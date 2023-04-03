@@ -1,24 +1,17 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
-import { TAutoConnect, useAutoConnect, useNetworkColor } from "~~/hooks/scaffold-eth";
-import Balance from "~~/components/scaffold-eth/Balance";
-import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { Balance, BlockieAvatar } from "~~/components/scaffold-eth";
+import { useAutoConnect, useNetworkColor } from "~~/hooks/scaffold-eth";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
-
-// todo: move this later scaffold config.  See TAutoConnect for comments on each prop
-const tempAutoConnectConfig: TAutoConnect = {
-  enableBurnerWallet: true,
-  autoConnect: true,
-};
 
 /**
  * Custom Wagmi Connect Button (watch balance + custom design)
  */
-export default function RainbowKitCustomConnectButton() {
-  useAutoConnect(tempAutoConnectConfig);
+export const RainbowKitCustomConnectButton = () => {
+  useAutoConnect();
 
-  const configuredChain = getTargetNetwork();
   const networkColor = useNetworkColor();
+  const configuredNetwork = getTargetNetwork();
 
   return (
     <ConnectButton.Custom>
@@ -36,11 +29,11 @@ export default function RainbowKitCustomConnectButton() {
                 );
               }
 
-              if (chain.unsupported || chain.id !== configuredChain.id) {
+              if (chain.unsupported || chain.id !== configuredNetwork.id) {
                 return (
                   <>
                     <span className="text-xs" style={{ color: networkColor }}>
-                      {configuredChain.name}
+                      {configuredNetwork.name}
                     </span>
                     <button className="btn btn-sm btn-error ml-2" onClick={openChainModal} type="button">
                       <span>Wrong network</span>
@@ -79,4 +72,4 @@ export default function RainbowKitCustomConnectButton() {
       }}
     </ConnectButton.Custom>
   );
-}
+};

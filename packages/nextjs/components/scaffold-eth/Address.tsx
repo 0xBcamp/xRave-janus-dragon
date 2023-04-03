@@ -1,17 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Blockies from "react-blockies";
-import { DocumentDuplicateIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
-import { CopyToClipboard } from "react-copy-to-clipboard";
-import { useEnsAvatar, useEnsName } from "wagmi";
+import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { isAddress } from "ethers/lib/utils";
-
-const blockExplorerLink = (address: string, blockExplorer?: string) =>
-  `${blockExplorer || "https://etherscan.io/"}address/${address}`;
+import Blockies from "react-blockies";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { useEnsAvatar, useEnsName } from "wagmi";
+import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { getBlockExplorerAddressLink, getTargetNetwork } from "~~/utils/scaffold-eth";
 
 type TAddressProps = {
   address?: string;
-  blockExplorer?: string;
   disableAddressLink?: boolean;
   format?: "short" | "long";
 };
@@ -19,7 +16,7 @@ type TAddressProps = {
 /**
  * Displays an address (or ENS) with a Blockie image and option to copy address.
  */
-export default function Address({ address, blockExplorer, disableAddressLink, format }: TAddressProps) {
+export const Address = ({ address, disableAddressLink, format }: TAddressProps) => {
   const [ens, setEns] = useState<string | null>();
   const [ensAvatar, setEnsAvatar] = useState<string | null>();
   const [addressCopied, setAddressCopied] = useState(false);
@@ -57,7 +54,7 @@ export default function Address({ address, blockExplorer, disableAddressLink, fo
     return <span className="text-error">Wrong address</span>;
   }
 
-  const explorerLink = blockExplorerLink(address, blockExplorer);
+  const blockExplorerAddressLink = getBlockExplorerAddressLink(getTargetNetwork(), address);
   let displayAddress = address?.slice(0, 5) + "..." + address?.slice(-4);
 
   if (ens) {
@@ -80,7 +77,12 @@ export default function Address({ address, blockExplorer, disableAddressLink, fo
       {disableAddressLink ? (
         <span className="ml-1.5 text-lg font-normal">{displayAddress}</span>
       ) : (
-        <a className="ml-1.5 text-lg font-normal" target="_blank" href={explorerLink} rel="noopener noreferrer">
+        <a
+          className="ml-1.5 text-lg font-normal"
+          target="_blank"
+          href={blockExplorerAddressLink}
+          rel="noopener noreferrer"
+        >
           {displayAddress}
         </a>
       )}
@@ -107,4 +109,4 @@ export default function Address({ address, blockExplorer, disableAddressLink, fo
       )}
     </div>
   );
-}
+};

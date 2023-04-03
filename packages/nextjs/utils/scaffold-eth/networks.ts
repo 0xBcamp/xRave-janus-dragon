@@ -1,5 +1,6 @@
-import * as chains from "wagmi/chains";
 import { Network } from "@ethersproject/networks";
+import * as chains from "wagmi/chains";
+import scaffoldConfig from "~~/scaffold.config";
 
 export type TChainAttributes = {
   // color | [lightThemeColor, darkThemeColor]
@@ -55,39 +56,54 @@ export const NETWORKS_EXTRA_DATA: Record<string, TChainAttributes> = {
  * @dev returns empty string if the network is localChain
  */
 export function getBlockExplorerTxLink(network: Network, txnHash: string) {
-  const { name, chainId } = network;
+  const { chainId } = network;
 
-  if (chainId === 31337 || chainId === 1337) {
-    // If its localChain then return empty sting
+  const chainNames = Object.keys(chains);
+
+  const targetChainArr = chainNames.filter(chainName => {
+    const wagmiChain = chains[chainName as keyof typeof chains];
+    return wagmiChain.id === chainId;
+  });
+
+  if (targetChainArr.length === 0) {
     return "";
   }
 
-  let blockExplorerNetwork = "";
-  if (name && chainId > 1) {
-    blockExplorerNetwork = name + ".";
+  const targetChain = targetChainArr[0] as keyof typeof chains;
+  // @ts-expect-error : ignoring error since `blockExplorers` key may or may not be present on some chains
+  const blockExplorerTxURL = chains[targetChain]?.blockExplorers?.default?.url;
+
+  if (!blockExplorerTxURL) {
+    return "";
   }
 
-  let blockExplorerBaseTxUrl = "https://" + blockExplorerNetwork + "etherscan.io/tx/";
-  if (chainId === 100) {
-    blockExplorerBaseTxUrl = "https://blockscout.com/poa/xdai/tx/";
-  }
-
-  const blockExplorerTxURL = blockExplorerBaseTxUrl + txnHash;
-
-  return blockExplorerTxURL;
+  return `${blockExplorerTxURL}/tx/${txnHash}`;
 }
 
 /**
- * Get the wagmi's Chain target network configured in the app.
+ * Gives the block explorer Address URL.
+ * @param network - wagmi chain object
+ * @param address
+ * @returns block explorer address URL and etherscan URL if block explorer URL is not present for wagmi network
  */
-export const getTargetNetwork = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK as keyof typeof chains;
-
-  if (!network || !chains[network]) {
-    // If error defaults to hardhat local network
-    console.error("Network name is not set, misspelled or unsupported network used in .env.*");
-    return chains.hardhat;
+export function getBlockExplorerAddressLink(network: chains.Chain, address: string) {
+  const blockExplorerBaseURL = network.blockExplorers?.default?.url;
+  if (!blockExplorerBaseURL) {
+    return `https://etherscan.io/address/${address}`;
   }
 
-  return chains[network];
-};
+  return `${blockExplorerBaseURL}/address/${address}`;
+}
+
+/**
+ * @returns targetNetwork object consisting targetNetwork from scaffold.config and extra network metadata
+ */
+
+export function getTargetNetwork(): chains.Chain & Partial<TChainAttributes> {
+  const configuredNetwork = scaffoldConfig.targetNetwork;
+
+  return {
+    ...configuredNetwork,
+    ...NETWORKS_EXTRA_DATA[configuredNetwork.id],
+  };
+}

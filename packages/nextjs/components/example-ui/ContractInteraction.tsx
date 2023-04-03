@@ -1,35 +1,20 @@
+import { useState } from "react";
 import { CopyIcon } from "./assets/CopyIcon";
 import { DiamondIcon } from "./assets/DiamondIcon";
 import { HareIcon } from "./assets/HareIcon";
 import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { useYourContractSetGreeting } from "~~/generated/contractHooks";
-import { utils } from "ethers";
-import { useTransactor } from "~~/hooks/scaffold-eth";
-import { getParsedEthersError } from "../scaffold-eth/Contract/utilsContract";
-import { notification } from "~~/utils/scaffold-eth";
+import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
-export default function ContractInteraction() {
+export const ContractInteraction = () => {
   const [visible, setVisible] = useState(true);
   const [newGreeting, setNewGreeting] = useState("");
 
-  const writeTxn = useTransactor();
-  const { writeAsync, isLoading } = useYourContractSetGreeting({
-    mode: "recklesslyUnprepared",
+  const { writeAsync, isLoading } = useScaffoldContractWrite({
+    contractName: "YourContract",
+    functionName: "setGreeting",
     args: [newGreeting],
-    overrides: {
-      value: utils.parseEther("0.01"),
-    },
+    value: "0.01",
   });
-
-  const handleWrite = async () => {
-    try {
-      await writeTxn(writeAsync());
-    } catch (e: any) {
-      const message = getParsedEthersError(e);
-      notification.error(message);
-    }
-  };
 
   return (
     <div className="flex bg-base-300 relative pb-10">
@@ -78,7 +63,7 @@ export default function ContractInteraction() {
                   className={`btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest ${
                     isLoading ? "loading" : ""
                   }`}
-                  onClick={handleWrite}
+                  onClick={writeAsync}
                 >
                   {!isLoading && (
                     <>
@@ -98,4 +83,4 @@ export default function ContractInteraction() {
       </div>
     </div>
   );
-}
+};
