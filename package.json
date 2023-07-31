@@ -33,11 +33,5 @@
   "devDependencies": {
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "usehooks-ts@2.7.2": "patches/usehooks-ts@2.7.2.patch"
-    },
-    "allowNonAppliedPatches": "true"
   }
 }
