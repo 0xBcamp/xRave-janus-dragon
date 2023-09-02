@@ -24,6 +24,7 @@ export const MetaHeader = ({
 
   return (
     <Head>
+      <link rel="manifest" href="/manifest.json" />
       {title && (
         <>
           <title>{title}</title>
