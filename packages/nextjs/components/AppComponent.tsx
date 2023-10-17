@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { WagmiConnector } from "./scaffold-eth/WagmiConnector";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { Toaster } from "react-hot-toast";
 import { WagmiConfig } from "wagmi";
@@ -28,6 +29,7 @@ export const AppComponent = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <WagmiConfig config={wagmiConfig}>
+      <WagmiConnector />
       <ProgressBar />
       <RainbowKitProvider
         chains={appChains.chains}
