@@ -11,7 +11,7 @@ The target audiences of this project are not only players with liquidity to prov
 # Game specific
 - Game will be autonomous and randomized. Will containe few significant states:
   
-<img src="./imgs/GameFlow.png" alt="drawing" width="1000" height="400"/>
+<img src="./imgs/GameFlow.png" alt="drawing" width="900" height="300"/>
 
 - Game will guarantee that each user will have the same amount of deposited tokens and the subject of competition will be the rewards from deposited tokens. Proportions will be determined according to player's performance in the game (how much points (resources) they gather):
   
