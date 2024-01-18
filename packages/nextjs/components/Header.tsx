@@ -24,6 +24,10 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/play",
   },
   {
+    label: "Exit",
+    href: "/exit",
+  },
+  {
     label: "Debug Contracts",
     href: "/debug",
     icon: <BugAntIcon className="h-4 w-4" />,
