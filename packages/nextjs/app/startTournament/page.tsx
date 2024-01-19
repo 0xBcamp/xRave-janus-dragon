@@ -26,6 +26,11 @@ const StartTournament: NextPage = () => {
   //     functionName: "createTournament",
   //   });
 
+  //  // approve LP tokens to be used by contract
+  //  const { data: approved } = useScaffoldContractWrite({
+  //   contractName: "LPToken",
+  //   functionName: "approve",
+
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
