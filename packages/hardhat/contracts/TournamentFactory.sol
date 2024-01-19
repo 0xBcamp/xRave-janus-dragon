@@ -56,6 +56,12 @@ contract TournamentFactory {
 	}
 
 	/**
+	 * Function that allows anyone to join a tournament
+	 */
+	function joinTournament(uint256 _tid) external {
+	}
+
+	/**
 	 * Function that returns an array of all the tournament contracts
 	 */
 	function getAllTournaments() external view returns (uint256[] memory) {
