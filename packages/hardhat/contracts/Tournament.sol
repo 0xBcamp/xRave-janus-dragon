@@ -7,8 +7,9 @@ pragma solidity >=0.8.0 <0.9.0;
 contract Tournament {
 	// State Variables
 	address public immutable owner;
-	mapping(address => uint256) public playerToLPToken;
-	mapping(address => uint256) public playerToPoints;
+	mapping(address => uint256) public playerToLPToken; // how much LP token each player has
+	mapping(address => uint256) public playerToPoints; // how many points each player has
+	mapping(address => uint256) public playerToLastGame; // when the player last played
 	string public name;
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	address public poolIncentivized;
@@ -96,6 +97,9 @@ contract Tournament {
 	}
 
 	function unstakingAllowed() public view returns (bool) {
+	}
+
+	function player(address _player) public view returns (uint256 LPToken, uint256 points, uint256 lastGame) {
 	}
 
 }
