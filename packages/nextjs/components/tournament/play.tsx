@@ -24,7 +24,7 @@ export const Play = () => {
             <span className="block text-2xl mb-2">Play your next move</span>
             <span className="block text-4xl font-bold">in the tournament {params.addr}</span>
           </h1>
-          {Number(livesOfPlayer) > 0 ? (
+          {Number(livesOfPlayer.data) > 0 ? (
             <div className="inline-flex rounded-md shadow-sm" role="group">
               <button className="btn btn-secondary" onClick={() => signMessage({ message: "ROCK" })}>
                 Rock

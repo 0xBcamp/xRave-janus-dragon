@@ -54,17 +54,15 @@ const Tournament: NextPage = () => {
     );
   }
 
-  if (unstakingAllowed) {
-    console.log("we are withdrawing");
+  if (unstakingAllowed.data) {
     return (
       <>
         <Withdraw />
       </>
     );
   }
-  console.log("we cant withdraw");
 
-  if (isPlayer) {
+  if (isPlayer.data) {
     return (
       <>
         <Play />
@@ -72,7 +70,7 @@ const Tournament: NextPage = () => {
     );
   }
 
-  if (!isActive) {
+  if (!isActive.data) {
     return (
       <>
         <p>Tournament {params.addr} has not started yet</p>
