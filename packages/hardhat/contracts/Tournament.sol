@@ -12,7 +12,9 @@ contract Tournament {
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	address public poolIncentivized;
 	address public rewardToken;
+	string public rewardTokenSymbol;
 	uint256 public rewardAmount;
+	string public LPTokenSymbol;
 	uint256 public LPTokenAmount;
 	uint256 public startTime;
 	uint256 public endTime;
@@ -81,6 +83,18 @@ contract Tournament {
 	}
 
 	function pointsOfPlayer(address _player) public view returns (uint256) {
+	}
+
+	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
+	}
+
+	function rewardTokenAmountOfPlayer(address _player) public view returns (uint256) {
+	}
+
+	function stakingAllowed() public view returns (bool) {
+	}
+
+	function unstakingAllowed() public view returns (bool) {
 	}
 
 }
