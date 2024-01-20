@@ -5,8 +5,8 @@ import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 const Exit: NextPage = () => {
   const { writeAsync } = useScaffoldContractWrite({
-    contractName: "YourContract",
-    functionName: "withdraw",
+    contractName: "Tournament",
+    functionName: "unstakeLPToken",
     blockConfirmations: 1,
     onBlockConfirmation: txnReceipt => {
       console.log("Transaction blockHash", txnReceipt.blockHash);

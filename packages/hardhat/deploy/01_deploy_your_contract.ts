@@ -8,7 +8,7 @@ import { Contract } from "ethers";
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -26,7 +26,17 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const RewardToken1 = await hre.ethers.getContract<Contract>("RewardToken1", deployer);
   const RewardToken2 = await hre.ethers.getContract<Contract>("RewardToken2", deployer);
 
-  await deploy("YourContract", {
+  await deploy("Tournament", {
+    from: deployer,
+    // Contract constructor arguments
+    args: [deployer],
+    log: true,
+    // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
+    // automatically mining the contract deployment transaction. There is no effect on live networks.
+    autoMine: true,
+  });
+
+  await deploy("TournamentFactory", {
     from: deployer,
     // Contract constructor arguments
     args: [deployer],
@@ -37,8 +47,6 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   });
 
   // Get the deployed contract to interact with it after deploying.
-  const yourContract = await hre.ethers.getContract<Contract>("YourContract", deployer);
-  console.log("👋 Initial greeting:", await yourContract.greeting());
 
   const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account
   await LPToken1.transfer(frontBurner, hre.ethers.parseEther("1000"));
@@ -47,8 +55,8 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   await RewardToken2.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };
 
-export default deployYourContract;
+export default deployContracts;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags YourContract
-deployYourContract.tags = ["YourContract"];
+deployContracts.tags = ["Contracts"];
