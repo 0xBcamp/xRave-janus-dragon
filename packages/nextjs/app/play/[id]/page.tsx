@@ -1,11 +1,13 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import type { NextPage } from "next";
 import { useAccount, useSignMessage } from "wagmi";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 const Play: NextPage = () => {
   const { address: connectedAddress } = useAccount();
+  const params = useParams<{ id: string }>();
 
   const { data: livesOfPlayer } = useScaffoldContractRead({
     contractName: "Tournament",
@@ -13,6 +15,12 @@ const Play: NextPage = () => {
     args: [connectedAddress],
   });
 
+  /*   const { data: tournamentData } = useScaffoldContractRead({
+    contractName: "TournamentFactory",
+    functionName: "getTournament",
+    args: [BigInt(params.id)],
+  });
+ */
   const { signMessage } = useSignMessage();
 
   return (
@@ -21,10 +29,10 @@ const Play: NextPage = () => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">Play your next move</span>
-            <span className="block text-4xl font-bold">in the tournament</span>
+            <span className="block text-4xl font-bold">in the tournament {params.id}</span>
           </h1>
           {Number(livesOfPlayer) > 0 ? (
-            <div>
+            <div className="inline-flex rounded-md shadow-sm" role="group">
               <button className="btn btn-secondary" onClick={() => signMessage({ message: "ROCK" })}>
                 Rock
               </button>

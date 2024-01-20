@@ -70,6 +70,13 @@ contract TournamentFactory {
 	}
 
 	/**
+	 * Function that returns an array of all the active tournament contracts
+	 */
+	function getActiveTournamentsNumber() external view returns (uint256 number) {
+
+	}
+
+	/**
 	 * Function that returns an array of all the past tournament contracts
 	 */
 	function getAllPastTournaments() external view returns (uint256[] memory) {

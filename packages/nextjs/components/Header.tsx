@@ -24,10 +24,6 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/tournaments",
   },
   {
-    label: "Play",
-    href: "/play",
-  },
-  {
     label: "Exit",
     href: "/exit",
   },

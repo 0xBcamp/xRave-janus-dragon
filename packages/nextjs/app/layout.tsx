@@ -11,14 +11,14 @@ const imageUrl = `${baseUrl}/thumbnail.jpg`;
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Scaffold-ETH 2 App",
-    template: "%s | Scaffold-ETH 2",
+    default: "DeFi Conquest",
+    template: "%s | DeFi Conquest",
   },
   description: "Built with 🏗 Scaffold-ETH 2",
   openGraph: {
     title: {
-      default: "Scaffold-ETH 2 App",
-      template: "%s | Scaffold-ETH 2",
+      default: "DeFi Conquest",
+      template: "%s | DeFi Conquest",
     },
     description: "Built with 🏗 Scaffold-ETH 2",
     images: [
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [imageUrl],
     title: {
-      default: "Scaffold-ETH 2",
-      template: "%s | Scaffold-ETH 2",
+      default: "DeFi Conquest",
+      template: "%s | DeFi Conquest",
     },
     description: "Built with 🏗 Scaffold-ETH 2",
   },
