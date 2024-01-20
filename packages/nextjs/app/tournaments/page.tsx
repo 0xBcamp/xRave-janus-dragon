@@ -1,9 +1,7 @@
 "use client";
 
 import type { NextPage } from "next";
-// import { useAccount } from "wagmi";
-// import { useScaffoldContract, useScaffoldContractRead } from "~~/hooks/scaffold-eth";
-import { List } from "~~/components/tournament";
+import { List } from "~~/components/tournaments";
 
 const Tournaments: NextPage = () => {
   // const { address: connectedAddress } = useAccount();

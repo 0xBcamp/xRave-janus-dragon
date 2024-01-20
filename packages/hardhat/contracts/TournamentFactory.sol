@@ -45,14 +45,17 @@ contract TournamentFactory {
 	 * @return newTournament (address) - address of the new tournament
 	 */
 	function createTournament(string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
-		
+		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _rewardToken, _LPTokenAmount, _startTime, _endTime);
+		TournamentArray.push(newTournament);
+		tid += 1;
+		tidToAddress[tid] = address(newTournament);
 	}
 
 	/**
 	 * Function that returns all the data from a tournament
 	 */
 	function getTournament(uint256 _tid) external view returns (string memory name, address contractAddress, address poolIncentivized, address rewardToken, string memory LPTokenSymbol, uint256 LPTokenAmount, string memory rewardTokenSymbol, uint256 rewardAmount, uint256 startTime, uint256 endTime) {
-
+		return TournamentArray[_tid].getTournament();
 	}
 
 	/**
@@ -66,13 +69,6 @@ contract TournamentFactory {
 	 * Function that returns an array of all the active tournament contracts
 	 */
 	function getAllActiveTournaments() external view returns (uint256[] memory) {
-
-	}
-
-	/**
-	 * Function that returns an array of all the active tournament contracts
-	 */
-	function getActiveTournamentsNumber() external view returns (uint256 number) {
 
 	}
 
@@ -96,4 +92,17 @@ contract TournamentFactory {
 	function getTournamentsByPlayer(address _player) external view returns (uint256[] memory) {
 
 	}
+
+	/**
+	 * Function that returns true if the contract is a deployed tournament, false otherwise
+	 */
+	function isTournament(address _contract) external view returns (bool) {
+		for(uint256 i = 0; i < TournamentArray.length; i++) {
+			if(address(TournamentArray[i]) == _contract) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
+
