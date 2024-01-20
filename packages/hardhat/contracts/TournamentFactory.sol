@@ -34,6 +34,7 @@ contract TournamentFactory {
 	/**
 	 * Function that allows anyone to deploy a new tournament contract
 	 *
+	 * @param _name (string) - name of the tournament
 	 * @param _poolIncentivized (address) - address of the pool to incentivize and from which we will accept the LP token
 	 * @param _rewardToken (address) - address of the ERC-20 token used as prize for the players
 	 * @param _rewardAmount (uint256) - amount of the ERC-20 token to fund the prize
@@ -43,49 +44,49 @@ contract TournamentFactory {
 	 *
 	 * @return newTournament (address) - address of the new tournament
 	 */
-	function createTournament(address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
+	function createTournament(string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
 		
 	}
 
 	/**
 	 * Function that returns all the data from a tournament
 	 */
-	function getTournament(uint256 _tid) external view returns (address contractAddress, address poolIncentivized, address rewardToken, uint256 LPTokenAmount, uint256 rewardAmount, uint256 startTime, uint256 endTime) {
+	function getTournament(uint256 _tid) external view returns (string memory name, address contractAddress, address poolIncentivized, address rewardToken, string memory LPTokenSymbol, uint256 LPTokenAmount, string memory rewardTokenSymbol, uint256 rewardAmount, uint256 startTime, uint256 endTime) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the tournament contracts
 	 */
-	function getAllTournaments() external view returns (address[] memory) {
+	function getAllTournaments() external view returns (uint256[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the active tournament contracts
 	 */
-	function getAllActiveTournaments() external view returns (address[] memory) {
+	function getAllActiveTournaments() external view returns (uint256[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the past tournament contracts
 	 */
-	function getAllPastTournaments() external view returns (address[] memory) {
+	function getAllPastTournaments() external view returns (uint256[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the future tournament contracts
 	 */
-	function getAllFutureTournaments() external view returns (address[] memory) {
+	function getAllFutureTournaments() external view returns (uint256[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the tournament a player is registered to
 	 */
-	function getTournamentsByPlayer(address _player) external view returns (address[] memory) {
+	function getTournamentsByPlayer(address _player) external view returns (uint256[] memory) {
 
 	}
 }

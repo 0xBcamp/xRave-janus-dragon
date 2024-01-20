@@ -9,6 +9,7 @@ contract Tournament {
 	address public immutable owner;
 	mapping(address => uint256) public playerToLPToken;
 	mapping(address => uint256) public playerToPoints;
+	string public name;
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	address public poolIncentivized;
 	address public rewardToken;
