@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LPToken1: {
-      address: "0xFD6F7A6a5c21A3f503EBaE7a473639974379c351",
+      address: "0x2b5A4e5493d4a54E717057B127cf0C000C876f9B",
       abi: [
         {
           inputs: [],
@@ -300,7 +300,7 @@ const deployedContracts = {
       },
     },
     LPToken2: {
-      address: "0xa6e99A4ED7498b3cdDCBB61a6A607a4925Faa1B7",
+      address: "0x413b1AfCa96a3df5A686d8BFBF93d30688a7f7D9",
       abi: [
         {
           inputs: [],
@@ -593,7 +593,7 @@ const deployedContracts = {
       },
     },
     RewardToken1: {
-      address: "0x5302E909d1e93e30F05B5D6Eea766363D14F9892",
+      address: "0x02df3a3F960393F5B349E40A599FEda91a7cc1A7",
       abi: [
         {
           inputs: [],
@@ -886,7 +886,7 @@ const deployedContracts = {
       },
     },
     RewardToken2: {
-      address: "0x0ed64d01D0B4B655E410EF1441dD677B695639E7",
+      address: "0x821f3361D454cc98b7555221A06Be563a7E2E0A6",
       abi: [
         {
           inputs: [],
@@ -1179,7 +1179,7 @@ const deployedContracts = {
       },
     },
     Tournament: {
-      address: "0x4bf010f1b9beDA5450a8dD702ED602A104ff65EE",
+      address: "0x1780bCf4103D3F501463AD3414c7f4b654bb7aFd",
       abi: [
         {
           inputs: [
@@ -1311,7 +1311,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "string",
-              name: "name",
+              name: "rName",
               type: "string",
             },
             {
@@ -1321,27 +1321,27 @@ const deployedContracts = {
             },
             {
               internalType: "address",
-              name: "poolIncentivized",
+              name: "rPoolIncentivized",
               type: "address",
             },
             {
               internalType: "address",
-              name: "rewardToken",
+              name: "rRewardToken",
               type: "address",
             },
             {
               internalType: "string",
-              name: "LPTokenSymbol",
+              name: "rLPTokenSymbol",
               type: "string",
             },
             {
               internalType: "uint256",
-              name: "LPTokenAmount",
+              name: "rLPTokenAmount",
               type: "uint256",
             },
             {
               internalType: "string",
-              name: "rewardTokenSymbol",
+              name: "rRewardTokenSymbol",
               type: "string",
             },
             {
@@ -1351,12 +1351,12 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "startTime",
+              name: "rStartTime",
               type: "uint256",
             },
             {
               internalType: "uint256",
-              name: "endTime",
+              name: "rEndTime",
               type: "uint256",
             },
           ],
@@ -1738,7 +1738,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x40a42Baf86Fc821f972Ad2aC878729063CeEF403",
+      address: "0x5133BBdfCCa3Eb4F739D599ee4eC45cBCD0E16c5",
       abi: [
         {
           inputs: [
@@ -1766,6 +1766,25 @@ const deployedContracts = {
             },
           ],
           name: "TournamentArray",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "TournamentMap",
           outputs: [
             {
               internalType: "contract Tournament",
@@ -1830,9 +1849,9 @@ const deployedContracts = {
           name: "getAllActiveTournaments",
           outputs: [
             {
-              internalType: "uint256[]",
+              internalType: "address[]",
               name: "",
-              type: "uint256[]",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -1843,9 +1862,9 @@ const deployedContracts = {
           name: "getAllFutureTournaments",
           outputs: [
             {
-              internalType: "uint256[]",
+              internalType: "address[]",
               name: "",
-              type: "uint256[]",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -1856,9 +1875,9 @@ const deployedContracts = {
           name: "getAllPastTournaments",
           outputs: [
             {
-              internalType: "uint256[]",
+              internalType: "address[]",
               name: "",
-              type: "uint256[]",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -1869,73 +1888,9 @@ const deployedContracts = {
           name: "getAllTournaments",
           outputs: [
             {
-              internalType: "uint256[]",
-              name: "",
-              type: "uint256[]",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_tid",
-              type: "uint256",
-            },
-          ],
-          name: "getTournament",
-          outputs: [
-            {
-              internalType: "string",
-              name: "name",
-              type: "string",
-            },
-            {
-              internalType: "address",
-              name: "contractAddress",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "poolIncentivized",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "rewardToken",
-              type: "address",
-            },
-            {
-              internalType: "string",
-              name: "LPTokenSymbol",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "LPTokenAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "rewardTokenSymbol",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "rewardAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "startTime",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "endTime",
-              type: "uint256",
+              internalType: "address[]",
+              name: "list",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -1952,9 +1907,9 @@ const deployedContracts = {
           name: "getTournamentsByPlayer",
           outputs: [
             {
-              internalType: "uint256[]",
+              internalType: "address[]",
               name: "",
-              type: "uint256[]",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -1982,38 +1937,6 @@ const deployedContracts = {
         {
           inputs: [],
           name: "owner",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "tid",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "tidToAddress",
           outputs: [
             {
               internalType: "address",

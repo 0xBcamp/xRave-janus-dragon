@@ -48,8 +48,17 @@ contract Tournament {
 		_;
 	}
 
-	function getTournament() public view returns (string memory name, address contractAddress, address poolIncentivized, address rewardToken, string memory LPTokenSymbol, uint256 LPTokenAmount, string memory rewardTokenSymbol, uint256 rewardAmount, uint256 startTime, uint256 endTime) {
-		return (name, address(this), poolIncentivized, rewardToken, LPTokenSymbol, LPTokenAmount, rewardTokenSymbol, rewardAmount, startTime, endTime);
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, address rRewardToken, string memory rLPTokenSymbol, uint256 rLPTokenAmount, string memory rRewardTokenSymbol, uint256 rewardAmount, uint256 rStartTime, uint256 rEndTime) {
+		rName = name;
+		contractAddress = address(this);
+		rPoolIncentivized = poolIncentivized;
+		rRewardToken = rewardToken;
+		rLPTokenSymbol = LPTokenSymbol;
+		rLPTokenAmount = LPTokenAmount;
+		rRewardTokenSymbol = rewardTokenSymbol;
+		rewardAmount = 100;
+		rStartTime = startTime;
+		rEndTime = endTime;
 	}
 
 	/**

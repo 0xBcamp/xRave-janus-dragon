@@ -8,9 +8,8 @@ import "./Tournament.sol";
 
 contract TournamentFactory {
 	// State Variables
-	Tournament[] public TournamentArray; // Store deployed contracts
-	mapping(uint256 => address) public tidToAddress; // Mapping tid => contract address
-	uint256 public tid; // Number of deployed contracts
+	address[] public TournamentArray; // Store deployed contracts
+	mapping(address => Tournament) public TournamentMap;
 	address public owner;
 
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
@@ -46,50 +45,43 @@ contract TournamentFactory {
 	 */
 	function createTournament(string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
 		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _rewardToken, _LPTokenAmount, _startTime, _endTime);
-		TournamentArray.push(newTournament);
-		tid += 1;
-		tidToAddress[tid] = address(newTournament);
-	}
-
-	/**
-	 * Function that returns all the data from a tournament
-	 */
-	function getTournament(uint256 _tid) external view returns (string memory name, address contractAddress, address poolIncentivized, address rewardToken, string memory LPTokenSymbol, uint256 LPTokenAmount, string memory rewardTokenSymbol, uint256 rewardAmount, uint256 startTime, uint256 endTime) {
-		return TournamentArray[_tid].getTournament();
+		TournamentArray.push(address(newTournament));
+		TournamentMap[address(newTournament)] = newTournament;
 	}
 
 	/**
 	 * Function that returns an array of all the tournament contracts
 	 */
-	function getAllTournaments() external view returns (uint256[] memory) {
-
+	function getAllTournaments() public view returns (address[] memory list) {
+		list = TournamentArray;
 	}
 
 	/**
 	 * Function that returns an array of all the active tournament contracts
 	 */
-	function getAllActiveTournaments() external view returns (uint256[] memory) {
-
+	function getAllActiveTournaments() external view returns (address[] memory) {
+		// TODO: filter active tournaments only
+		return getAllTournaments();
 	}
 
 	/**
 	 * Function that returns an array of all the past tournament contracts
 	 */
-	function getAllPastTournaments() external view returns (uint256[] memory) {
+	function getAllPastTournaments() external view returns (address[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the future tournament contracts
 	 */
-	function getAllFutureTournaments() external view returns (uint256[] memory) {
+	function getAllFutureTournaments() external view returns (address[] memory) {
 
 	}
 
 	/**
 	 * Function that returns an array of all the tournament a player is registered to
 	 */
-	function getTournamentsByPlayer(address _player) external view returns (uint256[] memory) {
+	function getTournamentsByPlayer(address _player) external view returns (address[] memory) {
 
 	}
 
@@ -97,10 +89,8 @@ contract TournamentFactory {
 	 * Function that returns true if the contract is a deployed tournament, false otherwise
 	 */
 	function isTournament(address _contract) external view returns (bool) {
-		for(uint256 i = 0; i < TournamentArray.length; i++) {
-			if(address(TournamentArray[i]) == _contract) {
-				return true;
-			}
+		if(address(TournamentMap[_contract]) == _contract) {
+			return true;
 		}
 		return false;
 	}
