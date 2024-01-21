@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { useAccount, useContractRead, useContractWrite } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
@@ -25,14 +26,18 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     amount = Number(tournamentData?.data[5]);
   }
 
-  const balance = useContractRead({
+  const { data: balance } = useContractRead({
     abi: DeployedContracts[31337].LPToken1.abi,
     address: LPaddr,
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
-  console.log(balance);
+  const { data: decimals } = useContractRead({
+    abi: DeployedContracts[31337].LPToken1.abi,
+    address: LPaddr,
+    functionName: "decimals",
+  });
 
   const { writeAsync: approve } = useContractWrite({
     abi: DeployedContracts[31337].LPToken1.abi,
@@ -72,13 +77,13 @@ export const Enter = ({ tournament }: { tournament: string }) => {
             <span className="block text-4xl font-bold">by staking your LP tokens</span>
           </h1>
           <div>
-            You hold {(balance?.data || "-?-").toString()} {LPTokenSymbol}
+            You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
             <div className="inline-flex rounded-md shadow-sm" role="group">
               <button className="btn btn-secondary" onClick={() => approveToken()}>
                 Approve {LPTokenSymbol}
               </button>
               <button className="btn btn-secondary" onClick={() => depositToken()}>
-                Deposit {amount.toString()} {LPTokenSymbol}
+                Deposit {formatUnits(BigInt(amount) || 0n, decimals || 18).toString()} {LPTokenSymbol}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatUnits } from "viem";
 import { useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
@@ -7,6 +8,17 @@ export const Item = ({ tournament }: { tournament: string }) => {
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
+  });
+
+  let address = "";
+  if (tournamentData.data != undefined) {
+    address = tournamentData.data[2];
+  }
+
+  const { data: decimals } = useContractRead({
+    abi: DeployedContracts[31337].LPToken1.abi,
+    address: address,
+    functionName: "decimals",
   });
 
   console.log(tournamentData);
@@ -27,10 +39,10 @@ export const Item = ({ tournament }: { tournament: string }) => {
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
         <p className="text-sm leading-6 text-gray-900">
-          Reward: {tournamentData.data[7].toString()} {tournamentData.data[6]}
+          Reward: {formatUnits(tournamentData.data[7], decimals || 18)} {tournamentData.data[6]}
         </p>
         <p className="mt-1 text-xs leading-5 text-gray-500">
-          Open until <time dateTime={tournamentData.data[8].toString()}>{tournamentData.data[8].toString()}</time>
+          Open until <time dateTime={tournamentData.data[9].toString()}>{tournamentData.data[9].toString()}</time>
         </p>
       </div>
     </li>

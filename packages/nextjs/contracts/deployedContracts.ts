@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LPToken1: {
-      address: "0x8D81A3DCd17030cD5F23Ac7370e4Efb10D2b3cA4",
+      address: "0x3C1Cb427D20F15563aDa8C249E71db76d7183B6c",
       abi: [
         {
           inputs: [],
@@ -300,7 +300,7 @@ const deployedContracts = {
       },
     },
     LPToken2: {
-      address: "0xcC4c41415fc68B2fBf70102742A83cDe435e0Ca7",
+      address: "0x1343248Cbd4e291C6979e70a138f4c774e902561",
       abi: [
         {
           inputs: [],
@@ -593,7 +593,7 @@ const deployedContracts = {
       },
     },
     RewardToken1: {
-      address: "0xa722bdA6968F50778B973Ae2701e90200C564B49",
+      address: "0x22a9B82A6c3D2BFB68F324B2e8367f346Dd6f32a",
       abi: [
         {
           inputs: [],
@@ -886,7 +886,7 @@ const deployedContracts = {
       },
     },
     RewardToken2: {
-      address: "0xc7cDb7A2E5dDa1B7A0E792Fe1ef08ED20A6F56D4",
+      address: "0x547382C0D1b23f707918D3c83A77317B71Aa8470",
       abi: [
         {
           inputs: [],
@@ -1179,7 +1179,7 @@ const deployedContracts = {
       },
     },
     Tournament: {
-      address: "0x967AB65ef14c58bD4DcfFeaAA1ADb40a022140E5",
+      address: "0x7C8BaafA542c57fF9B2B90612bf8aB9E86e22C09",
       abi: [
         {
           inputs: [
@@ -1730,7 +1730,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0xe1708FA6bb2844D5384613ef0846F9Bc1e8eC55E",
+      address: "0x0a17FabeA4633ce714F1Fa4a2dcA62C3bAc4758d",
       abi: [
         {
           inputs: [

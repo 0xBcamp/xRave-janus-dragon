@@ -76,7 +76,7 @@ contract Tournament {
 	 */
 	function stakeLPToken() public {
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
-
+		playerToLPToken[msg.sender] += LPTokenAmount;
 		// emit: keyword used to trigger an event
 		emit Staked();
 	}
@@ -112,6 +112,7 @@ contract Tournament {
 	}
 
 	function isPlayer(address _player) public view returns (bool) {
+		return playerToLPToken[_player] > 0;
 	}
 
 	function numberOfPlayers() public view returns (uint256) {
