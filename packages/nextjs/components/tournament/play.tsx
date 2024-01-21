@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useAccount, useContractRead, useSignMessage } from "wagmi";
+import { useAccount, useContractRead, useContractWrite, useSignMessage } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
+import { useTransactor } from "~~/hooks/scaffold-eth";
 
 export const Play = () => {
+  const writeTx = useTransactor();
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
+  const [move, setMove] = useState("");
 
   const livesOfPlayer = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
@@ -14,7 +18,22 @@ export const Play = () => {
     args: [connectedAddress],
   });
 
-  const { signMessage } = useSignMessage();
+  const { writeAsync } = useContractWrite({
+    abi: DeployedContracts[31337].Tournament.abi,
+    address: params.addr,
+    functionName: "playAgainstContract",
+    args: [move],
+  });
+
+  const playAgainstContract = async () => {
+    try {
+      await writeTx(writeAsync, { blockConfirmations: 1 });
+    } catch (e) {
+      console.log("Unexpected error in writeTx", e);
+    }
+  };
+
+  const { signMessage } = useSignMessage({ message: move });
 
   return (
     <>
@@ -25,16 +44,26 @@ export const Play = () => {
             <span className="block text-4xl font-bold">in the tournament {params.addr}</span>
           </h1>
           {Number(livesOfPlayer.data) > 0 ? (
-            <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button className="btn btn-secondary" onClick={() => signMessage({ message: "ROCK" })}>
-                Rock
-              </button>
-              <button className="btn btn-secondary" onClick={() => signMessage({ message: "PAPER" })}>
-                Paper
-              </button>
-              <button className="btn btn-secondary" onClick={() => signMessage({ message: "SCISSORS" })}>
-                Scissors
-              </button>
+            <div>
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+                <button className="btn btn-secondary" disabled={move == "ROCK"} onClick={() => setMove("ROCK")}>
+                  Rock
+                </button>
+                <button className="btn btn-secondary" disabled={move == "PAPER"} onClick={() => setMove("PAPER")}>
+                  Paper
+                </button>
+                <button className="btn btn-secondary" disabled={move == "SCISSORS"} onClick={() => setMove("SCISSORS")}>
+                  Scissors
+                </button>
+              </div>
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+                <button className="btn btn-secondary" onClick={() => playAgainstContract()}>
+                  Instant play against the contract
+                </button>
+                <button className="btn btn-secondary" onClick={() => signMessage()}>
+                  Be matched against a human player
+                </button>
+              </div>
             </div>
           ) : (
             <div

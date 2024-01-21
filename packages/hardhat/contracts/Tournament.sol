@@ -73,7 +73,13 @@ contract Tournament {
 	/**
 	 * Function that allows the bot to sumbit a batch of signed moves for resolution
 	 */
-	function resolve() public {
+	function resolveBatch() public {
+	}
+
+	/**
+	 * Function that allows the player to submit a move for play against Chainlink VRF
+	 */
+	function playAgainstContract(string memory _move) public returns(uint256 contractMove) {
 	}
 
 	function isActive() public view returns (bool) {
