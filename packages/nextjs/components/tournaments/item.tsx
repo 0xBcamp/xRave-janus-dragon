@@ -26,7 +26,9 @@ export const Item = ({ tournament }: { tournament: string }) => {
         </div>
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-        <p className="text-sm leading-6 text-gray-900">Reward: {tournamentData.data[6]}</p>
+        <p className="text-sm leading-6 text-gray-900">
+          Reward: {tournamentData.data[7].toString()} {tournamentData.data[6]}
+        </p>
         <p className="mt-1 text-xs leading-5 text-gray-500">
           Open until <time dateTime={tournamentData.data[8].toString()}>{tournamentData.data[8].toString()}</time>
         </p>

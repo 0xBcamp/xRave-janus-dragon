@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LPToken1: {
-      address: "0x2b5A4e5493d4a54E717057B127cf0C000C876f9B",
+      address: "0x8D81A3DCd17030cD5F23Ac7370e4Efb10D2b3cA4",
       abi: [
         {
           inputs: [],
@@ -300,7 +300,7 @@ const deployedContracts = {
       },
     },
     LPToken2: {
-      address: "0x413b1AfCa96a3df5A686d8BFBF93d30688a7f7D9",
+      address: "0xcC4c41415fc68B2fBf70102742A83cDe435e0Ca7",
       abi: [
         {
           inputs: [],
@@ -593,7 +593,7 @@ const deployedContracts = {
       },
     },
     RewardToken1: {
-      address: "0x02df3a3F960393F5B349E40A599FEda91a7cc1A7",
+      address: "0xa722bdA6968F50778B973Ae2701e90200C564B49",
       abi: [
         {
           inputs: [],
@@ -886,7 +886,7 @@ const deployedContracts = {
       },
     },
     RewardToken2: {
-      address: "0x821f3361D454cc98b7555221A06Be563a7E2E0A6",
+      address: "0xc7cDb7A2E5dDa1B7A0E792Fe1ef08ED20A6F56D4",
       abi: [
         {
           inputs: [],
@@ -1179,7 +1179,7 @@ const deployedContracts = {
       },
     },
     Tournament: {
-      address: "0x1780bCf4103D3F501463AD3414c7f4b654bb7aFd",
+      address: "0x967AB65ef14c58bD4DcfFeaAA1ADb40a022140E5",
       abi: [
         {
           inputs: [
@@ -1202,6 +1202,11 @@ const deployedContracts = {
               internalType: "address",
               name: "_rewardToken",
               type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_rewardAmount",
+              type: "uint256",
             },
             {
               internalType: "uint256",
@@ -1346,7 +1351,7 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "rewardAmount",
+              name: "rRewardAmount",
               type: "uint256",
             },
             {
@@ -1605,19 +1610,6 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "poolIncentivized",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
           name: "resolveBatch",
           outputs: [],
           stateMutability: "nonpayable",
@@ -1625,12 +1617,12 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "rewardToken",
+          name: "rewardAmount",
           outputs: [
             {
-              internalType: "address",
+              internalType: "uint256",
               name: "",
-              type: "address",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -1738,7 +1730,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x5133BBdfCCa3Eb4F739D599ee4eC45cBCD0E16c5",
+      address: "0xe1708FA6bb2844D5384613ef0846F9Bc1e8eC55E",
       abi: [
         {
           inputs: [

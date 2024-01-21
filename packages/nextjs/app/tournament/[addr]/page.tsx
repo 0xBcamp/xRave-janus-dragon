@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import type { NextPage } from "next";
 import { useAccount, useContractRead } from "wagmi";
+import { Enter } from "~~/components/tournament/enter";
 import { Play } from "~~/components/tournament/play";
 import { Withdraw } from "~~/components/tournament/withdraw";
 import DeployedContracts from "~~/contracts/deployedContracts";
@@ -80,7 +81,7 @@ const Tournament: NextPage = () => {
 
   return (
     <>
-      <p>You can register as a player in tournament {params.addr}</p>
+      <Enter tournament={params.addr} key={params.addr} />
     </>
   );
 };

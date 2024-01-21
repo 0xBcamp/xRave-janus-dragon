@@ -5,6 +5,7 @@ import "./Tournament.sol";
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TournamentFactory {
 	// State Variables
@@ -44,9 +45,10 @@ contract TournamentFactory {
 	 * @return newTournament (address) - address of the new tournament
 	 */
 	function createTournament(string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
-		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _rewardToken, _LPTokenAmount, _startTime, _endTime);
+		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _rewardToken, _rewardAmount, _LPTokenAmount, _startTime, _endTime);
 		TournamentArray.push(address(newTournament));
 		TournamentMap[address(newTournament)] = newTournament;
+		require(IERC20(_rewardToken).transferFrom(msg.sender, address(newTournament), _rewardAmount), "Transfer of reward token Failed");
 	}
 
 	/**
