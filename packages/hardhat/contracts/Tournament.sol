@@ -15,9 +15,6 @@ contract Tournament {
 	string public name;
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	IERC20Metadata poolIncentivized;
-	IERC20Metadata rewardToken;
-	string public rewardTokenSymbol;
-	uint256 public rewardAmount;
 	string public LPTokenSymbol;
 	uint256 public LPTokenAmount;
 	uint256 public startTime;
@@ -37,14 +34,9 @@ contract Tournament {
 
 	// Constructor: Called once on contract deployment
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
-	constructor(address _owner, string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
+	constructor(address _owner, string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
 		owner = _owner;
 		name = _name;
-		if(_rewardToken != address(0)) {
-			rewardToken = IERC20Metadata(_rewardToken);
-			rewardTokenSymbol = rewardToken.symbol();		
-		}
-		rewardAmount = _rewardAmount;
 		LPTokenAmount = _LPTokenAmount;
 		if(_poolIncentivized != address(0)) {
 			poolIncentivized = IERC20Metadata(_poolIncentivized);
@@ -62,15 +54,12 @@ contract Tournament {
 		_;
 	}
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, address rRewardToken, string memory rLPTokenSymbol, uint256 rLPTokenAmount, string memory rRewardTokenSymbol, uint256 rRewardAmount, uint256 rStartTime, uint256 rEndTime) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime) {
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
-		rRewardToken = address(rewardToken);
 		rLPTokenSymbol = LPTokenSymbol;
 		rLPTokenAmount = LPTokenAmount;
-		rRewardTokenSymbol = rewardTokenSymbol;
-		rRewardAmount = rewardAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
 	}

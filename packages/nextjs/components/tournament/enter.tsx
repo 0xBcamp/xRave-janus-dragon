@@ -25,8 +25,8 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   if (tournamentData != undefined) {
     spender = tournamentData[1];
     LPaddr = tournamentData[2];
-    LPTokenSymbol = tournamentData[4];
-    amount = Number(tournamentData[5]);
+    LPTokenSymbol = tournamentData[3];
+    amount = Number(tournamentData[4]);
   }
 
   const { data: balance } = useContractRead({

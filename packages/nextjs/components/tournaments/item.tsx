@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatUnits } from "viem";
+// import { formatUnits } from "viem";
 import { useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
@@ -10,7 +10,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
     functionName: "getTournament",
   });
 
-  let address = "";
+  /*   let address = "";
   if (tournamentData != undefined) {
     address = tournamentData[2];
   }
@@ -19,7 +19,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
     abi: DeployedContracts[31337].LPToken1.abi,
     address: address,
     functionName: "decimals",
-  });
+  }); */
 
   console.log(tournamentData);
 
@@ -34,15 +34,13 @@ export const Item = ({ tournament }: { tournament: string }) => {
           <p className="text-sm font-semibold leading-6 text-gray-900">
             <Link href={`/tournament/${tournament}`}>{tournamentData[0]}</Link>
           </p>
-          <p className="mt-1 truncate text-xs leading-5 text-gray-500">{tournamentData[4]}</p>
+          <p className="mt-1 truncate text-xs leading-5 text-gray-500">{tournamentData[3]}</p>
         </div>
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-        <p className="text-sm leading-6 text-gray-900">
-          Reward: {formatUnits(tournamentData[7], decimals || 18)} {tournamentData[6]}
-        </p>
+        <p className="text-sm leading-6 text-gray-900">Reward:</p>
         <p className="mt-1 text-xs leading-5 text-gray-500">
-          Open until <time dateTime={tournamentData[9].toString()}>{tournamentData[9].toString()}</time>
+          Open until <time dateTime={tournamentData[6].toString()}>{tournamentData[6].toString()}</time>
         </p>
       </div>
     </li>
