@@ -11,10 +11,10 @@ export const Play = () => {
   const params = useParams<{ addr: string }>();
   const [move, setMove] = useState("");
 
-  const livesOfPlayer = useContractRead({
+  const alreadyPlayed = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
-    functionName: "livesOfPlayer",
+    functionName: "alreadyPlayed",
     args: [connectedAddress],
   });
 
@@ -43,7 +43,7 @@ export const Play = () => {
             <span className="block text-2xl mb-2">Play your next move</span>
             <span className="block text-4xl font-bold">in the tournament {params.addr}</span>
           </h1>
-          {Number(livesOfPlayer.data) > 0 ? (
+          {Number(!alreadyPlayed.data) ? (
             <div>
               <div className="inline-flex rounded-md shadow-sm" role="group">
                 <button className="btn btn-secondary" disabled={move == "ROCK"} onClick={() => setMove("ROCK")}>

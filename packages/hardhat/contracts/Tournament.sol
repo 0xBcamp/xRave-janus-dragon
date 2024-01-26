@@ -6,13 +6,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract YearnInterface {
-	function pricePerShare() public view returns (uint256);
+interface YearnInterface {
+	function pricePerShare() external view returns (uint256);
 }
 
-contract UniswapInterface {
-	function getReserves() public view returns (uint256, uint256, uint256);
-	function totalSupply() public view returns (uint256);
+interface UniswapInterface {
+	function getReserves() external view returns (uint256, uint256, uint256);
+	function totalSupply() external view returns (uint256);
 }
 
 contract Tournament {
@@ -69,14 +69,14 @@ contract Tournament {
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
 	constructor(address _owner, string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
 		require(_startTime < _endTime, "Start time must be before end time");
-		require(_startTime > now, "Start time must be in the future");
+		require(_startTime > block.timestamp, "Start time must be in the future");
 		owner = _owner;
 		name = _name;
 		LPTokenAmount = _LPTokenAmount;
 		if(_poolIncentivized != address(0)) {
 			poolIncentivized = IERC20Metadata(_poolIncentivized);
 			LPTokenSymbol = poolIncentivized.symbol();
-			if(LPTokenSymbol == "UNI-V2") {
+			if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
 				protocol = Protocol.Uniswap;
 			} else {
 				protocol = Protocol.Yearn;
@@ -88,7 +88,7 @@ contract Tournament {
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
 	// Check the withdraw() function
-	modifier isOwner() {
+	modifier onlyOwner() {
 		// msg.sender: predefined variable that represents address of the account that called the current function
 		require(msg.sender == owner, "Not the Owner");
 		_;
@@ -122,12 +122,12 @@ contract Tournament {
 	 */
 	function unstakeLPToken() public {
 		// Get back its deposited value of underlying assets
-		uint256 amount = LPTokenAmountOfPlayer(_player); // corresponds to deposited underlying assets
+		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
 		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - extraPoolPrize;
 		// Add rewards from the game
-		uint share = getRewardShare(_player);
+		uint share = getRewardShare(msg.sender);
 		amount += getPoolPrize() * share / 1 ether;
 		unclaimedPoolPrize -= share; // TODO: useful?
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
@@ -164,14 +164,14 @@ contract Tournament {
 	 * Function that allows the player to submit a move for play against another player
 	 */
 	function playAgainstPlayer(string memory _move) public {
-		playersMap[msg.sender].lastGame = now;
+		playersMap[msg.sender].lastGame = block.timestamp;
 		updateScore(msg.sender, 1); // TODO: game logic
 	}
 
 	/**
 	 * Function that updates the player score by adding the points
 	 */
-	function updateScore(address, _player, uint256 _points) internal {
+	function updateScore(address _player, uint256 _points) internal {
 		if(_points == 0) { return; }
 		// We first remove the player from it's current rank
 		uint score = playersMap[_player].score;
@@ -207,20 +207,21 @@ contract Tournament {
 	 */
 	function getRewardShare(address _player) public view returns (uint256) {
 		// TODO: how to manage rewards if the number of different ranks is low?
-		(uint256 rank, uint256 split) = getRank();
+		(uint256 rank, uint256 split) = getRank(_player);
 		return (1 ether / (2 ** rank)) / split;
 	}
 
 	/**
 	 * Function that returns the current price per share from the LP token contract
 	 */
-	function getPricePerShare() private returns(uint256, uint256) {
+	function getPricePerShare() private view returns(uint256, uint256) {
 		if(Protocol.Yearn == protocol) {
-			YearnInterface yearn = YearnInterface(poolIncentivized);
+			YearnInterface yearn = YearnInterface(address(poolIncentivized));
 			return ( yearn.pricePerShare(), 0 );
 		} else { // Uniswap
-			UniswapInterface uniswap = UniswapInterface(poolIncentivized);
-			return ( uniswap.getReserves()[0] / uniswap.totalSupply(), uniswap.getReserves()[1] / uniswap.totalSupply() );
+			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
+			(uint256 res0, uint256 res1, uint256 time) = uniswap.getReserves();
+			return ( res0 / uniswap.totalSupply(), res1 / uniswap.totalSupply() );
 		}
 	}
 
@@ -240,7 +241,7 @@ contract Tournament {
 	 * Function that returns the expected pool prize at the end of the tournament from the accrued LP since the start
 	 */
 	function getExpectedPoolPrize() public view returns (uint256) {
-		return getPoolPrize() * (endTime - startTime) / (now - startTime);
+		return getPoolPrize() * (endTime - startTime) / (block.timestamp - startTime);
 	}
 
 	/**
@@ -258,18 +259,18 @@ contract Tournament {
 	 * Function that returns if the tournament is active (players are allowed to play)
 	 */
 	function isActive() public view returns (bool) {
-		return now >= startTime && now < endTime;
+		return block.timestamp >= startTime && block.timestamp < endTime;
 	}
 
 	function isEnded() public view returns (bool) {
-		return now >= endTime;
+		return block.timestamp >= endTime;
 	}
 
 	/**
 	 * Function that returns true if the tournament is not yet started
 	 */
 	function isFuture() public view returns (bool) {
-		return now < startTime;
+		return block.timestamp < startTime;
 	}
 
 	/**
@@ -283,7 +284,7 @@ contract Tournament {
 	 * Function that returns if the player has already played today (resets at O0:OO UTC)
 	 */
 	function alreadyPlayed(address _player) public view returns (bool) {
-		uint256 today = ( now - ( now % (60 * 60 * 24) ) ) / (60 * 60 * 24);
+		uint256 today = ( block.timestamp - ( block.timestamp % (60 * 60 * 24) ) ) / (60 * 60 * 24);
 		uint256 lastGame = ( playersMap[_player].lastGame - ( playersMap[_player].lastGame % (60 * 60 * 24) ) ) / (60 * 60 * 24);
 		return today == lastGame;
 	}
@@ -296,10 +297,10 @@ contract Tournament {
 	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
 	 */
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
+		(uint256 pPS, uint256 pPS2) = getPricePerShare();
 		if(Protocol.Yearn == protocol) {
-			return LPTokenAmount * playersMap[_player].depositPricePerShare / getPricePerShare()[0];
+			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
-			(uint256 pPS, uint256 pPS2) = getPricePerShare();
 			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
 		}
 	}

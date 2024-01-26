@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LPToken1: {
-      address: "0x4000F8820522AC96C4221b299876e3e53bCc8525",
+      address: "0xF342E904702b1D021F03f519D6D9614916b03f37",
       abi: [
         {
           inputs: [],
@@ -300,7 +300,7 @@ const deployedContracts = {
       },
     },
     LPToken2: {
-      address: "0x9338CA7d556248055f5751d85cDA7aD6eF254433",
+      address: "0x9849832a1d8274aaeDb1112ad9686413461e7101",
       abi: [
         {
           inputs: [],
@@ -593,7 +593,7 @@ const deployedContracts = {
       },
     },
     Tournament: {
-      address: "0x9c65f85425c619A6cB6D29fF8d57ef696323d188",
+      address: "0xa4E00CB342B36eC9fDc4B50b3d527c3643D4C49e",
       abi: [
         {
           inputs: [
@@ -715,6 +715,25 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "alreadyPlayed",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "contractLPToken",
           outputs: [
@@ -730,6 +749,114 @@ const deployedContracts = {
         {
           inputs: [],
           name: "endTime",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "fees",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getExpectedPoolPrize",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getFees",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getNumberOfPlayers",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getPoolPrize",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "getRank",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "rank",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "split",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "getRewardShare",
           outputs: [
             {
               internalType: "uint256",
@@ -842,25 +969,6 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_player",
-              type: "address",
-            },
-          ],
-          name: "livesOfPlayer",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
           inputs: [],
           name: "name",
           outputs: [
@@ -868,19 +976,6 @@ const deployedContracts = {
               internalType: "string",
               name: "",
               type: "string",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "numberOfPlayers",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -921,6 +1016,19 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "string",
+              name: "_move",
+              type: "string",
+            },
+          ],
+          name: "playAgainstPlayer",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "address",
               name: "_player",
               type: "address",
@@ -935,7 +1043,7 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "points",
+              name: "score",
               type: "uint256",
             },
             {
@@ -950,17 +1058,17 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "playerToLPToken",
-          outputs: [
-            {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          name: "players",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -974,30 +1082,26 @@ const deployedContracts = {
               type: "address",
             },
           ],
-          name: "playerToLastGame",
+          name: "playersMap",
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "score",
               type: "uint256",
             },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "playerToPoints",
-          outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "lastGame",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "depositPricePerShare",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "depositPricePerShare2",
               type: "uint256",
             },
           ],
@@ -1025,6 +1129,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "protocol",
+          outputs: [
+            {
+              internalType: "enum Tournament.Protocol",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "resolveBatch",
           outputs: [],
           stateMutability: "nonpayable",
@@ -1033,17 +1150,22 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "address",
-              name: "_player",
-              type: "address",
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
-          ],
-          name: "rewardTokenAmountOfPlayer",
-          outputs: [
             {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          name: "scoreToPlayers",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -1084,19 +1206,6 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "totalUnconvertedPoints",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
           name: "unstakeLPToken",
           outputs: [],
           stateMutability: "nonpayable",
@@ -1115,11 +1224,18 @@ const deployedContracts = {
           stateMutability: "view",
           type: "function",
         },
+        {
+          inputs: [],
+          name: "withdrawFees",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
       ],
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x7Cf4be31f546c04787886358b9486ca3d62B9acf",
+      address: "0x8ac5eE52F70AE01dB914bE459D8B3d50126fd6aE",
       abi: [
         {
           inputs: [
@@ -1233,7 +1349,7 @@ const deployedContracts = {
           name: "createTournament",
           outputs: [
             {
-              internalType: "address",
+              internalType: "contract Tournament",
               name: "newTournament",
               type: "address",
             },
