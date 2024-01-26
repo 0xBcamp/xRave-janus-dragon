@@ -26,9 +26,13 @@ contract Tournament {
 
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
 	event Staked(
+		address indexed player,
+		uint256 amount
 	);
 
 	event Unstaked(
+		address indexed player,
+		uint256 amount
 	);
 
 	// Constructor: Called once on contract deployment
@@ -78,16 +82,19 @@ contract Tournament {
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
 		playerToLPToken[msg.sender] += LPTokenAmount;
 		// emit: keyword used to trigger an event
-		emit Staked();
+		emit Staked(msg.sender, LPTokenAmount);
 	}
 
 	/**
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
 	function unstakeLPToken() public {
+		uint256 amount = playerToLPToken[msg.sender];
+		playerToLPToken[msg.sender] = 0;
+		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
 		// emit: keyword used to trigger an event
-		emit Unstaked();
+		emit Unstaked(msg.sender, amount);
 	}
 
 	/**

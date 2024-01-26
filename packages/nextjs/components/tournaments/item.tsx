@@ -4,15 +4,15 @@ import { useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
 export const Item = ({ tournament }: { tournament: string }) => {
-  const tournamentData = useContractRead({
+  const { data: tournamentData } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
   });
 
   let address = "";
-  if (tournamentData.data != undefined) {
-    address = tournamentData.data[2];
+  if (tournamentData != undefined) {
+    address = tournamentData[2];
   }
 
   const { data: decimals } = useContractRead({
@@ -23,7 +23,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
 
   console.log(tournamentData);
 
-  if (tournamentData.data == undefined) {
+  if (tournamentData == undefined) {
     return <></>;
   }
 
@@ -32,17 +32,17 @@ export const Item = ({ tournament }: { tournament: string }) => {
       <div className="flex min-w-0 gap-x-4">
         <div className="min-w-0 flex-auto">
           <p className="text-sm font-semibold leading-6 text-gray-900">
-            <Link href={`/tournament/${tournament}`}>{tournamentData.data[0]}</Link>
+            <Link href={`/tournament/${tournament}`}>{tournamentData[0]}</Link>
           </p>
-          <p className="mt-1 truncate text-xs leading-5 text-gray-500">{tournamentData.data[4]}</p>
+          <p className="mt-1 truncate text-xs leading-5 text-gray-500">{tournamentData[4]}</p>
         </div>
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
         <p className="text-sm leading-6 text-gray-900">
-          Reward: {formatUnits(tournamentData.data[7], decimals || 18)} {tournamentData.data[6]}
+          Reward: {formatUnits(tournamentData[7], decimals || 18)} {tournamentData[6]}
         </p>
         <p className="mt-1 text-xs leading-5 text-gray-500">
-          Open until <time dateTime={tournamentData.data[9].toString()}>{tournamentData.data[9].toString()}</time>
+          Open until <time dateTime={tournamentData[9].toString()}>{tournamentData[9].toString()}</time>
         </p>
       </div>
     </li>

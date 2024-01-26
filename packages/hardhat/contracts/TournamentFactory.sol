@@ -11,6 +11,7 @@ contract TournamentFactory {
 	// State Variables
 	address[] public TournamentArray; // Store deployed contracts
 	mapping(address => Tournament) public TournamentMap;
+	mapping(address => address) public TournamentPartner;
 	address public owner;
 
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
@@ -84,6 +85,13 @@ contract TournamentFactory {
 	 * Function that returns an array of all the tournament a player is registered to
 	 */
 	function getTournamentsByPlayer(address _player) external view returns (address[] memory) {
+
+	}
+
+	/**
+	 * Function that returns an array of all the tournament a partner created
+	 */
+	function getTournamentsByPartner(address _partner) external view returns (address[] memory) {
 
 	}
 

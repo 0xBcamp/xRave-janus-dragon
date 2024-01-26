@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useContractRead, useContractWrite } from "wagmi";
+import { useContractEvent } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 
@@ -7,8 +9,9 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   const writeTx = useTransactor();
   // const { address } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
+  const [approved, setApproved] = useState(false);
 
-  const tournamentData = useContractRead({
+  const { data: tournamentData } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
@@ -19,11 +22,11 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   let amount = 0;
   let LPTokenSymbol = "";
 
-  if (tournamentData.data != undefined) {
-    spender = tournamentData.data[1];
-    LPaddr = tournamentData?.data[2];
-    LPTokenSymbol = tournamentData?.data[4];
-    amount = Number(tournamentData?.data[5]);
+  if (tournamentData != undefined) {
+    spender = tournamentData[1];
+    LPaddr = tournamentData[2];
+    LPTokenSymbol = tournamentData[4];
+    amount = Number(tournamentData[5]);
   }
 
   const { data: balance } = useContractRead({
@@ -32,6 +35,18 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     functionName: "balanceOf",
     args: [connectedAddress],
   });
+
+  const { data: allowance } = useContractRead({
+    abi: DeployedContracts[31337].LPToken1.abi,
+    address: LPaddr,
+    functionName: "allowance",
+    args: [connectedAddress, spender],
+  });
+
+  console.log(allowance);
+  if (allowance != undefined && allowance >= BigInt(amount) && !approved) {
+    setApproved(true);
+  }
 
   const { data: decimals } = useContractRead({
     abi: DeployedContracts[31337].LPToken1.abi,
@@ -68,6 +83,21 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     }
   };
 
+  useContractEvent({
+    address: LPaddr,
+    abi: DeployedContracts[31337].LPToken1.abi,
+    eventName: "Approval",
+    listener: log => {
+      if (
+        log[0].args.owner == connectedAddress &&
+        spender == log[0].args.spender &&
+        (log[0].args.value || 0n) >= BigInt(amount)
+      ) {
+        setApproved(true);
+      }
+    },
+  });
+
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
@@ -79,10 +109,10 @@ export const Enter = ({ tournament }: { tournament: string }) => {
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
             <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button className="btn btn-secondary" onClick={() => approveToken()}>
+              <button className="btn btn-secondary" disabled={approved} onClick={() => approveToken()}>
                 Approve {LPTokenSymbol}
               </button>
-              <button className="btn btn-secondary" onClick={() => depositToken()}>
+              <button className="btn btn-secondary" disabled={!approved} onClick={() => depositToken()}>
                 Deposit {formatUnits(BigInt(amount) || 0n, decimals || 18).toString()} {LPTokenSymbol}
               </button>
             </div>
