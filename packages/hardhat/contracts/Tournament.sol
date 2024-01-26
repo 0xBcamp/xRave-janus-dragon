@@ -18,11 +18,6 @@ contract UniswapInterface {
 contract Tournament {
 	// State Variables
 	address public immutable owner;
-	mapping(address => uint256) public playerToScore; // how many points each player has
-	mapping(address => uint256) public playerToLastGame; // when the player last played (used to determine if the player already played today)
-	mapping(address => uint256) public playerToDepositPricePerShare; // price per share at deposit
-	mapping(address => uint256) public playerToDepositPricePerShare2; // price per share at deposit (only used for UniswapV2 LPs)
-	address[] public players;
 	string public name; // Name of the tournament
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	IERC20Metadata poolIncentivized;
@@ -30,13 +25,23 @@ contract Tournament {
 	uint256 public LPTokenAmount; // Amount of LP to be deposited by the players
 	uint256 public startTime;
 	uint256 public endTime;
+	Protocol public protocol;
+
 	uint256 realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 realizedFees; // Amount of LP fees left by players that withdrawn
 	uint256 unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
-	Protocol public protocol;
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
+
 	uint256 topScore = 0;
-	mapping(uint256 => address[]) public scoreToPlayers;
+	address[] public players;
+	mapping(uint256 => address[]) public scoreToPlayers; // Used for ranking
+	mapping(address => Player) public playersMap;
+	struct Player {
+		uint score; // how many points each player has
+		uint lastGame; // when the player last played (used to determine if the player already played today)
+		uint depositPricePerShare; // price per share at deposit
+		uint depositPricePerShare2; // price per share at deposit (only used for UniswapV2 LPs)
+	}
 
 	enum Protocol {
 		Uniswap,
@@ -105,8 +110,8 @@ contract Tournament {
 	function stakeLPToken() public {
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
-		playerToDepositPricePerShare[msg.sender] = pPS;
-		playerToDepositPricePerShare2[msg.sender] = pPS2;
+		playersMap[msg.sender].depositPricePerShare = pPS;
+		playersMap[msg.sender].depositPricePerShare2 = pPS2;
 		players.push(msg.sender);
 		// emit: keyword used to trigger an event
 		emit Staked(msg.sender, LPTokenAmount);
@@ -127,7 +132,8 @@ contract Tournament {
 		unclaimedPoolPrize -= share; // TODO: useful?
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
-		playerToDepositPricePerShare[msg.sender] = 0; // Reuse of this variable to indicate that the player unstaked its LP token
+		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
+
 		// emit: keyword used to trigger an event
 		emit Unstaked(msg.sender, amount);
 	}
@@ -158,7 +164,7 @@ contract Tournament {
 	 * Function that allows the player to submit a move for play against another player
 	 */
 	function playAgainstPlayer(string memory _move) public {
-		playerToLastGame[msg.sender] = now;
+		playersMap[msg.sender].lastGame = now;
 		updateScore(msg.sender, 1); // TODO: game logic
 	}
 
@@ -168,30 +174,31 @@ contract Tournament {
 	function updateScore(address, _player, uint256 _points) internal {
 		if(_points == 0) { return; }
 		// We first remove the player from it's current rank
-		for(uint i=0; i<scoreToPlayers[playerToScore[_player]].length; i++) {
-			if(scoreToPlayers[playerToScore[_player]][i] == _player) {
-				scoreToPlayers[playerToScore[_player]][i] = scoreToPlayers[playerToScore[_player]][scoreToPlayers[playerToScore[_player]].length - 1];
+		uint score = playersMap[_player].score;
+		for(uint i=0; i<scoreToPlayers[score].length; i++) {
+			if(scoreToPlayers[score][i] == _player) {
+				scoreToPlayers[score][i] = scoreToPlayers[score][scoreToPlayers[score].length - 1];
 				break;
 			}
 		}
-		scoreToPlayers[playerToScore[_player]].pop();
+		scoreToPlayers[score].pop();
 		// Now we can update the score and push the user to its new rank
-		playerToScore[_player] += _points;
-		if(topScore < playerToScore[_player]) {
-			topScore = playerToScore[_player];
+		playersMap[_player].score += _points;
+		if(topScore < playersMap[_player].score) {
+			topScore = playersMap[_player].score;
 		}
-		scoreToPlayers[playerToScore[_player]].push(_player);
+		scoreToPlayers[playersMap[_player].score].push(_player);
 	}
 
 	/**
 	 * Function that returns the player's rank and how many players share this rank
 	 */
 	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
-		for(uint i=topScore; i>=playerToScore[_player]; i--) {
+		for(uint i=topScore; i>=playersMap[_player].score; i--) {
 			if(scoreToPlayers[i].length > 0) {
 				rank += 1;
 			}
-			split = scoreToPlayers[playerToScore[_player]].length;
+			split = scoreToPlayers[playersMap[_player].score].length;
 		}
 	}
 
@@ -223,7 +230,7 @@ contract Tournament {
 	function getPoolPrize() public view returns (uint256) {
 		uint256 extraLP = 0;
 		for (uint i=0; i<players.length; i++) {
-			if(playerToDepositPricePerShare[players[i]] == 0) continue; // Already counted in realizedPoolPrize
+			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
 			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
 		}
 		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
@@ -265,8 +272,11 @@ contract Tournament {
 		return now < startTime;
 	}
 
+	/**
+	 * Function that returns true if the address deposited and did not withdraw
+	 */
 	function isPlayer(address _player) public view returns (bool) {
-		return playerToDepositPricePerShare[_player] > 0;
+		return playersMap[_player].depositPricePerShare > 0;
 	}
 
 	/**
@@ -274,12 +284,12 @@ contract Tournament {
 	 */
 	function alreadyPlayed(address _player) public view returns (bool) {
 		uint256 today = ( now - ( now % (60 * 60 * 24) ) ) / (60 * 60 * 24);
-		uint256 lastGame = ( playerToLastGame[_player] - ( playerToLastGame[_player] % (60 * 60 * 24) ) ) / (60 * 60 * 24);
+		uint256 lastGame = ( playersMap[_player].lastGame - ( playersMap[_player].lastGame % (60 * 60 * 24) ) ) / (60 * 60 * 24);
 		return today == lastGame;
 	}
 
 	function pointsOfPlayer(address _player) public view returns (uint256) {
-		return playerToScore[_player];
+		return playersMap[_player].score;
 	}
 
 	/**
@@ -287,12 +297,10 @@ contract Tournament {
 	 */
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
 		if(Protocol.Yearn == protocol) {
-			// return playerToLPToken[_player] * playerToDepositPricePerShare[_player] / getPricePerShare()[0];
-			return LPTokenAmount * playerToDepositPricePerShare[_player] / getPricePerShare()[0];
+			return LPTokenAmount * playersMap[_player].depositPricePerShare / getPricePerShare()[0];
 		} else { // Uniswap
 			(uint256 pPS, uint256 pPS2) = getPricePerShare();
-			// return playerToLPToken[_player] / ( ( ( pPS / playerToDepositPricePerShare[_player] ) + ( pPS2 / playerToDepositPricePerShare2[_player] ) ) / 2 );
-			return LPTokenAmount / ( ( ( pPS / playerToDepositPricePerShare[_player] ) + ( pPS2 / playerToDepositPricePerShare2[_player] ) ) / 2 );
+			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
 		}
 	}
 
@@ -304,10 +312,10 @@ contract Tournament {
 		return isEnded();
 	}
 
-	function player(address _player) public view returns (uint256 LPToken, uint256 points, uint256 lastGame) {
+	function player(address _player) public view returns (uint256 LPToken, uint256 score, uint256 lastGame) {
 		LPToken = LPTokenAmountOfPlayer(_player);
-		points = pointsOfPlayer(_player);
-		lastGame = playerToLastGame[_player];
+		score = playersMap[_player].score;
+		lastGame = playersMap[_player].lastGame;
 	}
 
 }
