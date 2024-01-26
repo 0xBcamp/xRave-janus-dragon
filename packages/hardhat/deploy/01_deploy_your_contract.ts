@@ -23,22 +23,11 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const { deploy } = hre.deployments;
   const LPToken1 = await hre.ethers.getContract<Contract>("LPToken1", deployer);
   const LPToken2 = await hre.ethers.getContract<Contract>("LPToken2", deployer);
-  const RewardToken1 = await hre.ethers.getContract<Contract>("RewardToken1", deployer);
-  const RewardToken2 = await hre.ethers.getContract<Contract>("RewardToken2", deployer);
 
   await deploy("Tournament", {
     from: deployer,
     // Contract constructor arguments
-    args: [
-      deployer,
-      "Tournament",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      0,
-      0,
-      0,
-      0,
-    ],
+    args: [deployer, "Tournament", "0x0000000000000000000000000000000000000000", 0, 0, 0],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
@@ -60,8 +49,6 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account
   await LPToken1.transfer(frontBurner, hre.ethers.parseEther("1000"));
   await LPToken2.transfer(frontBurner, hre.ethers.parseEther("1000"));
-  await RewardToken1.transfer(frontBurner, hre.ethers.parseEther("1000"));
-  await RewardToken2.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };
 
 export default deployContracts;

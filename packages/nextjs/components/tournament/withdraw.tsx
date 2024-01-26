@@ -14,23 +14,10 @@ export const Withdraw = () => {
     functionName: "LPTokenSymbol",
   });
 
-  const rewardTokenSymbol = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
-    address: params.addr,
-    functionName: "rewardTokenSymbol",
-  });
-
   const LPTokenAmountOfPlayer = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
     functionName: "LPTokenAmountOfPlayer",
-    args: [connectedAddress],
-  });
-
-  const rewardTokenAmountOfPlayer = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
-    address: params.addr,
-    functionName: "rewardTokenAmountOfPlayer",
     args: [connectedAddress],
   });
 
@@ -63,8 +50,7 @@ export const Withdraw = () => {
             <span className="block text-4xl font-bold">and get your rewards</span>
           </h1>
           <p className="text-center text-lg">
-            {LPTokenAmountOfPlayer?.data?.toString()} {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data} and{" "}
-            {rewardTokenAmountOfPlayer?.data?.toString()} {rewardTokenSymbol.isLoading ? "..." : rewardTokenSymbol.data}{" "}
+            {LPTokenAmountOfPlayer?.data?.toString()} {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data}
             can be withdrawn.
             <button className="btn btn-secondary" onClick={() => writeAsync()}>
               Unstake and receive earned rewards

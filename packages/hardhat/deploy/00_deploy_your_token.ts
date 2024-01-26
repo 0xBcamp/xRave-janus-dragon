@@ -43,29 +43,6 @@ const deployTokens: DeployFunction = async function (hre: HardhatRuntimeEnvironm
 
   // Get the deployed contract
   // const LPToken1 = await hre.ethers.getContract("LPToken1", deployer);
-
-  await deploy("RewardToken1", {
-    from: deployer,
-    // Contract constructor arguments
-    args: [],
-    log: true,
-    // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
-    // automatically mining the contract deployment transaction. There is no effect on live networks.
-    autoMine: true,
-  });
-
-  await deploy("RewardToken2", {
-    from: deployer,
-    // Contract constructor arguments
-    args: [],
-    log: true,
-    // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
-    // automatically mining the contract deployment transaction. There is no effect on live networks.
-    autoMine: true,
-  });
-
-  // Get the deployed contract
-  // const RewardToken1 = await hre.ethers.getContract("RewardToken1", deployer);
 };
 
 export default deployTokens;
