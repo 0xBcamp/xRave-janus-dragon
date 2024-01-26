@@ -19,7 +19,7 @@ contract Tournament {
 	// State Variables
 	address public immutable owner;
 	// mapping(address => uint256) public playerToLPToken; // how much LP token each player has deposited
-	mapping(address => uint256) public playerToPoints; // how many points each player has
+	mapping(address => uint256) public playerToScore; // how many points each player has
 	mapping(address => uint256) public playerToLastGame; // when the player last played
 	mapping(address => uint256) public playerToDepositPricePerShare; // price per share at deposit
 	mapping(address => uint256) public playerToDepositPricePerShare2; // price per share at deposit
@@ -32,12 +32,14 @@ contract Tournament {
 	uint256 public LPTokenAmount;
 	uint256 public startTime;
 	uint256 public endTime;
-	uint256 public totalUnconvertedPoints;
+	uint256 public totalUnconvertedScore;
 	uint256 realizedPoolPrize;
 	uint256 realizedFees;
 	uint256 unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	Protocol public protocol;
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
+	uint256 topScore = 0;
+	mapping(uint256 => address[]) public scoreToPlayers;
 
 	enum Protocol {
 		Uniswap,
@@ -117,6 +119,8 @@ contract Tournament {
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount);
 		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - extraPoolPrize;
+		// rewards from the game
+		amount += getPoolPrize() * getRewardShare(_player) / 1 ether;
 		// playerToLPToken[msg.sender] = 0;
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
@@ -149,6 +153,41 @@ contract Tournament {
 		playerToLastGame[msg.sender] = now;
 	}
 
+	function updateScore(address, _player, uint256 _points) internal {
+		for(uint i=0; i<scoreToPlayers[playerToScore[_player]].length; i++) {
+			if(scoreToPlayers[playerToScore[_player]][i] == _player) {
+				scoreToPlayers[playerToScore[_player]][i] = scoreToPlayers[playerToScore[_player]][scoreToPlayers[playerToScore[_player]].length - 1];
+				break;
+			}
+		}
+		scoreToPlayers[playerToScore[_player]].pop();
+		playerToScore[_player] += _points;
+		if(topScore < playerToScore[_player]) {
+			topScore = playerToScore[_player];
+		}
+		scoreToPlayers[playerToScore[_player]].push(_player);
+	}
+
+	/**
+	 * Function that returns the player's rank and how many players share this rank
+	 */
+	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
+		for(uint i=topScore; i>=playerToScore[_player]; i--) {
+			if(scoreToPlayers[i].length > 0) {
+				rank += 1;
+			}
+			split = scoreToPlayers[playerToScore[_player]].length;
+		}
+	}
+
+	/**
+	 * Function that returns the player's reward share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
+	 */
+	function getRewardShare(address _player) public view returns (uint256) {
+		(uint256 rank, uint256 split) = getRank();
+		return (1 ether / (2 ** rank)) / split;
+	}
+
 	function getPricePerShare() private returns(uint256, uint256) {
 		if(Protocol.Yearn == protocol) {
 			YearnInterface yearn = YearnInterface(poolIncentivized);
@@ -158,7 +197,7 @@ contract Tournament {
 		}
 	}
 
-	function getPrizePool() public view returns (uint256) {
+	function getPoolPrize() public view returns (uint256) {
 		uint256 extraLP = 0;
 		for (uint i=0; i<players.length; i++) {
 			if(playerToDepositPricePerShare[players[i]] == 0) continue; // Already counted in realizedPoolPrize
@@ -167,8 +206,12 @@ contract Tournament {
 		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
 	}
 
+	function getExpectedPoolPrize() public view returns (uint256) {
+		return getPoolPrize() * (endTime - startTime) / (now - startTime);
+	}
+
 	function getFees() public view returns (uint256) {
-		return fees / 1 ether * getPrizePool();
+		return fees / 1 ether * getPoolPrize();
 	}
 
 	function getNumberOfPlayers() public view returns (uint256) {
@@ -200,7 +243,7 @@ contract Tournament {
 	}
 
 	function pointsOfPlayer(address _player) public view returns (uint256) {
-		return playerToPoints[_player];
+		return playerToScore[_player];
 	}
 
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
