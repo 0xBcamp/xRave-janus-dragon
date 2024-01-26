@@ -4,6 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 contract Tournament {
 	// State Variables
 	address public immutable owner;
@@ -12,14 +14,15 @@ contract Tournament {
 	mapping(address => uint256) public playerToLastGame; // when the player last played
 	string public name;
 	uint256 public contractLPToken; // amount of LP token held by the contract
-	address public poolIncentivized;
-	address public rewardToken;
+	IERC20Metadata poolIncentivized;
+	IERC20Metadata rewardToken;
 	string public rewardTokenSymbol;
 	uint256 public rewardAmount;
 	string public LPTokenSymbol;
 	uint256 public LPTokenAmount;
 	uint256 public startTime;
 	uint256 public endTime;
+	uint256 public totalUnconvertedPoints;
 
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
 	event Staked(
@@ -30,8 +33,21 @@ contract Tournament {
 
 	// Constructor: Called once on contract deployment
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
-	constructor(address _owner) {
+	constructor(address _owner, string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
 		owner = _owner;
+		name = _name;
+		if(_rewardToken != address(0)) {
+			rewardToken = IERC20Metadata(_rewardToken);
+			rewardTokenSymbol = rewardToken.symbol();		
+		}
+		rewardAmount = _rewardAmount;
+		LPTokenAmount = _LPTokenAmount;
+		if(_poolIncentivized != address(0)) {
+			poolIncentivized = IERC20Metadata(_poolIncentivized);
+			LPTokenSymbol = poolIncentivized.symbol();
+		}
+		startTime = _startTime;
+		endTime = _endTime;
 	}
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
@@ -42,11 +58,25 @@ contract Tournament {
 		_;
 	}
 
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, address rRewardToken, string memory rLPTokenSymbol, uint256 rLPTokenAmount, string memory rRewardTokenSymbol, uint256 rRewardAmount, uint256 rStartTime, uint256 rEndTime) {
+		rName = name;
+		contractAddress = address(this);
+		rPoolIncentivized = address(poolIncentivized);
+		rRewardToken = address(rewardToken);
+		rLPTokenSymbol = LPTokenSymbol;
+		rLPTokenAmount = LPTokenAmount;
+		rRewardTokenSymbol = rewardTokenSymbol;
+		rRewardAmount = rewardAmount;
+		rStartTime = startTime;
+		rEndTime = endTime;
+	}
+
 	/**
 	 * Function that allows anyone to stake their LP token to register in the tournament
 	 */
 	function stakeLPToken() public {
-
+		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
+		playerToLPToken[msg.sender] += LPTokenAmount;
 		// emit: keyword used to trigger an event
 		emit Staked();
 	}
@@ -63,7 +93,13 @@ contract Tournament {
 	/**
 	 * Function that allows the bot to sumbit a batch of signed moves for resolution
 	 */
-	function resolve() public {
+	function resolveBatch() public {
+	}
+
+	/**
+	 * Function that allows the player to submit a move for play against Chainlink VRF
+	 */
+	function playAgainstContract(string memory _move) public returns(uint256 contractMove) {
 	}
 
 	function isActive() public view returns (bool) {
@@ -75,7 +111,8 @@ contract Tournament {
 	function isFuture() public view returns (bool) {
 	}
 
-	function isPlayer() public view returns (bool) {
+	function isPlayer(address _player) public view returns (bool) {
+		return playerToLPToken[_player] > 0;
 	}
 
 	function numberOfPlayers() public view returns (uint256) {

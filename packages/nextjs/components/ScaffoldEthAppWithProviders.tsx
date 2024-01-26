@@ -14,6 +14,8 @@ import { useGlobalState } from "~~/services/store/store";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { appChains } from "~~/services/web3/wagmiConnectors";
 
+//import { rainbowkitUseMoonConnector } from "@moonup/moon-rainbowkit";
+//import { AUTH, MOON_SESSION_KEY, Storage } from "@moonup/moon-types";
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   const price = useNativeCurrencyPrice();
   const setNativeCurrencyPrice = useGlobalState(state => state.setNativeCurrencyPrice);
