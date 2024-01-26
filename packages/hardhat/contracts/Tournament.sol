@@ -121,6 +121,7 @@ contract Tournament {
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
 	function unstakeLPToken() public {
+		require(isPlayer(msg.sender), "You have nothing to withdraw");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
@@ -144,6 +145,7 @@ contract Tournament {
 	 * Partial fees can be withdran at any time after players begun to withdraw
 	 */
 	function withdrawFees() public onlyOwner {
+		require(realizedFees > 0, "No fees to withdraw");
 		require(IERC20(poolIncentivized).transfer(msg.sender, realizedFees), "Transfer of LP token Failed");		
 		realizedFees = 0;
 	}
@@ -208,6 +210,7 @@ contract Tournament {
 	function getRewardShare(address _player) public view returns (uint256) {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
+		if(split == 0) { return 0; }
 		return (1 ether / (2 ** rank)) / split;
 	}
 
@@ -241,6 +244,7 @@ contract Tournament {
 	 * Function that returns the expected pool prize at the end of the tournament from the accrued LP since the start
 	 */
 	function getExpectedPoolPrize() public view returns (uint256) {
+		if(isFuture()) return 0;
 		return getPoolPrize() * (endTime - startTime) / (block.timestamp - startTime);
 	}
 
@@ -248,7 +252,7 @@ contract Tournament {
 	 * Function that returns the amount of fees accrued by the protocol on this tournament
 	 */
 	function getFees() public view returns (uint256) {
-		return fees / 1 ether * getPoolPrize();
+		return (fees / 1 ether) * getPoolPrize();
 	}
 
 	function getNumberOfPlayers() public view returns (uint256) {

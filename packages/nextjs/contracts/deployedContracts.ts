@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     LPToken1: {
-      address: "0xF342E904702b1D021F03f519D6D9614916b03f37",
+      address: "0x262e2b50219620226C5fB5956432A88fffd94Ba7",
       abi: [
         {
           inputs: [],
@@ -300,7 +300,7 @@ const deployedContracts = {
       },
     },
     LPToken2: {
-      address: "0x9849832a1d8274aaeDb1112ad9686413461e7101",
+      address: "0x10e38eE9dd4C549b61400Fc19347D00eD3edAfC4",
       abi: [
         {
           inputs: [],
@@ -593,7 +593,7 @@ const deployedContracts = {
       },
     },
     Tournament: {
-      address: "0xa4E00CB342B36eC9fDc4B50b3d527c3643D4C49e",
+      address: "0xd753c12650c280383Ce873Cc3a898F6f53973d16",
       abi: [
         {
           inputs: [
@@ -1235,7 +1235,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x8ac5eE52F70AE01dB914bE459D8B3d50126fd6aE",
+      address: "0xd710a67624Ad831683C86a48291c597adE30F787",
       abi: [
         {
           inputs: [
