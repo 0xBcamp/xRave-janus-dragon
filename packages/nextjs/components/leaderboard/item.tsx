@@ -1,7 +1,8 @@
 // import { formatUnits } from "viem";
 import { useContractRead } from "wagmi";
 import { useAccount } from "wagmi";
-import { SparklesIcon, TrophyIcon, UserIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon, UserIcon } from "@heroicons/react/24/outline";
+import { TrophyIcon } from "@heroicons/react/24/solid";
 import { Address } from "~~/components/scaffold-eth";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
@@ -19,11 +20,22 @@ export const Item = ({ tournament, player, score }: { tournament: string; player
     return <></>;
   }
 
+  let trophyColor = "h-4 w-4 mr-1";
+  if (playerRank[0] == 1n) {
+    trophyColor += " text-yellow-400";
+  } else if (playerRank[0] == 2n) {
+    trophyColor += " text-gray-300";
+  } else if (playerRank[0] == 3n) {
+    trophyColor += " text-yellow-700";
+  } else {
+    trophyColor += " text-gray-600";
+  }
+
   return (
     <>
       <li key={player} className="grid grid-cols-3 justify-items-start flex px-5 py-5 bg-base-100 rounded-3xl">
         <div className="flex items-center justify-self-start">
-          <TrophyIcon className="h-4 w-4 mr-1" /> {playerRank[0].toString()}
+          <TrophyIcon className={trophyColor} /> {playerRank[0].toString()}
         </div>
         {player === connectedAddress ? (
           <div className="flex items-center">
