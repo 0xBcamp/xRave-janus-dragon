@@ -9,7 +9,7 @@ export const Play = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
-  const [move, setMove] = useState("");
+  const [move, setMove] = useState(3);
 
   const alreadyPlayed = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
@@ -67,13 +67,13 @@ export const Play = () => {
           {!alreadyPlayed.data ? (
             <div>
               <div className="inline-flex rounded-md shadow-sm" role="group">
-                <button className="btn btn-secondary" disabled={move == "ROCK"} onClick={() => setMove("ROCK")}>
+                <button className="btn btn-secondary" disabled={move == 0} onClick={() => setMove(0)}>
                   Rock
                 </button>
-                <button className="btn btn-secondary" disabled={move == "PAPER"} onClick={() => setMove("PAPER")}>
+                <button className="btn btn-secondary" disabled={move == 1} onClick={() => setMove(1)}>
                   Paper
                 </button>
-                <button className="btn btn-secondary" disabled={move == "SCISSORS"} onClick={() => setMove("SCISSORS")}>
+                <button className="btn btn-secondary" disabled={move == 2} onClick={() => setMove(2)}>
                   Scissors
                 </button>
               </div>

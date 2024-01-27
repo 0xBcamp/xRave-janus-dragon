@@ -220,17 +220,19 @@ contract Tournament {
 	/**
 	 * Function that allows the player to submit a move for play against Chainlink VRF
 	 */
-	function playAgainstContract(string memory _move) public returns(uint256 contractMove) {
+	function playAgainstContract(uint8 _move) public returns(uint256 contractMove) {
+		require(isActive(), "Tournament is not active");
 	}
 		
 	/**
 	 * Function that allows the player to submit a move for play against another player
 	 */
-	function playAgainstPlayer(string memory _move) public {
+	function playAgainstPlayer(uint8 _move) public {
+		// require(isActive(), "Tournament is not active");
 		playersMap[msg.sender].lastGame = block.timestamp;
-		if(keccak256(abi.encode(_move)) == keccak256("ROCK")) updateScore(msg.sender, 0); // TODO: game logic
-		else if(keccak256(abi.encode(_move)) == keccak256("PAPER")) updateScore(msg.sender, 1);
-		else updateScore(msg.sender, 2);
+		if(_move == uint8(Moves.Paper)) updateScore(msg.sender, 0); // TODO: game logic
+		else if(_move == uint8(Moves.Rock)) updateScore(msg.sender, 1);
+		else updateScore(msg.sender, 2); // Scissors
 	}
 
 	/**
