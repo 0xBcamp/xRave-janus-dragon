@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
-//@note could not use 8.20 because of PUSH0 error
+//@note could not use 8.20 because of PUSH0 error in Remix 8.17 is default for ScaffoldETH
+// WHY DEAL WITH LIVES?? -> your deposits are your lives. 
+//@todo add getters 
+
 // Layout of Contract:
 // version
 // imports
@@ -33,19 +36,25 @@ contract SingleGame is VRFConsumerBaseV2 {
     //////////////
     error NoLivesLeft();
     error InvalidMove();
+    error NotEnoughFunds();
 
 
     /// State Variables ///
 
-    // @todo do I need this?
+    // @todo do I need lives/points?
     uint256 lives; // must be over 0 to play
     uint256 points;
-    uint256 MINIMUM_DEPOSIT = 1000000000000000; //0.001 eth
+    uint256 MINIMUM_DEPOSIT = 1000000000000000; //0.001 eth @todo replace w/token
+
+    uint8 currentMove; // 0 = no move must start game, 1 = rock, 2 = paper, 3 = scissors @todo encrypt 1, 2, 3?? 
+    address currentPlayer;
+
 
     mapping(address => uint256) public livesLeft; // lives left of player
     mapping(address => uint256) public playersPoints; // number of points a player has
     mapping(address => uint256) public deposits; // deposits of player
 
+    //mapping(address => uint8) private currentPlayerMove; // current move of player @todo encrypt
     ///////////////////////////////
     /// Chainlink VRF Variables ///
     ///////////////////////////////
@@ -80,13 +89,13 @@ contract SingleGame is VRFConsumerBaseV2 {
     /// Events /// 
 
     event ContractPlayed(uint256 move);
+    event MoveMade(uint256 move);
     event PlayerPlayedAganistContract(uint8 playerMove);
     event GameResolved(address winner);
     event RequestSent(uint256 requestId);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
      constructor(uint64 subscriptionId, bytes32 gasLane, uint32 callbackGasLimit, address vrfCoordinatorV2)
-        //address payable destinationWallet
         VRFConsumerBaseV2(vrfCoordinatorV2) {
             i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
             i_subscriptionId = subscriptionId;
@@ -94,42 +103,127 @@ contract SingleGame is VRFConsumerBaseV2 {
             gasLimit = callbackGasLimit;
         }
 
+    ///////////////////////
+    /// Fund Management ///
+    ///////////////////////
+
+    function deposit(uint256 amount) public  {
+        if(amount < MINIMUM_DEPOSIT){
+            revert NotEnoughFunds();
+        }
+
+        deposits[msg.sender] += amount;
+        livesLeft[msg.sender] += 10; //@todo deposit amount to lives amount / MINIMUM_DEPOSIT;
+    }
+
+    function withdraw(uint256 amount) public {
+        if(deposits[msg.sender] < amount){
+            revert NotEnoughFunds();
+        }
+
+        deposits[msg.sender] -= amount;
+        livesLeft[msg.sender] = 0;
+    }   
+
+    //////////////////////
+    /// Play Functions ///
+    //////////////////////
+
     ///@param playerMove - 0 = rock, 1 = paper, 2 = scissors
     ///outcome - 0 = draw, 1 = win, 2 = lose
     //@todo uint8 for variables?
     function playAganistContract(uint8 playerMove) public /*payable*/ {
-        // if(playerMove > 2){
-        //     revert InvalidMove();
-        // }
+        if(playerMove > 2){
+            revert InvalidMove();
+        }
         
-        // if(livesLeft[msg.sender] == 0){
-        //     revert NoLivesLeft();
-        // }
+        if(livesLeft[msg.sender] == 0){
+            revert NoLivesLeft();
+        }
 
-        // if(deposits[msg.sender] <= MINIMUM_DEPOSIT){
-        //     revert NoLivesLeft();
-        // }
+        if(deposits[msg.sender] <= MINIMUM_DEPOSIT){
+            revert NoLivesLeft();
+        }
 
-        // livesLeft[msg.sender] -= 1;
+        livesLeft[msg.sender] -= 1;
         _requestRandomWords(playerMove, msg.sender);
 
         emit PlayerPlayedAganistContract(playerMove);
 
     }
 
-    function resolveGame(uint256 requestId) public returns (address winner) {
+    function play(uint8 move) public /*payable*/ {
+        if(move == 0 || move > 3){
+            revert InvalidMove();
+        }
+        
+        if(livesLeft[msg.sender] == 0){
+            revert NoLivesLeft();
+        }
+
+        if(deposits[msg.sender] <= MINIMUM_DEPOSIT){
+            revert NoLivesLeft();
+        }
+
+        livesLeft[msg.sender] -= 1;
+
+        //store move
+        if(currentMove > 0){
+            //resolve game -> set currentMove to 0
+            _resolveGame(move);     
+        } else {
+            currentMove = move;
+            currentPlayer = msg.sender;
+        }
+        
+        emit MoveMade(move);
+
+    }
+
+    function _resolveGame(uint8 move) internal returns (address winner){
+        if(move == currentMove){
+            //draw
+            playersPoints[msg.sender] += 2;
+            playersPoints[currentPlayer] += 2;
+
+            winner = address(0);
+
+        } else if ((move + 1) % 3 == currentMove) {
+            // currentPlayer wins + 4 points & refunded life // @todo
+            playersPoints[currentPlayer] += 4;
+            winner = currentPlayer;
+        } else {
+            // currentPlayer loses
+            playersPoints[msg.sender] += 4;
+            winner = msg.sender;
+        }
+
+        currentMove = 0;
+        currentPlayer = address(0);
+        return winner;
+    }
+
+    function startGameWithWager(uint256 wager) public {
+        // @todo
+    }
+
+
+    //@todo make this resolve pvp game too
+    function resolveVrfGame(uint256 requestId) public returns (address winner) {
         ContractGame storage game = contractGameRequestId[requestId];
 
         if ((game.playerMove + 1) % 3 == game.vrfMove) {
             // player wins + 2 points & refunded life // @todo
             playersPoints[game.player] += 2;
+            livesLeft[game.player] += 1;
             game.winner = game.player;
         } else if (game.playerMove == game.vrfMove) {
             // player ties + 1 points refund life??
             playersPoints[game.player] += 1;
+            livesLeft[game.player] += 1;
         } else {
             // player loses
-            livesLeft[msg.sender] -= 1;
+            //livesLeft[msg.sender] -= 1;
             game.winner = address(i_vrfCoordinator);
         }
 
@@ -141,8 +235,6 @@ contract SingleGame is VRFConsumerBaseV2 {
     //// VRFv2 functions ///
     ////////////////////////
 
-    // test gaslane: 0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc
-    // mock vrf: 0xd9145CCE52D386f254917e481eB44e9943F39138
     // fuji id: 1341
     //  gaslane: 0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61
     // vrf: 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
@@ -198,7 +290,7 @@ contract SingleGame is VRFConsumerBaseV2 {
         game.randomWords = randomWords;
         game.vrfMove = vrfMove;
 
-        resolveGame(requestId);
+        resolveVrfGame(requestId);
         
         emit ContractPlayed(vrfMove);
     }
