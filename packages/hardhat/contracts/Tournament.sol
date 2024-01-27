@@ -22,6 +22,7 @@ contract Tournament {
 	uint256 public contractLPToken; // amount of LP token held by the contract
 	IERC20Metadata poolIncentivized;
 	string public LPTokenSymbol;
+	uint256 public LPTokenDecimals;
 	uint256 public LPTokenAmount; // Amount of LP to be deposited by the players
 	uint256 public startTime;
 	uint256 public endTime;
@@ -29,7 +30,7 @@ contract Tournament {
 
 	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
-	uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
+	// uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
 
 	uint256 public topScore = 0;
@@ -76,6 +77,7 @@ contract Tournament {
 		if(_poolIncentivized != address(0)) {
 			poolIncentivized = IERC20Metadata(_poolIncentivized);
 			LPTokenSymbol = poolIncentivized.symbol();
+			LPTokenDecimals = poolIncentivized.decimals();
 			if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
 				protocol = Protocol.Uniswap;
 			} else {
@@ -152,14 +154,14 @@ contract Tournament {
 			if(scoreToPlayers[i].length > 0) {
 				rank += 1;
 			}
-			split = scoreToPlayers[playersMap[_player].score].length;
 		}
+		split = scoreToPlayers[playersMap[_player].score].length;
 	}
 
 	/**
-	 * Function that returns the player's reward share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
+	 * Function that returns the player's prize share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
 	 */
-	function getRewardShare(address _player) public view returns (uint256) {
+	function getPrizeShare(address _player) public view returns (uint256) {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
 		if(split == 0) { return 0; }
@@ -179,6 +181,13 @@ contract Tournament {
 	}
 
 	/**
+	 * Function that returns the amount of LP token earned by the player
+	 */
+	function getPrizeAmount(address _player) public view returns (uint256) {
+		return getPoolPrize() * getPrizeShare(_player) / 1 ether;
+	}
+
+	/**
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
 	function unstakeLPToken() public {
@@ -189,9 +198,8 @@ contract Tournament {
 		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - extraPoolPrize;
 		// Add rewards from the game
-		uint share = getRewardShare(msg.sender);
-		amount += getPoolPrize() * share / 1 ether;
-		unclaimedPoolPrize -= share; // TODO: useful?
+		amount += getPrizeAmount(msg.sender);
+		// unclaimedPoolPrize -= share; // TODO: useful?
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
 		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
