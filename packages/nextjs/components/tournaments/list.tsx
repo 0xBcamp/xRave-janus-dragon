@@ -2,10 +2,14 @@ import { Item } from "./item";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 export const List = () => {
-  const { data: activeTournaments } = useScaffoldContractRead({
+  const { data: activeTournaments, isLoading: isTournamentsLoading } = useScaffoldContractRead({
     contractName: "TournamentFactory",
     functionName: "getAllActiveTournaments",
   });
+
+  if (isTournamentsLoading) {
+    return <div>Loading...</div>;
+  }
 
   console.log(activeTournaments);
 
@@ -17,8 +21,8 @@ export const List = () => {
         </div>
       ) : (
         <ul role="list" className="divide-y divide-gray-100">
-          {activeTournaments?.map(tid => (
-            <Item tournament={tid} key={tid} />
+          {activeTournaments?.map(addr => (
+            <Item tournament={addr} key={addr} />
           ))}
         </ul>
       )}

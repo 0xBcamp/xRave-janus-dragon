@@ -3,6 +3,7 @@ import { formatUnits } from "viem";
 import { useAccount, useContractRead, useContractWrite } from "wagmi";
 import { useContractEvent } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
+import ExternalContracts from "~~/contracts/externalContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 
 export const Enter = ({ tournament }: { tournament: string }) => {
@@ -30,32 +31,32 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   }
 
   const { data: balance } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: ExternalContracts[31337].ERC20.abi,
     address: LPaddr,
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   const { data: allowance } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: ExternalContracts[31337].ERC20.abi,
     address: LPaddr,
     functionName: "allowance",
     args: [connectedAddress, spender],
   });
 
   console.log(allowance);
-  if (allowance != undefined && allowance >= BigInt(amount) && !approved) {
+  if (allowance != undefined && Number(allowance) >= amount && !approved) {
     setApproved(true);
   }
 
   const { data: decimals } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: ExternalContracts[31337].ERC20.abi,
     address: LPaddr,
     functionName: "decimals",
   });
 
   const { writeAsync: approve } = useContractWrite({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: ExternalContracts[31337].ERC20.abi,
     address: LPaddr,
     functionName: "approve",
     args: [spender, BigInt(amount)],
@@ -85,7 +86,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
 
   useContractEvent({
     address: LPaddr,
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: ExternalContracts[31337].ERC20.abi,
     eventName: "Approval",
     listener: log => {
       if (

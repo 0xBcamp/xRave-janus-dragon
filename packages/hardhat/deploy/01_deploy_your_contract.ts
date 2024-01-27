@@ -21,8 +21,8 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   */
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-  const LPToken1 = await hre.ethers.getContract<Contract>("LPToken1", deployer);
-  const LPToken2 = await hre.ethers.getContract<Contract>("LPToken2", deployer);
+  const UniswapV2Pair = await hre.ethers.getContract<Contract>("UniswapV2Pair", deployer);
+  const Vyper_contract = await hre.ethers.getContract<Contract>("Vyper_contract", deployer); // yearn
 
   await deploy("Tournament", {
     from: deployer,
@@ -53,9 +53,9 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   // Get the deployed contract to interact with it after deploying.
 
-  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account @todo change this to my burnner
-  await LPToken1.transfer(frontBurner, hre.ethers.parseEther("1000"));
-  await LPToken2.transfer(frontBurner, hre.ethers.parseEther("1000"));
+  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account @note this is where you need to add your burnner address
+  await UniswapV2Pair.transfer(frontBurner, hre.ethers.parseEther("1000"));
+  await Vyper_contract.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };
 
 export default deployContracts;

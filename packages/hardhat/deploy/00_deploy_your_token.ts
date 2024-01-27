@@ -25,14 +25,15 @@ const deployMocksAndTokens: DeployFunction = async function (hre: HardhatRuntime
   }
 
   // Example token deployment, adjust as necessary
-  await deploy("LPToken1", {
+  //await deploy("LPToken1", {
+  await deploy("UniswapV2Pair", {
     from: deployer,
     args: [],
     log: true,
     autoMine: true,
   });
 
-  await deploy("LPToken2", {
+  await deploy("Vyper_contract", {
     from: deployer,
     args: [],
     log: true,
