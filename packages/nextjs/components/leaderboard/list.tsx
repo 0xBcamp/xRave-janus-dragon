@@ -16,7 +16,7 @@ export const List = ({ tournament, topScore }: { tournament: string; topScore: n
 
   return (
     <>
-      <ul role="list" className="divide-y divide-gray-100">
+      <ul role="list" className="space-y-4">
         {list}
       </ul>
     </>

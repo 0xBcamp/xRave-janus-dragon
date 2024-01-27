@@ -24,6 +24,12 @@ const Leaderboard: NextPage = () => {
     functionName: "topScore",
   });
 
+  const { data: name } = useContractRead({
+    abi: DeployedContracts[31337].Tournament.abi,
+    address: params.addr,
+    functionName: "name",
+  });
+
   console.log(topScore);
 
   if (!connectedAddress) {
@@ -51,8 +57,16 @@ const Leaderboard: NextPage = () => {
   }
 
   return (
-    <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-      <List tournament={params.addr} topScore={Number(topScore)} key={params.addr} />
+    <div className="flex items-center flex-col flex-grow pt-10">
+      <div className="px-5">
+        <h1 className="text-center mb-8">
+          <span className="block text-2xl mb-2">Leaderboard</span>
+          <span className="block text-4xl font-bold">of the tournament &quot;{name}&quot;</span>
+        </h1>
+        <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
+          <List tournament={params.addr} topScore={Number(topScore)} key={params.addr} />
+        </div>
+      </div>
     </div>
   );
 };

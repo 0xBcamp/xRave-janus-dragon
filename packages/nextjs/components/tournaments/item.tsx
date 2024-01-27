@@ -21,20 +21,27 @@ export const Item = ({ tournament }: { tournament: string }) => {
 
   if (endTime < Date.now() / 1000) {
     return (
-      <li key={tournament} className="flex justify-between gap-x-6 py-5">
+      <li key={tournament} className="flex justify-between gap-x-6 px-5 py-5 bg-base-100 rounded-3xl">
         <div className="flex min-w-0 gap-x-4">
           <div className="min-w-0 flex-auto">
-            <p className="text-sm font-semibold leading-6 text-gray-900">{name}</p>
-            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-              <CurrencyDollarIcon className="h-4 w-4 fill-secondary" />
+            <p className="text-sm font-semibold leading-6">{name}</p>
+            <div className="flex items-center">
+              <CurrencyDollarIcon className="h-4 w-4 mr-1" />
               {LPTokenSymbol}
-            </p>
+            </div>
           </div>
         </div>
         <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-          <p className="text-sm leading-6 text-gray-900">
-            Ended on {new Date(Number(endTime) * 1000).toLocaleString()}
-          </p>
+          <div className="flex items-center">
+            <StarIcon className="h-4 w-4 mr-1" />
+            <Link href={`/leaderboard/${tournament}`}>Leaderboard</Link>
+          </div>
+          <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+            <div className="flex items-center">
+              <ClockIcon className="h-4 w-4 mr-1" />
+              <span>Ended on {new Date(Number(endTime) * 1000).toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       </li>
     );
@@ -42,48 +49,54 @@ export const Item = ({ tournament }: { tournament: string }) => {
 
   if (startTime > Date.now() / 1000) {
     return (
-      <li key={tournament} className="flex justify-between gap-x-6 py-5">
+      <li key={tournament} className="flex justify-between gap-x-6 px-5 py-5 bg-base-100 rounded-3xl">
         <div className="flex min-w-0 gap-x-4">
           <div className="min-w-0 flex-auto">
-            <p className="text-sm font-semibold leading-6 text-gray-900">{name}</p>
-            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-              <CurrencyDollarIcon className="h-4 w-4 fill-secondary" />
-              {LPTokenSymbol}
+            <p className="text-sm font-semibold leading-6">
+              <Link href={`/tournament/${tournament}`}>{name}</Link>
             </p>
+            <div className="flex items-center">
+              <CurrencyDollarIcon className="h-4 w-4 mr-1" />
+              {LPTokenSymbol}
+            </div>
           </div>
         </div>
         <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-          <p className="text-sm leading-6 text-gray-900">
-            Will open on {new Date(Number(startTime) * 1000).toLocaleString()}
-          </p>
+          <div className="flex items-center">
+            <ClockIcon className="h-4 w-4 mr-1" />
+            <span>Will open on {new Date(Number(startTime) * 1000).toLocaleString()}</span>
+          </div>
         </div>
       </li>
     );
   }
 
   return (
-    <li key={tournament} className="flex justify-between gap-x-6 py-5">
+    <li key={tournament} className="flex justify-between gap-x-6 px-5 py-5 bg-base-100 rounded-3xl">
       <div className="flex min-w-0 gap-x-4">
         <div className="min-w-0 flex-auto">
-          <p className="text-sm font-semibold leading-6 text-gray-900">
+          <p className="text-sm font-semibold leading-6">
             <Link href={`/tournament/${tournament}`}>{name}</Link>
           </p>
-          <div>
-            <CurrencyDollarIcon className="h-4 w-4" />
-            <span className="mt-1 truncate text-xs leading-5 text-gray-500">{LPTokenSymbol}</span>
+          <div className="flex items-center">
+            <CurrencyDollarIcon className="h-4 w-4 mr-1" />
+            {LPTokenSymbol}
           </div>
         </div>
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-        <p className="text-sm leading-6 text-gray-900">
-          <Link href={`/leaderboard/${tournament}`}>
-            <StarIcon className="h-4 w-4" /> Leaderboard
-          </Link>
-        </p>
-        <p className="mt-1 text-xs leading-5 text-gray-500">
-          <ClockIcon className="h-4 w-4" />
-          Open until <time dateTime={endTime.toString()}>{new Date(Number(endTime) * 1000).toLocaleString()}</time>
-        </p>
+        <div className="flex items-center">
+          <StarIcon className="h-4 w-4 mr-1" />
+          <Link href={`/leaderboard/${tournament}`}>Leaderboard</Link>
+        </div>
+        <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+          <div className="flex items-center">
+            <ClockIcon className="h-4 w-4 mr-1" />
+            <span>
+              Open until <time dateTime={endTime.toString()}>{new Date(Number(endTime) * 1000).toLocaleString()}</time>
+            </span>
+          </div>
+        </div>
       </div>
     </li>
   );
