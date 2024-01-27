@@ -181,6 +181,7 @@ contract SingleGame is VRFConsumerBaseV2, Ownable {
 
     }
 
+    //@todo add lives back
     function _resolveGame(uint8 move) internal returns (address winner){
         if(move == currentMove){
             //draw
@@ -211,7 +212,7 @@ contract SingleGame is VRFConsumerBaseV2, Ownable {
 
     //@todo make this resolve pvp game too
     function resolveVrfGame(uint256 requestId) public returns (address winner) {
-        ContractGame storage game = contractGameRequestId[requestId];
+        ContractGame storage game = contractGameRequestId[requestId]; 
 
         if ((game.playerMove + 1) % 3 == game.vrfMove) {
             // player wins + 2 points & refunded life // @todo

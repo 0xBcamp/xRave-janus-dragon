@@ -53,7 +53,7 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   // Get the deployed contract to interact with it after deploying.
 
-  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account
+  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account @todo change this to my burnner
   await LPToken1.transfer(frontBurner, hre.ethers.parseEther("1000"));
   await LPToken2.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };

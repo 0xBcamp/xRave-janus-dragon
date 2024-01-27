@@ -286,7 +286,9 @@ contract Tournament {
 
 	/**
 	 * Function that returns if the player has already played today (resets at O0:OO UTC)
+	 * 
 	 */
+	//@note compaired to midnight - use to reset live per day
 	function alreadyPlayed(address _player) public view returns (bool) {
 		uint256 today = ( block.timestamp - ( block.timestamp % (60 * 60 * 24) ) ) / (60 * 60 * 24);
 		uint256 lastGame = ( playersMap[_player].lastGame - ( playersMap[_player].lastGame % (60 * 60 * 24) ) ) / (60 * 60 * 24);
