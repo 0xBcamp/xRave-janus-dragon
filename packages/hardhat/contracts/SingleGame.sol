@@ -28,9 +28,10 @@ pragma solidity 0.8.17;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract SingleGame is VRFConsumerBaseV2 {
+contract SingleGame is VRFConsumerBaseV2, Ownable {
     //////////////
     /// ERRORS ///
     //////////////
@@ -106,7 +107,7 @@ contract SingleGame is VRFConsumerBaseV2 {
     ///////////////////////
     /// Fund Management ///
     ///////////////////////
-
+    //@todo accept deposits from token
     function deposit(uint256 amount) public  {
         if(amount < MINIMUM_DEPOSIT){
             revert NotEnoughFunds();
@@ -115,7 +116,7 @@ contract SingleGame is VRFConsumerBaseV2 {
         deposits[msg.sender] += amount;
         livesLeft[msg.sender] += 10; //@todo deposit amount to lives amount / MINIMUM_DEPOSIT;
     }
-
+    //@todo withdraw deposits of token
     function withdraw(uint256 amount) public {
         if(deposits[msg.sender] < amount){
             revert NotEnoughFunds();
@@ -295,7 +296,28 @@ contract SingleGame is VRFConsumerBaseV2 {
         emit ContractPlayed(vrfMove);
     }
 
+
+    /////////////////////////////////
+    /// Getter / Helper Functions ///
+    /////////////////////////////////
+
+    function getLivesLeft(address player) public view returns (uint256) {
+        return livesLeft[player];
+    }
+
+    function getPoints(address player) public view returns (uint256) {
+        return playersPoints[player];
+    }
     
+    function getDeposits(address player) public view returns (uint256) {
+        return deposits[player];
+    }
+
+    function getContractGame(uint256 requestId) public view returns (ContractGame memory) {
+        return contractGameRequestId[requestId];
+    }
+
+
 
 }
    
