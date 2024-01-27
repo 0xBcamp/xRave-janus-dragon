@@ -12,7 +12,6 @@ const Tournaments: NextPage = () => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">List of tournaments</span>
-            <span className="block text-4xl font-bold">active</span>
           </h1>
           <List />
         </div>

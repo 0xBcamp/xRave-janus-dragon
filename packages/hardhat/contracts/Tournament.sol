@@ -27,12 +27,12 @@ contract Tournament {
 	uint256 public endTime;
 	Protocol public protocol;
 
-	uint256 realizedPoolPrize; // Amount of LP left by players that withdrawn
-	uint256 realizedFees; // Amount of LP fees left by players that withdrawn
-	uint256 unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
+	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
+	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
+	uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
 
-	uint256 topScore = 0;
+	uint256 public topScore = 0;
 	address[] public players;
 	mapping(uint256 => address[]) public scoreToPlayers; // Used for ranking
 	mapping(address => Player) public playersMap;
@@ -105,6 +105,21 @@ contract Tournament {
 	}
 
 	/**
+	 * Function that returns the current price per share from the LP token contract
+	 */
+	function getPricePerShare() private view returns(uint256, uint256) {
+		if(Protocol.Yearn == protocol) {
+			YearnInterface yearn = YearnInterface(address(poolIncentivized));
+			return ( yearn.pricePerShare(), 0 );
+		} else { // Uniswap
+			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
+			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
+			uint supply = uniswap.totalSupply();
+			return ( res0 / supply, res1 / supply );
+		}
+	}
+
+	/**
 	 * Function that allows anyone to stake their LP token to register in the tournament
 	 */
 	function stakeLPToken() public {
@@ -115,6 +130,52 @@ contract Tournament {
 		players.push(msg.sender);
 		// emit: keyword used to trigger an event
 		emit Staked(msg.sender, LPTokenAmount);
+	}
+
+	/**
+	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
+	 */
+	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
+		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		if(Protocol.Yearn == protocol) {
+			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
+		} else { // Uniswap
+			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
+		}
+	}
+
+	/**
+	 * Function that returns the player's rank and how many players share this rank
+	 */
+	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
+		for(uint i=topScore; i>=playersMap[_player].score; i--) {
+			if(scoreToPlayers[i].length > 0) {
+				rank += 1;
+			}
+			split = scoreToPlayers[playersMap[_player].score].length;
+		}
+	}
+
+	/**
+	 * Function that returns the player's reward share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
+	 */
+	function getRewardShare(address _player) public view returns (uint256) {
+		// TODO: how to manage rewards if the number of different ranks is low?
+		(uint256 rank, uint256 split) = getRank(_player);
+		if(split == 0) { return 0; }
+		return (1 ether / (2 ** rank)) / split;
+	}
+
+	/**
+	 * Function that returns the amount of LP token in the pool prize
+	 */
+	function getPoolPrize() public view returns (uint256) {
+		uint256 extraLP = 0;
+		for (uint i=0; i<players.length; i++) {
+			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
+			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
+		}
+		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
 	}
 
 	/**
@@ -167,13 +228,15 @@ contract Tournament {
 	 */
 	function playAgainstPlayer(string memory _move) public {
 		playersMap[msg.sender].lastGame = block.timestamp;
-		updateScore(msg.sender, 1); // TODO: game logic
+		if(keccak256(abi.encode(_move)) == keccak256("ROCK")) updateScore(msg.sender, 0); // TODO: game logic
+		else if(keccak256(abi.encode(_move)) == keccak256("PAPER")) updateScore(msg.sender, 1);
+		else updateScore(msg.sender, 2);
 	}
 
 	/**
 	 * Function that updates the player score by adding the points
 	 */
-	function updateScore(address _player, uint256 _points) internal {
+	function updateScore(address _player, uint8 _points) internal {
 		if(_points == 0) { return; }
 		// We first remove the player from it's current rank
 		uint score = playersMap[_player].score;
@@ -190,55 +253,6 @@ contract Tournament {
 			topScore = playersMap[_player].score;
 		}
 		scoreToPlayers[playersMap[_player].score].push(_player);
-	}
-
-	/**
-	 * Function that returns the player's rank and how many players share this rank
-	 */
-	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
-		for(uint i=topScore; i>=playersMap[_player].score; i--) {
-			if(scoreToPlayers[i].length > 0) {
-				rank += 1;
-			}
-			split = scoreToPlayers[playersMap[_player].score].length;
-		}
-	}
-
-	/**
-	 * Function that returns the player's reward share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
-	 */
-	function getRewardShare(address _player) public view returns (uint256) {
-		// TODO: how to manage rewards if the number of different ranks is low?
-		(uint256 rank, uint256 split) = getRank(_player);
-		if(split == 0) { return 0; }
-		return (1 ether / (2 ** rank)) / split;
-	}
-
-	/**
-	 * Function that returns the current price per share from the LP token contract
-	 */
-	function getPricePerShare() private view returns(uint256, uint256) {
-		if(Protocol.Yearn == protocol) {
-			YearnInterface yearn = YearnInterface(address(poolIncentivized));
-			return ( yearn.pricePerShare(), 0 );
-		} else { // Uniswap
-			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
-			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
-			uint supply = uniswap.totalSupply();
-			return ( res0 / supply, res1 / supply );
-		}
-	}
-
-	/**
-	 * Function that returns the amount of LP token in the pool prize
-	 */
-	function getPoolPrize() public view returns (uint256) {
-		uint256 extraLP = 0;
-		for (uint i=0; i<players.length; i++) {
-			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
-			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
-		}
-		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
 	}
 
 	/**
@@ -298,24 +312,20 @@ contract Tournament {
 		return playersMap[_player].score;
 	}
 
-	/**
-	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
-	 */
-	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
-		(uint256 pPS, uint256 pPS2) = getPricePerShare();
-		if(Protocol.Yearn == protocol) {
-			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
-		} else { // Uniswap
-			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
-		}
-	}
-
 	function stakingAllowed() public view returns (bool) {
 		return !isEnded();
 	}
 
 	function unstakingAllowed() public view returns (bool) {
 		return isEnded();
+	}
+
+	function getPlayers() public view returns (address[] memory) {
+		return players;
+	}
+
+	function getPlayersAtScore(uint256 _score) public view returns (address[] memory) {
+		return scoreToPlayers[_score];
 	}
 
 	function player(address _player) public view returns (uint256 LPToken, uint256 score, uint256 lastGame) {

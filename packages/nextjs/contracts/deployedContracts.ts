@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x5322471a7E37Ac2B8902cFcba84d266b37D811A0",
+      address: "0xaB837301d12cDc4b97f1E910FC56C9179894d9cf",
       abi: [
         {
           inputs: [
@@ -220,6 +220,38 @@ const deployedContracts = {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getPlayers",
+          outputs: [
+            {
+              internalType: "address[]",
+              name: "",
+              type: "address[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_score",
+              type: "uint256",
+            },
+          ],
+          name: "getPlayersAtScore",
+          outputs: [
+            {
+              internalType: "address[]",
+              name: "",
+              type: "address[]",
             },
           ],
           stateMutability: "view",
@@ -620,6 +652,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "topScore",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "unstakeLPToken",
           outputs: [],
           stateMutability: "nonpayable",
@@ -649,7 +694,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x90c84237fDdf091b1E63f369AF122EB46000bc70",
+      address: "0x4ff1f64683785E0460c24A4EF78D582C2488704f",
       abi: [
         {
           inputs: [
@@ -897,7 +942,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0x313F922BE1649cEc058EC0f076664500c78bdc0b",
+      address: "0x124dDf9BdD2DdaD012ef1D5bBd77c00F05C610DA",
       abi: [
         {
           inputs: [],
@@ -1140,7 +1185,7 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "_totalSupply",
+              name: "_supply",
               type: "uint256",
             },
           ],
@@ -1244,7 +1289,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0xc0Bb1650A8eA5dDF81998f17B5319afD656f4c11",
+      address: "0xe044814c9eD1e6442Af956a817c161192cBaE98F",
       abi: [
         {
           inputs: [],

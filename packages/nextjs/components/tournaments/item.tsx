@@ -10,17 +10,6 @@ export const Item = ({ tournament }: { tournament: string }) => {
     functionName: "getTournament",
   });
 
-  /*   let address = "";
-  if (tournamentData != undefined) {
-    address = tournamentData[2];
-  }
-
-  const { data: decimals } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
-    address: address,
-    functionName: "decimals",
-  }); */
-
   console.log(tournamentData);
 
   if (tournamentData == undefined) {
@@ -38,9 +27,14 @@ export const Item = ({ tournament }: { tournament: string }) => {
         </div>
       </div>
       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-        <p className="text-sm leading-6 text-gray-900">Reward:</p>
+        <p className="text-sm leading-6 text-gray-900">
+          <Link href={`/leaderboard/${tournament}`}>Leaderboard</Link>
+        </p>
         <p className="mt-1 text-xs leading-5 text-gray-500">
-          Open until <time dateTime={tournamentData[6].toString()}>{tournamentData[6].toString()}</time>
+          Open until{" "}
+          <time dateTime={tournamentData[6].toString()}>
+            {new Date(Number(tournamentData[6]) * 1000).toLocaleString()}
+          </time>
         </p>
       </div>
     </li>
