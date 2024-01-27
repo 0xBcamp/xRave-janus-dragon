@@ -19,9 +19,11 @@ interface UniswapInterface {
 }
 
 contract Tournament is VRFConsumerBaseV2{
+
 	//////////////
 	/// ERRORS ///
 	//////////////
+	
 	//error NoLivesLeft();
     error InvalidMove();
     error NotEnoughFunds();
