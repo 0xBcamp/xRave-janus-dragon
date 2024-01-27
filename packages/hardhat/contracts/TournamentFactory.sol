@@ -11,10 +11,12 @@ contract TournamentFactory {
 	// State Variables
 	address[] public TournamentArray; // Store deployed contracts
 	mapping(address => Tournament) public TournamentMap;
+	mapping(address => address) public TournamentPartner;
 	address public owner;
 
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
 	event TournamentCreated(
+		address tournament
 	);
 
 	// Constructor: Called once on contract deployment
@@ -36,19 +38,17 @@ contract TournamentFactory {
 	 *
 	 * @param _name (string) - name of the tournament
 	 * @param _poolIncentivized (address) - address of the pool to incentivize and from which we will accept the LP token
-	 * @param _rewardToken (address) - address of the ERC-20 token used as prize for the players
-	 * @param _rewardAmount (uint256) - amount of the ERC-20 token to fund the prize
 	 * @param _LPTokenAmount (uint256) - amount of the ERC-20 LP token to stake in order to participate
 	 * @param _startTime (uint256) - block number at which the tournament starts
 	 * @param _endTime (uint256) - block number at which the tournament ends
 	 *
 	 * @return newTournament (address) - address of the new tournament
 	 */
-	function createTournament(string memory _name, address _poolIncentivized, address _rewardToken, uint256 _rewardAmount, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
-		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _rewardToken, _rewardAmount, _LPTokenAmount, _startTime, _endTime);
+	function createTournament(string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (Tournament newTournament) {
+		newTournament = new Tournament(owner, _name, _poolIncentivized, _LPTokenAmount, _startTime, _endTime);
 		TournamentArray.push(address(newTournament));
 		TournamentMap[address(newTournament)] = newTournament;
-		require(IERC20(_rewardToken).transferFrom(msg.sender, address(newTournament), _rewardAmount), "Transfer of reward token Failed");
+		emit TournamentCreated(address(newTournament));
 	}
 
 	/**
@@ -90,6 +90,13 @@ contract TournamentFactory {
 	 * Function that returns an array of all the tournament a player is registered to
 	 */
 	function getTournamentsByPlayer(address _player) external view returns (address[] memory) {
+
+	}
+
+	/**
+	 * Function that returns an array of all the tournament a partner created
+	 */
+	function getTournamentsByPartner(address _partner) external view returns (address[] memory) {
 
 	}
 

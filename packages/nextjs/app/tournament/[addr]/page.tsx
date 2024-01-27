@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import type { NextPage } from "next";
 import { useAccount, useContractRead } from "wagmi";
+import { useContractEvent } from "wagmi";
 import { Enter } from "~~/components/tournament/enter";
 import { Play } from "~~/components/tournament/play";
 import { Withdraw } from "~~/components/tournament/withdraw";
@@ -13,6 +15,8 @@ const Tournament: NextPage = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
+
+  const [isPlayer, setIsPlayer] = useState(false);
 
   const { data: isTournament } = useScaffoldContractRead({
     contractName: "TournamentFactory",
@@ -26,11 +30,25 @@ const Tournament: NextPage = () => {
     functionName: "unstakingAllowed",
   });
 
-  const isPlayer = useContractRead({
+  const isPlayerRead = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
     functionName: "isPlayer",
     args: [connectedAddress],
+  });
+  if (isPlayerRead.data && !isPlayer) {
+    setIsPlayer(true);
+  }
+
+  useContractEvent({
+    address: params.addr,
+    abi: DeployedContracts[31337].Tournament.abi,
+    eventName: "Staked",
+    listener: log => {
+      if (log[0].args.player == connectedAddress) {
+        setIsPlayer(true);
+      }
+    },
   });
 
   // const isActive = useContractRead({
@@ -63,7 +81,7 @@ const Tournament: NextPage = () => {
     );
   }
 
-  if (isPlayer.data) {
+  if (isPlayer) {
     return (
       <>
         <Play />
