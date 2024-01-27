@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x3E661784267F128e5f706De17Fac1Fc1c9d56f30",
+      address: "0x773330693cb7d5D233348E25809770A32483A940",
       abi: [
         {
           inputs: [
@@ -105,6 +105,19 @@ const deployedContracts = {
             },
           ],
           name: "LPTokenAmountOfPlayer",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "LPTokenDecimals",
           outputs: [
             {
               internalType: "uint256",
@@ -278,16 +291,11 @@ const deployedContracts = {
               type: "address",
             },
           ],
-          name: "getRank",
+          name: "getPrizeAmount",
           outputs: [
             {
               internalType: "uint256",
-              name: "rank",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "split",
+              name: "",
               type: "uint256",
             },
           ],
@@ -302,11 +310,35 @@ const deployedContracts = {
               type: "address",
             },
           ],
-          name: "getRewardShare",
+          name: "getPrizeShare",
           outputs: [
             {
               internalType: "uint256",
               name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "getRank",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "rank",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "split",
               type: "uint256",
             },
           ],
@@ -694,7 +726,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x6732128F9cc0c4344b2d4DC6285BCd516b7E59E6",
+      address: "0x52173b6ac069619c206b9A0e75609fC92860AB2A",
       abi: [
         {
           inputs: [
@@ -942,7 +974,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0xF6a8aD553b265405526030c2102fda2bDcdDC177",
+      address: "0x47c05BCCA7d57c87083EB4e586007530eE4539e9",
       abi: [
         {
           inputs: [],
@@ -1289,7 +1321,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x09120eAED8e4cD86D85a616680151DAA653880F2",
+      address: "0x408F924BAEC71cC3968614Cb2c58E155A35e6890",
       abi: [
         {
           inputs: [],

@@ -28,32 +28,32 @@ const Leaderboard: NextPage = () => {
 
   if (!connectedAddress) {
     return (
-      <>
+      <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
         <p>Please connect your wallet to see the leaderboard</p>
-      </>
+      </div>
     );
   }
 
   if (!isTournament) {
     return (
-      <>
+      <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
         <p>No tournament found with address {params.addr}</p>
-      </>
+      </div>
     );
   }
 
   if (topScore == 0n) {
     return (
-      <>
+      <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
         <p>No player got points at the moment</p>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
       <List tournament={params.addr} topScore={Number(topScore)} key={params.addr} />
-    </>
+    </div>
   );
 };
 
