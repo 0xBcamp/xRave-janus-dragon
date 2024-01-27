@@ -51,12 +51,6 @@ const Tournament: NextPage = () => {
     },
   });
 
-  // const isActive = useContractRead({
-  //   abi: DeployedContracts[31337].Tournament.abi,
-  //   address: params.addr,
-  //   functionName: "isActive",
-  // });
-
   if (!connectedAddress) {
     return (
       <>
@@ -88,14 +82,6 @@ const Tournament: NextPage = () => {
       </>
     );
   }
-
-  // if (!isActive.data) {
-  //   return (
-  //     <>
-  //       <p>Tournament {params.addr} has not started yet</p>
-  //     </>
-  //   );
-  // }
 
   return (
     <>

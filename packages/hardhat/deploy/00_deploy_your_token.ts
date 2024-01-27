@@ -21,7 +21,7 @@ const deployTokens: DeployFunction = async function (hre: HardhatRuntimeEnvironm
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("LPToken1", {
+  await deploy("UniswapV2Pair", {
     from: deployer,
     // Contract constructor arguments
     args: [],
@@ -31,7 +31,7 @@ const deployTokens: DeployFunction = async function (hre: HardhatRuntimeEnvironm
     autoMine: true,
   });
 
-  await deploy("LPToken2", {
+  await deploy("Vyper_contract", {
     from: deployer,
     // Contract constructor arguments
     args: [],

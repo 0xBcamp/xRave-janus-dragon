@@ -44,8 +44,8 @@ contract TournamentFactory {
 	 *
 	 * @return newTournament (address) - address of the new tournament
 	 */
-	function createTournament(string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (address newTournament) {
-		Tournament newTournament = new Tournament(owner, _name, _poolIncentivized, _LPTokenAmount, _startTime, _endTime);
+	function createTournament(string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (Tournament newTournament) {
+		newTournament = new Tournament(owner, _name, _poolIncentivized, _LPTokenAmount, _startTime, _endTime);
 		TournamentArray.push(address(newTournament));
 		TournamentMap[address(newTournament)] = newTournament;
 		emit TournamentCreated(address(newTournament));
