@@ -157,6 +157,10 @@ contract SingleGame is VRFConsumerBaseV2, Ownable {
         if(move == 0 || move > 3){
             revert InvalidMove();
         }
+
+        if(msg.sender == currentPlayer){
+            revert InvalidMove();
+        }
         
         if(livesLeft[msg.sender] == 0){
             revert NoLivesLeft();

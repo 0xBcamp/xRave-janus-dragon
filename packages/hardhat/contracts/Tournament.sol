@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
@@ -24,7 +24,8 @@ contract Tournament is VRFConsumerBaseV2{
 	//////////////
 	//error NoLivesLeft();
     error InvalidMove();
-    //error NotEnoughFunds();	
+    error NotEnoughFunds();
+	error NotRegistered();	
 	
 	///////////////////////
 	/// State Variables ///
@@ -39,7 +40,7 @@ contract Tournament is VRFConsumerBaseV2{
 	IERC20Metadata poolIncentivized;
 	string public LPTokenSymbol;
 	uint256 public LPTokenDecimals;
-	uint256 public LPTokenAmount; // Amount of LP to be deposited by the players
+	uint256 public LPTokenAmount; // Min Amount of LP to be deposited by the players
 	uint256 public startTime;
 	uint256 public endTime;
 	Protocol public protocol;
@@ -146,11 +147,11 @@ contract Tournament is VRFConsumerBaseV2{
 		uint256 _startTime, 
 		uint256 _endTime,
 		//VRF
-		uint64 subscriptionId, 
-		bytes32 gasLane, 
-		uint32 callbackGasLimit, 
-		address vrfCoordinatorV2
-		)  VRFConsumerBaseV2(vrfCoordinatorV2) {
+		uint64 _subscriptionId, 
+		bytes32 _gasLane, 
+		uint32 _callbackGasLimit, 
+		address _vrfCoordinatorV2
+		)  VRFConsumerBaseV2(_vrfCoordinatorV2) {
 			require(_startTime < _endTime, "Start time must be before end time");
 			require(_startTime > block.timestamp, "Start time must be in the future");
 			owner = _owner;
@@ -169,36 +170,15 @@ contract Tournament is VRFConsumerBaseV2{
 			startTime = _startTime;
 			endTime = _endTime;
 			//VRF
-			i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
-            i_subscriptionId = subscriptionId;
-            i_gasLane = gasLane;
-            gasLimit = callbackGasLimit;
+			i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
+            i_subscriptionId = _subscriptionId;
+            i_gasLane = _gasLane;
+            gasLimit = _callbackGasLimit;
 		}
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime) {
-		rName = name;
-		contractAddress = address(this);
-		rPoolIncentivized = address(poolIncentivized);
-		rLPTokenSymbol = LPTokenSymbol;
-		rLPTokenAmount = LPTokenAmount;
-		rStartTime = startTime;
-		rEndTime = endTime;
-	}
-
-	/**
-	 * Function that returns the current price per share from the LP token contract
-	 */
-	function getPricePerShare() private view returns(uint256, uint256) {
-		if(Protocol.Yearn == protocol) {
-			YearnInterface yearn = YearnInterface(address(poolIncentivized));
-			return ( yearn.pricePerShare(), 0 );
-		} else { // Uniswap
-			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
-			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
-			uint supply = uniswap.totalSupply();
-			return ( res0 / supply, res1 / supply );
-		}
-	}
+	/////////////////////////////
+	/// Stake & Unstake Funcs ///
+	/////////////////////////////
 
 	/**
 	 * Function that allows anyone to stake their LP token to register in the tournament
@@ -211,59 +191,6 @@ contract Tournament is VRFConsumerBaseV2{
 		players.push(msg.sender);
 		// emit: keyword used to trigger an event
 		emit Staked(msg.sender, LPTokenAmount);
-	}
-
-	/**
-	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
-	 */
-	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
-		(uint256 pPS, uint256 pPS2) = getPricePerShare();
-		if(Protocol.Yearn == protocol) {
-			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
-		} else { // Uniswap
-			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
-		}
-	}
-
-	/**
-	 * Function that returns the player's rank and how many players share this rank
-	 */
-	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
-		for(uint i=topScore; i>=playersMap[_player].score; i--) {
-			if(scoreToPlayers[i].length > 0) {
-				rank += 1;
-			}
-		}
-		split = scoreToPlayers[playersMap[_player].score].length;
-	}
-
-	/**
-	 * Function that returns the player's prize share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
-	 */
-	function getPrizeShare(address _player) public view returns (uint256) {
-		// TODO: how to manage rewards if the number of different ranks is low?
-		(uint256 rank, uint256 split) = getRank(_player);
-		if(split == 0) { return 0; }
-		return (1 ether / (2 ** rank)) / split;
-	}
-
-	/**
-	 * Function that returns the amount of LP token in the pool prize
-	 */
-	function getPoolPrize() public view returns (uint256) {
-		uint256 extraLP = 0;
-		for (uint i=0; i<players.length; i++) {
-			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
-			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
-		}
-		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
-	}
-
-	/**
-	 * Function that returns the amount of LP token earned by the player
-	 */
-	function getPrizeAmount(address _player) public view returns (uint256) {
-		return getPoolPrize() * getPrizeShare(_player) / 1 ether;
 	}
 
 	/**
@@ -299,11 +226,6 @@ contract Tournament is VRFConsumerBaseV2{
 		realizedFees = 0;
 	}
 
-	/**
-	 * Function that allows the bot to sumbit a batch of signed moves for resolution
-	 */
-	function resolveBatch() public {
-	}
 
 	///////////////////////////
 	/// GAME PLAY FUNCTIONS ///
@@ -319,6 +241,14 @@ contract Tournament is VRFConsumerBaseV2{
 		if(_move == 0 || _move > 3){
             revert InvalidMove();
         }
+
+		if(msg.sender == currentPlayer){
+			revert InvalidMove();
+		}
+
+		if(!isPlayer(msg.sender)){
+			revert NotRegistered();
+		}
 
 		require(isActive(), "Tournament is not active");
 		playersMap[msg.sender].lastGame = block.timestamp;
@@ -375,9 +305,9 @@ contract Tournament is VRFConsumerBaseV2{
 	////////////////////////
     //// VRFv2 functions ///
     ////////////////////////
-
+	// fuji info
     // fuji id: 1341
-    //  gaslane: 0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61
+    // gaslane: 0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61
     // vrf: 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
 
 
@@ -508,8 +438,6 @@ contract Tournament is VRFConsumerBaseV2{
         emit GameResolved(winner);
     }
 
-		
-
 	/**
 	 * Function that updates the player score by adding the points
 	 */
@@ -531,6 +459,88 @@ contract Tournament is VRFConsumerBaseV2{
 			topScore = playersMap[_player].score;
 		}
 		scoreToPlayers[playersMap[_player].score].push(_player);
+	}
+
+	////////////////////
+	/// Getter Funcs ///
+	////////////////////
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime) {
+		rName = name;
+		contractAddress = address(this);
+		rPoolIncentivized = address(poolIncentivized);
+		rLPTokenSymbol = LPTokenSymbol;
+		rLPTokenAmount = LPTokenAmount;
+		rStartTime = startTime;
+		rEndTime = endTime;
+	}
+
+	/**
+	 * Function that returns the current price per share from the LP token contract
+	 */
+	function getPricePerShare() private view returns(uint256, uint256) {
+		if(Protocol.Yearn == protocol) {
+			YearnInterface yearn = YearnInterface(address(poolIncentivized));
+			return ( yearn.pricePerShare(), 0 );
+		} else { // Uniswap
+			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
+			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
+			uint supply = uniswap.totalSupply();
+			return ( res0 / supply, res1 / supply );
+		}
+	}
+
+
+	/**
+	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
+	 */
+	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
+		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		if(Protocol.Yearn == protocol) {
+			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
+		} else { // Uniswap
+			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
+		}
+	}
+
+	/**
+	 * Function that returns the player's rank and how many players share this rank
+	 */
+	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
+		for(uint i=topScore; i>=playersMap[_player].score; i--) {
+			if(scoreToPlayers[i].length > 0) {
+				rank += 1;
+			}
+		}
+		split = scoreToPlayers[playersMap[_player].score].length;
+	}
+
+	/**
+	 * Function that returns the player's prize share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
+	 */
+	function getPrizeShare(address _player) public view returns (uint256) {
+		// TODO: how to manage rewards if the number of different ranks is low?
+		(uint256 rank, uint256 split) = getRank(_player);
+		if(split == 0) { return 0; }
+		return (1 ether / (2 ** rank)) / split;
+	}
+
+	/**
+	 * Function that returns the amount of LP token in the pool prize
+	 */
+	function getPoolPrize() public view returns (uint256) {
+		uint256 extraLP = 0;
+		for (uint i=0; i<players.length; i++) {
+			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
+			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
+		}
+		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
+	}
+
+	/**
+	 * Function that returns the amount of LP token earned by the player
+	 */
+	function getPrizeAmount(address _player) public view returns (uint256) {
+		return getPoolPrize() * getPrizeShare(_player) / 1 ether;
 	}
 
 	/**
