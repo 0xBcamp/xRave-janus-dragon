@@ -188,15 +188,20 @@ contract SingleGame is VRFConsumerBaseV2, Ownable {
             playersPoints[msg.sender] += 2;
             playersPoints[currentPlayer] += 2;
 
+            livesLeft[msg.sender] += 1;
+            livesLeft[currentPlayer] += 1;
+
             winner = address(0);
 
-        } else if ((move + 1) % 3 == currentMove) {
+        } else if ((move % 3 + 1) == currentMove) {
             // currentPlayer wins + 4 points & refunded life // @todo
             playersPoints[currentPlayer] += 4;
+            livesLeft[currentPlayer] += 1;
             winner = currentPlayer;
         } else {
             // currentPlayer loses
             playersPoints[msg.sender] += 4;
+            livesLeft[msg.sender] += 1;
             winner = msg.sender;
         }
 
@@ -214,19 +219,20 @@ contract SingleGame is VRFConsumerBaseV2, Ownable {
     function resolveVrfGame(uint256 requestId) public returns (address winner) {
         ContractGame storage game = contractGameRequestId[requestId]; 
 
-        if ((game.playerMove + 1) % 3 == game.vrfMove) {
-            // player wins + 2 points & refunded life // @todo
+
+        if(game.playerMove == game.vrfMove){
+            //draw
+            playersPoints[game.player] += 1;
+            livesLeft[game.player] += 1;
+            game.winner = address(0);
+        } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
+            // player loses 
+            game.winner = address(i_vrfCoordinator);
+        } else {
+            //player wins
             playersPoints[game.player] += 2;
             livesLeft[game.player] += 1;
             game.winner = game.player;
-        } else if (game.playerMove == game.vrfMove) {
-            // player ties + 1 points refund life??
-            playersPoints[game.player] += 1;
-            livesLeft[game.player] += 1;
-        } else {
-            // player loses
-            //livesLeft[msg.sender] -= 1;
-            game.winner = address(i_vrfCoordinator);
         }
 
         winner = game.winner;
