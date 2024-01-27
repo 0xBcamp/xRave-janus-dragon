@@ -10,7 +10,7 @@ contract UniswapV2Pair is ERC20 {
     _mint( msg.sender , 1000 * 10 ** 18);
   }
 
-  uint public supply = 100000;
+  uint supply = 100000;
   uint reserve0 = 100000;
   uint reserve1 = 100000;
 

@@ -183,7 +183,7 @@ contract Tournament {
 				break;
 			}
 		}
-		scoreToPlayers[score].pop();
+		if(score > 0) { scoreToPlayers[score].pop(); }
 		// Now we can update the score and push the user to its new rank
 		playersMap[_player].score += _points;
 		if(topScore < playersMap[_player].score) {
@@ -223,8 +223,9 @@ contract Tournament {
 			return ( yearn.pricePerShare(), 0 );
 		} else { // Uniswap
 			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
-			(uint256 res0, uint256 res1, uint256 time) = uniswap.getReserves();
-			return ( res0 / uniswap.totalSupply(), res1 / uniswap.totalSupply() );
+			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
+			uint supply = uniswap.totalSupply();
+			return ( res0 / supply, res1 / supply );
 		}
 	}
 
