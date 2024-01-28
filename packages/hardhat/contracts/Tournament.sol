@@ -121,7 +121,7 @@ contract Tournament {
 		_;
 	}
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime, uint256 rPlayers) {
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
@@ -129,6 +129,7 @@ contract Tournament {
 		rLPTokenAmount = LPTokenAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
+		rPlayers = players.length;
 	}
 
 	/**

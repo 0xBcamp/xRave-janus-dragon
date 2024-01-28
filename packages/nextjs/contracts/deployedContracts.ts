@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x5c932424AcBfab036969b3B9D94bA9eCbae7565D",
+      address: "0x3de00f44ce68FC56DB0e0E33aD4015C6e78eCB39",
       abi: [
         {
           inputs: [
@@ -442,6 +442,11 @@ const deployedContracts = {
               name: "rEndTime",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "rPlayers",
+              type: "uint256",
+            },
           ],
           stateMutability: "view",
           type: "function",
@@ -784,7 +789,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x3949c97925e5Aa13e34ddb18EAbf0B70ABB0C7d4",
+      address: "0x89372b32b8AF3F1272e2efb3088616318D2834cA",
       abi: [
         {
           inputs: [
@@ -1032,7 +1037,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0x7036124464A2d2447516309169322c8498ac51e3",
+      address: "0x6D712CB50297b97b79dE784d10F487C00d7f8c2C",
       abi: [
         {
           inputs: [],
@@ -1379,7 +1384,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0xeE1eb820BeeCED56657bA74fa8D70748D7A6756C",
+      address: "0x04F339eC4D75Cf2833069e6e61b60eF56461CD7C",
       abi: [
         {
           inputs: [],

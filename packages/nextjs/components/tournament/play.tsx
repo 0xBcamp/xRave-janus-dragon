@@ -150,7 +150,7 @@ export const Play = () => {
             </div>
           ) : result == "draw" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
-              <p>You drew against your opponent.</p>
+              <p>That&apos;s a draw!</p>
             </div>
           ) : result == "saved" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
