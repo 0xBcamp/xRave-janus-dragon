@@ -92,7 +92,11 @@ contract Tournament {
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
 	constructor(address _owner, string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
 		require(_startTime < _endTime, "Start time must be before end time");
-		require(_startTime > block.timestamp, "Start time must be in the future");
+		// Defaults to current block timestamp
+		startTime = _startTime == 0 ? block.timestamp : _startTime;
+		require(startTime >= block.timestamp, "Start time must be today or in the future");
+		require(_endTime > block.timestamp, "End time must be in the future");
+		require(_LPTokenAmount > 0, "Amount to stake must be greater than 0");
 		owner = _owner;
 		name = _name;
 		LPTokenAmount = _LPTokenAmount;
@@ -106,7 +110,6 @@ contract Tournament {
 				protocol = Protocol.Yearn;
 			}
 		}
-		startTime = _startTime;
 		endTime = _endTime;
 	}
 
@@ -147,6 +150,8 @@ contract Tournament {
 	 * Function that allows anyone to stake their LP token to register in the tournament
 	 */
 	function stakeLPToken() public {
+		require(!isPlayer(msg.sender), "You have already staked");
+		require(stakingAllowed(), "Staking not allowed");
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
 		playersMap[msg.sender].depositPricePerShare = pPS;
@@ -214,6 +219,7 @@ contract Tournament {
 	 */
 	function unstakeLPToken() public {
 		require(isPlayer(msg.sender), "You have nothing to withdraw");
+		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
@@ -290,6 +296,8 @@ contract Tournament {
 
 		require(_move <= 2, "Invalid move");
 		require(isActive(), "Tournament is not active");
+		require(!alreadyPlayed(msg.sender), "You already played today");
+		require(isPlayer(msg.sender), "You must deposit before playing");
 		playersMap[msg.sender].lastGame = block.timestamp;
 
         if(storedPlayer.addr != address(0)) {
@@ -345,22 +353,26 @@ contract Tournament {
 		return players.length;
 	}
 
-	/**
-	 * Function that returns if the tournament is active (players are allowed to play)
-	 */
-	function isActive() public view returns (bool) {
-		return block.timestamp >= startTime && block.timestamp < endTime;
+	function timeToDate(uint256 _time) internal pure returns (uint256) {
+		return _time / (60 * 60 * 24);
 	}
 
 	function isEnded() public view returns (bool) {
-		return block.timestamp >= endTime;
+		return timeToDate(block.timestamp) >= timeToDate(endTime);
 	}
 
 	/**
 	 * Function that returns true if the tournament is not yet started
 	 */
 	function isFuture() public view returns (bool) {
-		return block.timestamp < startTime;
+		return timeToDate(block.timestamp) < timeToDate(startTime);
+	}
+
+	/**
+	 * Function that returns if the tournament is active (players are allowed to play)
+	 */
+	function isActive() public view returns (bool) {
+		return !isFuture() && !isEnded();
 	}
 
 	/**
@@ -374,8 +386,8 @@ contract Tournament {
 	 * Function that returns if the player has already played today (resets at O0:OO UTC)
 	 */
 	function alreadyPlayed(address _player) public view returns (bool) {
-		uint256 today = ( block.timestamp - ( block.timestamp % (60 * 60 * 24) ) ) / (60 * 60 * 24);
-		uint256 lastGame = ( playersMap[_player].lastGame - ( playersMap[_player].lastGame % (60 * 60 * 24) ) ) / (60 * 60 * 24);
+		uint256 today = timeToDate(block.timestamp);
+		uint256 lastGame = timeToDate(playersMap[_player].lastGame);
 		return today == lastGame;
 	}
 
