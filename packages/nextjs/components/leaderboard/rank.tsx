@@ -21,7 +21,7 @@ export const Rank = ({ tournament, score }: { tournament: string; score: number 
   for (let i = 0; i < players.length; i++) {
     list.push(
       <>
-        <Item player={players[i]} score={score} key={i} />
+        <Item tournament={tournament} player={players[i]} score={score} key={i} />
       </>,
     );
   }
