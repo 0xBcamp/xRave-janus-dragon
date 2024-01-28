@@ -43,6 +43,11 @@ contract Tournament {
 		uint depositPricePerShare; // price per share at deposit
 		uint depositPricePerShare2; // price per share at deposit (only used for UniswapV2 LPs)
 	}
+	struct StoredPlayer {
+		uint8 move;
+		address addr;
+	}
+	StoredPlayer private storedPlayer;
 
 	enum Protocol {
 		Uniswap,
@@ -64,6 +69,23 @@ contract Tournament {
 	event Unstaked(
 		address indexed player,
 		uint256 amount
+	);
+
+	event MoveSaved(
+		address indexed player
+	);
+
+	event Winner(
+		address indexed player
+	);
+
+	event Looser(
+		address indexed player
+	);
+
+	event Draw(
+		address indexed player,
+		address indexed opponent
 	);
 
 	// Constructor: Called once on contract deployment
@@ -231,16 +253,55 @@ contract Tournament {
 	function playAgainstContract(uint8 _move) public returns(uint256 contractMove) {
 		require(isActive(), "Tournament is not active");
 	}
-		
+	
+	function _resolveGame(uint8 _move) internal {
+		if(_move == storedPlayer.move) {
+            // Draw
+			updateScore(msg.sender, 2);
+			updateScore(storedPlayer.addr, 2);
+            // winner = address(0);
+			emit Draw(msg.sender, storedPlayer.addr);
+        } else if ((_move % 3 + 1) == storedPlayer.move) {
+			// storedPlayer wins
+			updateScore(storedPlayer.addr, 4);
+            // winner = storedPlayer.addr;
+			emit Winner(storedPlayer.addr);
+			emit Looser(msg.sender);
+        } else {
+            // msg.sender wins
+			updateScore(msg.sender, 4);
+            // winner = msg.sender;
+			emit Winner(msg.sender);
+			emit Looser(storedPlayer.addr);
+        }
+		// Reset the stored player
+        storedPlayer.addr = address(0);
+    }
+
 	/**
 	 * Function that allows the player to submit a move for play against another player
 	 */
 	function playAgainstPlayer(uint8 _move) public {
 		// require(isActive(), "Tournament is not active");
+		// playersMap[msg.sender].lastGame = block.timestamp;
+		// if(_move == uint8(Moves.Paper)) updateScore(msg.sender, 0); // TODO: game logic
+		// else if(_move == uint8(Moves.Rock)) updateScore(msg.sender, 1);
+		// else updateScore(msg.sender, 2); // Scissors
+
+		require(_move <= 2, "Invalid move");
+		require(isActive(), "Tournament is not active");
 		playersMap[msg.sender].lastGame = block.timestamp;
-		if(_move == uint8(Moves.Paper)) updateScore(msg.sender, 0); // TODO: game logic
-		else if(_move == uint8(Moves.Rock)) updateScore(msg.sender, 1);
-		else updateScore(msg.sender, 2); // Scissors
+
+        if(storedPlayer.addr != address(0)) {
+			// A player is already waiting to be matched
+            _resolveGame(_move);
+        } else {
+			// No player is waiting to be matched, we store the move and wait for a player to join
+            storedPlayer.move = _move;
+            storedPlayer.addr = msg.sender;
+        }
+        
+        emit MoveSaved(msg.sender);
 	}
 
 	/**

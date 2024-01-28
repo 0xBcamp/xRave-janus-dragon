@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x773330693cb7d5D233348E25809770A32483A940",
+      address: "0xA9d0Fb5837f9c42c874e16da96094b14Af0e2784",
       abi: [
         {
           inputs: [
@@ -55,6 +55,51 @@ const deployedContracts = {
               type: "address",
             },
             {
+              indexed: true,
+              internalType: "address",
+              name: "opponent",
+              type: "address",
+            },
+          ],
+          name: "Draw",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+          ],
+          name: "Looser",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+          ],
+          name: "MoveSaved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+            {
               indexed: false,
               internalType: "uint256",
               name: "amount",
@@ -81,6 +126,19 @@ const deployedContracts = {
             },
           ],
           name: "Unstaked",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+          ],
+          name: "Winner",
           type: "event",
         },
         {
@@ -726,7 +784,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x52173b6ac069619c206b9A0e75609fC92860AB2A",
+      address: "0x6B21b3ae41f818Fc91e322b53f8D0773d31eCB75",
       abi: [
         {
           inputs: [
@@ -974,7 +1032,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0x47c05BCCA7d57c87083EB4e586007530eE4539e9",
+      address: "0x1eB5C49630E08e95Ba7f139BcF4B9BA171C9a8C7",
       abi: [
         {
           inputs: [],
@@ -1321,7 +1379,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x408F924BAEC71cC3968614Cb2c58E155A35e6890",
+      address: "0x6e0a5725dD4071e46356bD974E13F35DbF9ef367",
       abi: [
         {
           inputs: [],

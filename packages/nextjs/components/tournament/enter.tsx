@@ -109,7 +109,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
-            <div className="inline-flex rounded-md shadow-sm" role="group">
+            <div className="flex justify-center rounded-md shadow-sm space-x-4 mt-5" role="group">
               <button className="btn btn-secondary" disabled={approved} onClick={() => approveToken()}>
                 Approve {LPTokenSymbol}
               </button>
