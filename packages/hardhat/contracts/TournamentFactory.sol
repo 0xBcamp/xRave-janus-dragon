@@ -62,29 +62,104 @@ contract TournamentFactory {
 	 * Function that returns an array of all the active tournament contracts
 	 */
 	function getAllActiveTournaments() external view returns (address[] memory) {
-		// TODO: filter active tournaments only
-		return getAllTournaments();
+		uint activeCount = 0;
+
+		// First pass: Count the number of active tournaments
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isActive()) {
+				activeCount++;
+			}
+		}
+
+		// Second pass: Populate the array with active tournaments
+		address[] memory activeTournaments = new address[](activeCount);
+		uint currentIndex = 0;
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isActive()) {
+				activeTournaments[currentIndex] = TournamentArray[i];
+				currentIndex++;
+			}
+		}
+
+		return activeTournaments;
 	}
 
 	/**
 	 * Function that returns an array of all the past tournament contracts
 	 */
 	function getAllPastTournaments() external view returns (address[] memory) {
+		uint count = 0;
 
+		// First pass: Count the number of active tournaments
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isEnded()) {
+				count++;
+			}
+		}
+
+		// Second pass: Populate the array with active tournaments
+		address[] memory pastTournaments = new address[](count);
+		uint currentIndex = 0;
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isEnded()) {
+				pastTournaments[currentIndex] = TournamentArray[i];
+				currentIndex++;
+			}
+		}
+
+		return pastTournaments;
 	}
 
 	/**
 	 * Function that returns an array of all the future tournament contracts
 	 */
 	function getAllFutureTournaments() external view returns (address[] memory) {
+		uint count = 0;
 
+		// First pass: Count the number of active tournaments
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isFuture()) {
+				count++;
+			}
+		}
+
+		// Second pass: Populate the array with active tournaments
+		address[] memory futureTournaments = new address[](count);
+		uint currentIndex = 0;
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isFuture()) {
+				futureTournaments[currentIndex] = TournamentArray[i];
+				currentIndex++;
+			}
+		}
+
+		return futureTournaments;
 	}
 
 	/**
 	 * Function that returns an array of all the tournament a player is registered to
 	 */
 	function getTournamentsByPlayer(address _player) external view returns (address[] memory) {
+		uint count = 0;
 
+		// First pass: Count the number of active tournaments
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
+				count++;
+			}
+		}
+
+		// Second pass: Populate the array with active tournaments
+		address[] memory playersTournaments = new address[](count);
+		uint currentIndex = 0;
+		for (uint i = 0; i < TournamentArray.length; i++) {
+			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
+				playersTournaments[currentIndex] = TournamentArray[i];
+				currentIndex++;
+			}
+		}
+
+		return playersTournaments;
 	}
 
 	/**

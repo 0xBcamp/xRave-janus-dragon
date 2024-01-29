@@ -3,12 +3,22 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 export const List = () => {
-  const { data: activeTournaments, isLoading: isTournamentsLoading } = useScaffoldContractRead({
+  const { data: activeTournaments, isLoading: isActiveTournamentsLoading } = useScaffoldContractRead({
     contractName: "TournamentFactory",
     functionName: "getAllActiveTournaments",
   });
 
-  if (isTournamentsLoading) {
+  const { data: futureTournaments, isLoading: isFutureTournamentsLoading } = useScaffoldContractRead({
+    contractName: "TournamentFactory",
+    functionName: "getAllFutureTournaments",
+  });
+
+  const { data: pastTournaments, isLoading: isPastTournamentsLoading } = useScaffoldContractRead({
+    contractName: "TournamentFactory",
+    functionName: "getAllPastTournaments",
+  });
+
+  if (isActiveTournamentsLoading || isFutureTournamentsLoading || isPastTournamentsLoading) {
     return <div className="flex justify-center items-center mt-10">Loading...</div>;
   }
 
@@ -30,11 +40,26 @@ export const List = () => {
           </div>
         </div>
       ) : (
-        <ul role="list" className="space-y-4">
-          {activeTournaments?.map(addr => (
-            <Item tournament={addr} key={addr} />
-          ))}
-        </ul>
+        <div className="grid grid-cols-2 place-content-start space-y-6">
+          <div className="flex justify-center mt-10">Active Tournaments</div>
+          <ul role="list" className="space-y-4">
+            {activeTournaments?.map(addr => (
+              <Item tournament={addr} key={addr} />
+            ))}
+          </ul>
+          <div className="flex justify-center mt-10">Future Tournaments</div>
+          <ul role="list" className="space-y-4">
+            {futureTournaments?.map(addr => (
+              <Item tournament={addr} key={addr} />
+            ))}
+          </ul>
+          <div className="flex justify-center mt-10">Past Tournaments</div>
+          <ul role="list" className="space-y-4">
+            {pastTournaments?.map(addr => (
+              <Item tournament={addr} key={addr} />
+            ))}
+          </ul>
+        </div>
       )}
     </>
   );

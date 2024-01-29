@@ -177,7 +177,7 @@ export const Play = () => {
                   Scissors
                 </button>
               </div>
-              <div className="flex rounded-md shadow-sm space-x-4" role="group">
+              <div className="flex justify-center rounded-md shadow-sm space-x-4" role="group">
                 <button className="btn btn-secondary" disabled={true} onClick={() => playAgainstContract()}>
                   Instant play against the contract
                 </button>
