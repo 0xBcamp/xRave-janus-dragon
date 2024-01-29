@@ -89,10 +89,10 @@ export const Play = () => {
   useContractEvent({
     address: params.addr,
     abi: DeployedContracts[31337].Tournament.abi,
-    eventName: "Looser",
+    eventName: "Loser",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
-        setResult("looser");
+        setResult("loser");
       }
     },
   });
@@ -144,7 +144,7 @@ export const Play = () => {
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>Congratulations! You won against your opponent.</p>
             </div>
-          ) : result == "looser" ? (
+          ) : result == "loser" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>You lost against your opponent.</p>
             </div>

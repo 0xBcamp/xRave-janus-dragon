@@ -76,16 +76,19 @@ contract Tournament {
 	);
 
 	event Winner(
-		address indexed player
+		address indexed player,
+		uint256 day
 	);
 
-	event Looser(
-		address indexed player
+	event Loser(
+		address indexed player,
+		uint256 day
 	);
 
 	event Draw(
 		address indexed player,
-		address indexed opponent
+		address indexed opponent,
+		uint256 day
 	);
 
 	// Constructor: Called once on contract deployment
@@ -267,19 +270,19 @@ contract Tournament {
 			updateScore(msg.sender, 2);
 			updateScore(storedPlayer.addr, 2);
             // winner = address(0);
-			emit Draw(msg.sender, storedPlayer.addr);
-        } else if ((_move % 3 + 1) == storedPlayer.move) {
-			// storedPlayer wins
-			updateScore(storedPlayer.addr, 4);
-            // winner = storedPlayer.addr;
-			emit Winner(storedPlayer.addr);
-			emit Looser(msg.sender);
-        } else {
+			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
+        } else if (((3 +_move - storedPlayer.move) % 3) == 1) {
             // msg.sender wins
 			updateScore(msg.sender, 4);
             // winner = msg.sender;
-			emit Winner(msg.sender);
-			emit Looser(storedPlayer.addr);
+			emit Winner(msg.sender, timeToDate(block.timestamp));
+			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
+        } else {
+			// storedPlayer wins
+			updateScore(storedPlayer.addr, 4);
+            // winner = storedPlayer.addr;
+			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
+			emit Loser(msg.sender, timeToDate(block.timestamp));
         }
 		// Reset the stored player
         storedPlayer.addr = address(0);
