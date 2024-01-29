@@ -28,6 +28,7 @@ contract Tournament is VRFConsumerBaseV2{
     error InvalidMove();
     error NotEnoughFunds();
 	error NotRegistered();	
+	error NotEnded();
 	
 	///////////////////////
 	/// State Variables ///
@@ -38,13 +39,17 @@ contract Tournament is VRFConsumerBaseV2{
 	//TOURNAMENT INFO?
 	// @todo could probably put all tournament info in a struct, probaly dont need LPTokenSymbols or Decimals
 	string public name; // Name of the tournament
-	uint256 public contractLPToken; // amount of LP token held by the contract
+	uint256 public contractLPToken; // amount of LP token held by the 
+	//@note why do we need IERC20Metadata??
 	IERC20Metadata poolIncentivized;
+	//@note do we need symbol and decimals??
 	string public LPTokenSymbol;
 	uint256 public LPTokenDecimals;
+	//@note change to depositAmout
 	uint256 public LPTokenAmount; // Min Amount of LP to be deposited by the players
 	uint256 public startTime;
 	uint256 public endTime;
+	//@note is this necessary??
 	Protocol public protocol;
 	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
@@ -62,7 +67,7 @@ contract Tournament is VRFConsumerBaseV2{
 	mapping(uint256 => address[]) public scoreToPlayers; // Used for ranking
 	mapping(address => Player) public playersMap; //address => Player Struct
 
-
+	//@note if we only allow one pool we don't need 2 depositPricePerShare variables
 	struct Player {
 		uint score; // how many points each player has
 		uint lastGame; // when the player last played (used to determine if the player already played today)
@@ -70,16 +75,12 @@ contract Tournament is VRFConsumerBaseV2{
 		uint depositPricePerShare2; // price per share at deposit (only used for UniswapV2 LPs)
 	}
 
+	//@note is this necessary? 
 	enum Protocol {
 		Uniswap,
 		Yearn
 	}
 
-	enum Moves {
-		Paper,
-		Rock,
-		Scissors
-	}
 
 	///////////////////////////////
     /// Chainlink VRF Variables ///
@@ -94,7 +95,7 @@ contract Tournament is VRFConsumerBaseV2{
         address winner;
     }
 
-    // requestId --> GameStatus  
+    // requestId --> GameStatus  @note is there a better way to track games?
     mapping(uint256 => ContractGame) public contractGameRequestId; 
 
     // past requests Id.
@@ -132,6 +133,7 @@ contract Tournament is VRFConsumerBaseV2{
 	/////////////////
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
+	//@note we could use OZ Ownable
 	// Check the withdraw() function
 	modifier onlyOwner() {
 		// msg.sender: predefined variable that represents address of the account that called the current function
@@ -161,6 +163,7 @@ contract Tournament is VRFConsumerBaseV2{
 			LPTokenAmount = _LPTokenAmount;
 			if(_poolIncentivized != address(0)) {
 				poolIncentivized = IERC20Metadata(_poolIncentivized);
+				//@note why do we need to check the symbol??
 				LPTokenSymbol = poolIncentivized.symbol();
 				LPTokenDecimals = poolIncentivized.decimals();
 				if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
@@ -185,6 +188,7 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that allows anyone to stake their LP token to register in the tournament
 	 */
+	//@todo give lives??
 	function stakeLPToken() public {
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
@@ -198,11 +202,16 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
-	//@todo require tournament is over
 	function unstakeLPToken() public {
+		if(isActive()){
+			revert NotEnded();
+		}
 		require(isPlayer(msg.sender), "You have nothing to withdraw");
 		// Get back its deposited value of underlying assets
+
+		//@note could read directly from Player struct
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
+		//@note there is a better way to calc this
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
 		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - extraPoolPrize;
@@ -222,10 +231,12 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Total fees will be available for withdrawal once all players have withdrawn
 	 * Partial fees can be withdran at any time after players begun to withdraw
 	 */
+	//updated to follow CEI
 	function withdrawFees() public onlyOwner {
 		require(realizedFees > 0, "No fees to withdraw");
-		require(IERC20(poolIncentivized).transfer(msg.sender, realizedFees), "Transfer of LP token Failed");		
+		uint256 _realizedFees = realizedFees;
 		realizedFees = 0;
+		require(IERC20(poolIncentivized).transfer(msg.sender, _realizedFees), "Transfer of LP token Failed");		
 	}
 
 
@@ -283,7 +294,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that allows the player to submit a move for play against Chainlink VRF
 	 */
 	//@note must update lastgame in Player struct 
-	function playAgainstContract(uint8 _playerMove) public {
+	function playAgainstContract(uint8 _playerMove) public returns (uint256 requestId) {
 		require(isActive(), "Tournament is not active");
 
 		if(_playerMove > 2){
@@ -299,7 +310,7 @@ contract Tournament is VRFConsumerBaseV2{
         // }
 
         // livesLeft[msg.sender] -= 1;
-        _requestRandomWords(_playerMove, msg.sender);
+        requestId = _requestRandomWords(_playerMove, msg.sender);
 
         emit PlayerPlayedAganistContract(_playerMove);
 	}
@@ -417,6 +428,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * @dev this resolves a game aganist the contract
 	 */
     //@todo make one function that resolves both pvp and vrf games
+	//@todo make it only callable by VRF fulfillRandomwords
     function resolveVrfGame(uint256 requestId) public returns (address winner) {
         ContractGame storage game = contractGameRequestId[requestId]; 
         if(game.playerMove == game.vrfMove){
@@ -474,6 +486,16 @@ contract Tournament is VRFConsumerBaseV2{
 		rLPTokenAmount = LPTokenAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
+	}
+
+	function getGame(uint256 _requestId) public view returns (uint8 playerMove, address gamePlayer, bool fulfilled, bool exists, uint256[] memory randomWords, uint256 vrfMove, address winner) {
+		playerMove = contractGameRequestId[_requestId].playerMove;
+		gamePlayer = contractGameRequestId[_requestId].player;
+		fulfilled = contractGameRequestId[_requestId].fulfilled;
+		exists = contractGameRequestId[_requestId].exists;
+		randomWords = contractGameRequestId[_requestId].randomWords;
+		vrfMove = contractGameRequestId[_requestId].vrfMove;
+		winner = contractGameRequestId[_requestId].winner;
 	}
 
 	/**
