@@ -13,7 +13,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
  */
 
 const externalContracts = {
-  31337: {
+  /*  31337: {
     ERC20: {
       address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
@@ -239,7 +239,7 @@ const externalContracts = {
         },
       ],
     },
-  },
+  }, */
 } as const;
 
 export default externalContracts satisfies GenericContractsDeclaration;
