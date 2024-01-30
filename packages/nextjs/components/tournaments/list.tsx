@@ -40,21 +40,21 @@ export const List = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 place-content-start space-y-6">
-          <div className="flex justify-center mt-10">Active Tournaments</div>
-          <ul role="list" className="space-y-4">
+        <div className="grid grid-cols-4 place-content-start space-y-6 gap-6">
+          <div className="flex col-span-1 justify-end mt-10">Active Tournaments</div>
+          <ul role="list" className="space-y-4 col-span-3">
             {activeTournaments?.map(addr => (
               <Item tournament={addr} key={addr} />
             ))}
           </ul>
-          <div className="flex justify-center mt-10">Future Tournaments</div>
-          <ul role="list" className="space-y-4">
+          <div className="flex col-span-1 justify-end mt-10">Future Tournaments</div>
+          <ul role="list" className="space-y-4 col-span-3">
             {futureTournaments?.map(addr => (
               <Item tournament={addr} key={addr} />
             ))}
           </ul>
-          <div className="flex justify-center mt-10">Past Tournaments</div>
-          <ul role="list" className="space-y-4">
+          <div className="flex col-span-1 justify-end mt-10">Past Tournaments</div>
+          <ul role="list" className="space-y-4 col-span-3">
             {pastTournaments?.map(addr => (
               <Item tournament={addr} key={addr} />
             ))}
