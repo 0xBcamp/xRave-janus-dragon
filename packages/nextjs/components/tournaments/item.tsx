@@ -4,7 +4,7 @@ import { useContractRead } from "wagmi";
 import { ClockIcon, CurrencyDollarIcon, TrophyIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
-export const Item = ({ tournament }: { tournament: string }) => {
+export const Item = ({ tournament, player }: { tournament: string; player: boolean }) => {
   const { data: tournamentData, isLoading: isLoading } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
@@ -38,7 +38,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
         </div>
         <div className="flex items-center">
           <UserCircleIcon className="h-4 w-4 mr-1" />
-          {players.toString()}
+          {player ? "You + " + (Number(players) - 1).toString() : players.toString()}
         </div>
         <div className="flex items-center">
           <TrophyIcon className="h-4 w-4 mr-1" />
@@ -66,7 +66,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
         </div>
         <div className="flex items-center">
           <UserCircleIcon className="h-4 w-4 mr-1" />
-          {players.toString()}
+          {player ? "You + " + (Number(players) - 1).toString() : players.toString()}
         </div>
         <div className="flex items-center"></div>
         <div className="flex items-center">
@@ -90,7 +90,7 @@ export const Item = ({ tournament }: { tournament: string }) => {
       </div>
       <div className="flex items-center">
         <UserCircleIcon className="h-4 w-4 mr-1" />
-        {players.toString()}
+        {player ? "You + " + (Number(players) - 1).toString() : players.toString()}
       </div>
       <div className="flex items-center">
         <TrophyIcon className="h-4 w-4 mr-1" />
