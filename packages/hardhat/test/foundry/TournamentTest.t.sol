@@ -29,23 +29,6 @@ contract TournamentTest is Test {
     uint256 LPTokenAmount = 1e18; // 1 LP Token
     uint256 startTime =  block.timestamp + 1 seconds; // Start one day from now
     uint256 endTime = startTime + 7 days; // End one week after start
-    
-
-    
-    
-    // // state variables for PvVRF
-    // struct ContractGame {
-    //     uint8 playerMove;
-    //     address player;
-    //     bool fulfilled; // whether the request has been successfully fulfilled
-    //     bool exists; // whether a requestId exists
-    //     uint256[] randomWords;
-    //     uint256 vrfMove;
-    //     address winner;
-    // }
-
-    // // requestId --> GameStatus  @note is there a better way to track games?
-    // mapping(uint256 => ContractGame) public contractGameRequestId; 
 
     // Set up "wallets"
     address owner = makeAddr("owner");
@@ -64,6 +47,13 @@ contract TournamentTest is Test {
         // Deploy Mock Contracts
         mockUniLP = new UniswapV2Pair();
         mockYLP = new Vyper_contract();
+
+        // Transfer LP tokens to players
+        mockYLP.transfer(player1, 10e18);
+        mockYLP.transfer(player2, 10e18);
+        mockUniLP.transfer(player1, 10e18);
+        mockUniLP.transfer(player2, 10e18);
+
 
         //from mock vrf 
         //constructor(uint96 _baseFee, uint96 _gasPriceLink) 
@@ -87,6 +77,23 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
+    }
+
+    function testSetUp() public {
+        assertEq(tournament.owner(), owner);
+        assertEq(tournament.name(), "Test Tournament");
+        //assertEq(tournament.poolIncentivized(), address(mockYLP));
+        assertEq(tournament.LPTokenAmount(), 1e18);
+        assertEq(tournament.startTime(), startTime);
+        assertEq(tournament.endTime(), endTime);
+        //assertEq(tournament.subId(), 1);
+        //assertEq(tournament.gasLane(), bytes32(0));
+        //assertEq(tournament.callbackGasLimit(), 2000000);
+        //assertEq(tournament.vrfCoordinator(), address(mockVRF));
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+        assertEq(mockYLP.balanceOf(player2), 10e18);
+        assertEq(mockUniLP.balanceOf(player1), 10e18);
+        assertEq(mockUniLP.balanceOf(player2), 10e18);
     }
 
     function testPlayAganistContractAlwyasReturnsLessThan3(uint256 _fuzzNumber) public {
@@ -113,6 +120,33 @@ contract TournamentTest is Test {
         //assertApproxEqAbs(uint256 a, uint256 2, uint256 2)
         assertTrue(vrfMove <= 2, "VRF move is not valid");
 
+    }
+
+    function testPlayAganistPlayer() public {
+        uint8 currentMove;
+        address currentPlayer;
+
+        //test unregistered player
+        vm.prank(player1);
+        vm.expectRevert();
+        tournament.playAgainstPlayer(1);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+
+        // Check player1's token balance before approving
+        // uint256 player1Balance = mockYLP.balanceOf(player1);
+        // console2.log("Player1 Balance: ", player1Balance);
+
+        // deposit to enter
+        tournament.stakeLPToken();
+        // test can't play w/ 0 move
+        vm.expectRevert();
+        tournament.playAgainstPlayer(0);
+
+        //assertEq(currentMove, 1);
+        //assertEq(currentPlayer, player1);
     }
 
 

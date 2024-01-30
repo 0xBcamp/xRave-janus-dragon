@@ -26,3 +26,7 @@ However, if the VRFCoordinator's move matches this calculation, it means the pla
 Player chooses Rock (0), VRFCoordinator chooses Paper (1).
 (0 + 1) % 3 = 1. Since 1 is equal to 1, the player loses.
 This logic is a compact way to determine the outcome of a rock-paper-scissors game without using multiple if-else conditions. The modulo operation ensures that the result cycles through the three possible moves.
+
+## 1/30
+Yearn Notes:
+    Once a user's liquidity is withdrawn from the yVault, their yVault Token will be burned. yVault Tokens are ERC20, meaning they can be transferred and traded as any other common Ethereum token.

@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-// Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -195,7 +194,7 @@ contract Tournament is VRFConsumerBaseV2{
 		playersMap[msg.sender].depositPricePerShare = pPS;
 		playersMap[msg.sender].depositPricePerShare2 = pPS2;
 		players.push(msg.sender);
-		// emit: keyword used to trigger an event
+
 		emit Staked(msg.sender, LPTokenAmount);
 	}
 
