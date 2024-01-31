@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x87c470437282174b3f8368c7CF1Ac03bcAe57954",
+      address: "0x7c02b58029beeA7c1FcC872803dC9818f57A0E61",
       abi: [
         {
           inputs: [
@@ -807,7 +807,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0x746a48E39dC57Ff14B872B8979E20efE5E5100B1",
+      address: "0x3818eAb6Ca8Bf427222bfACFA706c514145F4104",
       abi: [
         {
           inputs: [
@@ -1055,7 +1055,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0x88D1aF96098a928eE278f162c1a84f339652f95b",
+      address: "0x18eb8AF587dcd7E4F575040F6D800a6B5Cef6CAf",
       abi: [
         {
           inputs: [],
@@ -1111,6 +1111,19 @@ const deployedContracts = {
           ],
           name: "Transfer",
           type: "event",
+        },
+        {
+          inputs: [],
+          name: "_totalSupply",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
         },
         {
           inputs: [
@@ -1402,7 +1415,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x7Ce73F8f636C6bD3357A0A8a59e0ab6462C955B0",
+      address: "0xA4aE77554847958aC0854f06601267c9F9C75dfD",
       abi: [
         {
           inputs: [],

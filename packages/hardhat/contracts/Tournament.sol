@@ -107,7 +107,7 @@ contract Tournament {
 			poolIncentivized = IERC20Metadata(_poolIncentivized);
 			LPTokenSymbol = poolIncentivized.symbol();
 			LPTokenDecimals = poolIncentivized.decimals();
-			if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
+			if(keccak256(abi.encodePacked(LPTokenSymbol)) == keccak256("UNI-V2")) {
 				protocol = Protocol.Uniswap;
 			} else {
 				protocol = Protocol.Yearn;
@@ -146,7 +146,7 @@ contract Tournament {
 			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
 			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
 			uint supply = uniswap.totalSupply();
-			return ( res0 / supply, res1 / supply );
+			return ( 1 ether * res0 / supply, 1 ether * res1 / supply );
 		}
 	}
 
