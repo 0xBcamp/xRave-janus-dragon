@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -26,7 +26,6 @@ contract Tournament is VRFConsumerBaseV2{
 	/// ERRORS ///
 	//////////////
 	
-	//error NoLivesLeft();
     error InvalidMove();
     error NotEnoughFunds();
 	error NotRegistered();	
@@ -58,11 +57,6 @@ contract Tournament is VRFConsumerBaseV2{
 	// uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
 	uint256 public topScore = 0;
-
-	//GAME INFO 
-	// used for pvp game
-	uint8 public currentMove; // 0 = no move must start game, 1 = rock, 2 = paper, 3 = scissors @todo encrypt 1, 2, 3??
-	address public currentPlayer;
 
 	// PLAYER INFO
 	address[] public players;
@@ -216,21 +210,29 @@ contract Tournament is VRFConsumerBaseV2{
 	/// Stake & Unstake Funcs ///
 	/////////////////////////////
 
-
+	/**
+	 * Function that allows anyone to stake their LP token to register in the tournament
+	 */
+	function stakeLPToken() public {
+		require(!isPlayer(msg.sender), "You have already staked");
+		require(stakingAllowed(), "Staking not allowed");
+		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
+		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		playersMap[msg.sender].depositPricePerShare = pPS;
+		playersMap[msg.sender].depositPricePerShare2 = pPS2;
+		players.push(msg.sender);
+		// emit: keyword used to trigger an event
+		emit Staked(msg.sender, LPTokenAmount);
+	}
 
 	/**
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
 	function unstakeLPToken() public {
-		if(isActive()){
-			revert NotEnded();
-		}
 		require(isPlayer(msg.sender), "You have nothing to withdraw");
+		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
-
-		//@note could read directly from Player struct
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
-		//@note there is a better way to calc this
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
 		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - extraPoolPrize;
@@ -264,50 +266,26 @@ contract Tournament is VRFConsumerBaseV2{
 	///////////////////////////
 
 	/**
-	 * @dev Function that allows the player to submit a move for play against another player
-	 * @param _move 1 = rock, 2 = paper, 3 = scissors
+	 * Function that allows the player to submit a move for play against another player
 	 */
 	function playAgainstPlayer(uint8 _move) public {
-		//@todo add in checks for deposits etc
-		
-		if(_move == 0 || _move > 3){
-            revert InvalidMove();
-        }
-
-		if(msg.sender == currentPlayer){
-			revert InvalidMove();
-		}
-
-		if(!isPlayer(msg.sender)){
-			revert NotRegistered();
-		}
-
+		require(_move <= 2, "Invalid move");
 		require(isActive(), "Tournament is not active");
+		require(!alreadyPlayed(msg.sender), "You already played today");
+		require(isPlayer(msg.sender), "You must deposit before playing");
 		playersMap[msg.sender].lastGame = block.timestamp;
-        
-        // if(livesLeft[msg.sender] == 0){
-        //     revert NoLivesLeft();
-        // }
 
-        // if(deposits[msg.sender] <= MINIMUM_DEPOSIT){
-        //     revert NoLivesLeft();
-        // }
-
-        // livesLeft[msg.sender] -= 1;
-
-        //store move
-        if(currentMove > 0){
-            //resolve game -> set currentMove to 0
-            _resolveGame(_move);     
+        if(storedPlayer.addr != address(0)) {
+			// A player is already waiting to be matched
+            _resolveGame(_move);
         } else {
-            currentMove = _move;
-            currentPlayer = msg.sender;
+			// No player is waiting to be matched, we store the move and wait for a player to join
+            storedPlayer.move = _move;
+            storedPlayer.addr = msg.sender;
         }
         
-        emit MoveMade(_move);
-
+        emit MoveSaved(msg.sender);
 	}
-
 
 	/**
 	 * Function that allows the player to submit a move for play against Chainlink VRF
@@ -319,16 +297,7 @@ contract Tournament is VRFConsumerBaseV2{
 		if(_playerMove > 2){
             revert InvalidMove();
         }
-        
-        // if(livesLeft[msg.sender] == 0){
-        //     revert NoLivesLeft();
-        // }
 
-        // if(deposits[msg.sender] <= MINIMUM_DEPOSIT){
-        //     revert NoLivesLeft();
-        // }
-
-        // livesLeft[msg.sender] -= 1;
         requestId = _requestRandomWords(_playerMove, msg.sender);
 
         emit PlayerPlayedAganistContract(_playerMove);
@@ -401,44 +370,35 @@ contract Tournament is VRFConsumerBaseV2{
 	//////////////////////////////
 	/// RESOLVE GAME FUNCTIONS ///
 	//////////////////////////////
+
 	/**
-	 * 
-	 * @param move 1 = rock, 2 = paper, 3 = scissors
-	 * @return winner address of winner
-	 * @dev this resolves a pvp game
-	 * Players get double points for playing aganist another human
+	 * Function that allows the bot to sumbit a batch of signed moves for resolution
 	 */
-	//@note do we want to track the total number of games won or played??
-	function _resolveGame(uint8 move) internal returns (address winner){
-		if(move == currentMove){
-            //draw
-            //playersPoints[msg.sender] += 2;
+	function resolveBatch() public {
+	}
+	
+	function _resolveGame(uint8 _move) internal {
+		if(_move == storedPlayer.move) {
+            // Draw
 			updateScore(msg.sender, 2);
-            //playersPoints[currentPlayer] += 2;
-			updateScore(currentPlayer, 2);
-            // livesLeft[msg.sender] += 1;
-            // livesLeft[currentPlayer] += 1;
-
-            winner = address(0);
-
-        } else if ((move % 3 + 1) == currentMove) {
-            // currentPlayer wins + 4 points & refunded life // @todo
-            //playersPoints[currentPlayer] += 4;
-			updateScore(currentPlayer, 4);
-            //livesLeft[currentPlayer] += 1;
-            winner = currentPlayer;
-        } else {
-            // currentPlayer loses
-            //playersPoints[msg.sender] += 4;
+			updateScore(storedPlayer.addr, 2);
+            // winner = address(0);
+			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
+        } else if (((3 +_move - storedPlayer.move) % 3) == 1) {
+            // msg.sender wins
 			updateScore(msg.sender, 4);
-            //livesLeft[msg.sender] += 1;
-            winner = msg.sender;
+            // winner = msg.sender;
+			emit Winner(msg.sender, timeToDate(block.timestamp));
+			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
+        } else {
+			// storedPlayer wins
+			updateScore(storedPlayer.addr, 4);
+            // winner = storedPlayer.addr;
+			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
+			emit Loser(msg.sender, timeToDate(block.timestamp));
         }
-
-		//reset game
-        currentMove = 0;
-        currentPlayer = address(0);
-        return winner;
+		// Reset the stored player
+        storedPlayer.addr = address(0);
     }
 
 	/**
@@ -535,22 +495,6 @@ contract Tournament is VRFConsumerBaseV2{
 		}
 	}
 
-
-	/**
-	 * Function that allows anyone to stake their LP token to register in the tournament
-	 */
-	function stakeLPToken() public {
-		require(!isPlayer(msg.sender), "You have already staked");
-		require(stakingAllowed(), "Staking not allowed");
-		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
-		(uint256 pPS, uint256 pPS2) = getPricePerShare();
-		playersMap[msg.sender].depositPricePerShare = pPS;
-		playersMap[msg.sender].depositPricePerShare2 = pPS2;
-		players.push(msg.sender);
-		// emit: keyword used to trigger an event
-		emit Staked(msg.sender, LPTokenAmount);
-	}
-
 	/**
 	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
 	 */
@@ -605,128 +549,6 @@ contract Tournament is VRFConsumerBaseV2{
 	}
 
 	/**
-
-	 * Function that allows anyone to unstake their LP token once the tournament is over
-	 */
-	function unstakeLPToken() public {
-		require(isPlayer(msg.sender), "You have nothing to withdraw");
-		require(unstakingAllowed(), "Unstaking not allowed");
-		// Get back its deposited value of underlying assets
-		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
-		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
-		realizedPoolPrize += extraPoolPrize;
-		realizedFees += LPTokenAmount - extraPoolPrize;
-		// Add rewards from the game
-		amount += getPrizeAmount(msg.sender);
-		// unclaimedPoolPrize -= share; // TODO: useful?
-		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
-
-		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
-
-		// emit: keyword used to trigger an event
-		emit Unstaked(msg.sender, amount);
-	}
-
-	/**
-	 * Function that allows the owner to withdraw realized fees
-	 * Total fees will be available for withdrawal once all players have withdrawn
-	 * Partial fees can be withdran at any time after players begun to withdraw
-	 */
-	function withdrawFees() public onlyOwner {
-		require(realizedFees > 0, "No fees to withdraw");
-		require(IERC20(poolIncentivized).transfer(msg.sender, realizedFees), "Transfer of LP token Failed");		
-		realizedFees = 0;
-	}
-
-	/**
-	 * Function that allows the bot to sumbit a batch of signed moves for resolution
-	 */
-	function resolveBatch() public {
-	}
-
-	/**
-	 * Function that allows the player to submit a move for play against Chainlink VRF
-	 */
-	function playAgainstContract(uint8 _move) public returns(uint256 contractMove) {
-		require(isActive(), "Tournament is not active");
-	}
-	
-	function _resolveGame(uint8 _move) internal {
-		if(_move == storedPlayer.move) {
-            // Draw
-			updateScore(msg.sender, 2);
-			updateScore(storedPlayer.addr, 2);
-            // winner = address(0);
-			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
-        } else if (((3 +_move - storedPlayer.move) % 3) == 1) {
-            // msg.sender wins
-			updateScore(msg.sender, 4);
-            // winner = msg.sender;
-			emit Winner(msg.sender, timeToDate(block.timestamp));
-			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
-        } else {
-			// storedPlayer wins
-			updateScore(storedPlayer.addr, 4);
-            // winner = storedPlayer.addr;
-			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
-			emit Loser(msg.sender, timeToDate(block.timestamp));
-        }
-		// Reset the stored player
-        storedPlayer.addr = address(0);
-    }
-
-	/**
-	 * Function that allows the player to submit a move for play against another player
-	 */
-	function playAgainstPlayer(uint8 _move) public {
-		// require(isActive(), "Tournament is not active");
-		// playersMap[msg.sender].lastGame = block.timestamp;
-		// if(_move == uint8(Moves.Paper)) updateScore(msg.sender, 0); // TODO: game logic
-		// else if(_move == uint8(Moves.Rock)) updateScore(msg.sender, 1);
-		// else updateScore(msg.sender, 2); // Scissors
-
-		require(_move <= 2, "Invalid move");
-		require(isActive(), "Tournament is not active");
-		require(!alreadyPlayed(msg.sender), "You already played today");
-		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = block.timestamp;
-
-        if(storedPlayer.addr != address(0)) {
-			// A player is already waiting to be matched
-            _resolveGame(_move);
-        } else {
-			// No player is waiting to be matched, we store the move and wait for a player to join
-            storedPlayer.move = _move;
-            storedPlayer.addr = msg.sender;
-        }
-        
-        emit MoveSaved(msg.sender);
-	}
-
-	/**
-	 * Function that updates the player score by adding the points
-	 */
-	function updateScore(address _player, uint8 _points) internal {
-		if(_points == 0) { return; }
-		// We first remove the player from it's current rank
-		uint score = playersMap[_player].score;
-		for(uint i=0; i<scoreToPlayers[score].length; i++) {
-			if(scoreToPlayers[score][i] == _player) {
-				scoreToPlayers[score][i] = scoreToPlayers[score][scoreToPlayers[score].length - 1];
-				break;
-			}
-		}
-		if(score > 0) { scoreToPlayers[score].pop(); }
-		// Now we can update the score and push the user to its new rank
-		playersMap[_player].score += _points;
-		if(topScore < playersMap[_player].score) {
-			topScore = playersMap[_player].score;
-		}
-		scoreToPlayers[playersMap[_player].score].push(_player);
-	}
-
-	/**
-
 	 * Function that returns the expected pool prize at the end of the tournament from the accrued LP since the start
 	 */
 	function getExpectedPoolPrize() public view returns (uint256) {
