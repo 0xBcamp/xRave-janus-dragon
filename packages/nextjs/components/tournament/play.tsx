@@ -89,10 +89,10 @@ export const Play = () => {
   useContractEvent({
     address: params.addr,
     abi: DeployedContracts[31337].Tournament.abi,
-    eventName: "Looser",
+    eventName: "Loser",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
-        setResult("looser");
+        setResult("loser");
       }
     },
   });
@@ -144,13 +144,13 @@ export const Play = () => {
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>Congratulations! You won against your opponent.</p>
             </div>
-          ) : result == "looser" ? (
+          ) : result == "loser" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>You lost against your opponent.</p>
             </div>
           ) : result == "draw" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
-              <p>You drew against your opponent.</p>
+              <p>That&apos;s a draw!</p>
             </div>
           ) : result == "saved" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
@@ -177,7 +177,7 @@ export const Play = () => {
                   Scissors
                 </button>
               </div>
-              <div className="flex rounded-md shadow-sm space-x-4" role="group">
+              <div className="flex justify-center rounded-md shadow-sm space-x-4" role="group">
                 <button className="btn btn-secondary" disabled={true} onClick={() => playAgainstContract()}>
                   Instant play against the contract
                 </button>

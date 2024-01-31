@@ -8,11 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface YearnInterface {
 	function pricePerShare() external view returns (uint256);
+	function token() external view returns (address); // Underlying asset
 }
 
 interface UniswapInterface {
 	function getReserves() external view returns (uint256, uint256, uint256);
 	function totalSupply() external view returns (uint256);
+	function token0() external view returns (address); // Underlying asset
+	function token1() external view returns (address); // Underlying asset
 }
 
 contract Tournament {
@@ -76,23 +79,30 @@ contract Tournament {
 	);
 
 	event Winner(
-		address indexed player
+		address indexed player,
+		uint256 day
 	);
 
-	event Looser(
-		address indexed player
+	event Loser(
+		address indexed player,
+		uint256 day
 	);
 
 	event Draw(
 		address indexed player,
-		address indexed opponent
+		address indexed opponent,
+		uint256 day
 	);
 
 	// Constructor: Called once on contract deployment
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
 	constructor(address _owner, string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) {
 		require(_startTime < _endTime, "Start time must be before end time");
-		require(_startTime > block.timestamp, "Start time must be in the future");
+		// Defaults to current block timestamp
+		startTime = _startTime == 0 ? block.timestamp : _startTime;
+		require(startTime >= block.timestamp, "Start time must be today or in the future");
+		require(_endTime > block.timestamp, "End time must be in the future");
+		require(_LPTokenAmount > 0, "Amount to stake must be greater than 0");
 		owner = _owner;
 		name = _name;
 		LPTokenAmount = _LPTokenAmount;
@@ -100,13 +110,12 @@ contract Tournament {
 			poolIncentivized = IERC20Metadata(_poolIncentivized);
 			LPTokenSymbol = poolIncentivized.symbol();
 			LPTokenDecimals = poolIncentivized.decimals();
-			if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
+			if(keccak256(abi.encodePacked(LPTokenSymbol)) == keccak256("UNI-V2")) {
 				protocol = Protocol.Uniswap;
 			} else {
 				protocol = Protocol.Yearn;
 			}
 		}
-		startTime = _startTime;
 		endTime = _endTime;
 	}
 
@@ -118,7 +127,7 @@ contract Tournament {
 		_;
 	}
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime, uint256 rPlayers) {
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
@@ -126,6 +135,7 @@ contract Tournament {
 		rLPTokenAmount = LPTokenAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
+		rPlayers = players.length;
 	}
 
 	/**
@@ -139,7 +149,7 @@ contract Tournament {
 			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
 			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
 			uint supply = uniswap.totalSupply();
-			return ( res0 / supply, res1 / supply );
+			return ( 1 ether * res0 / supply, 1 ether * res1 / supply );
 		}
 	}
 
@@ -147,6 +157,8 @@ contract Tournament {
 	 * Function that allows anyone to stake their LP token to register in the tournament
 	 */
 	function stakeLPToken() public {
+		require(!isPlayer(msg.sender), "You have already staked");
+		require(stakingAllowed(), "Staking not allowed");
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
 		playersMap[msg.sender].depositPricePerShare = pPS;
@@ -214,6 +226,7 @@ contract Tournament {
 	 */
 	function unstakeLPToken() public {
 		require(isPlayer(msg.sender), "You have nothing to withdraw");
+		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
@@ -260,19 +273,19 @@ contract Tournament {
 			updateScore(msg.sender, 2);
 			updateScore(storedPlayer.addr, 2);
             // winner = address(0);
-			emit Draw(msg.sender, storedPlayer.addr);
-        } else if ((_move % 3 + 1) == storedPlayer.move) {
-			// storedPlayer wins
-			updateScore(storedPlayer.addr, 4);
-            // winner = storedPlayer.addr;
-			emit Winner(storedPlayer.addr);
-			emit Looser(msg.sender);
-        } else {
+			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
+        } else if (((3 +_move - storedPlayer.move) % 3) == 1) {
             // msg.sender wins
 			updateScore(msg.sender, 4);
             // winner = msg.sender;
-			emit Winner(msg.sender);
-			emit Looser(storedPlayer.addr);
+			emit Winner(msg.sender, timeToDate(block.timestamp));
+			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
+        } else {
+			// storedPlayer wins
+			updateScore(storedPlayer.addr, 4);
+            // winner = storedPlayer.addr;
+			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
+			emit Loser(msg.sender, timeToDate(block.timestamp));
         }
 		// Reset the stored player
         storedPlayer.addr = address(0);
@@ -290,6 +303,8 @@ contract Tournament {
 
 		require(_move <= 2, "Invalid move");
 		require(isActive(), "Tournament is not active");
+		require(!alreadyPlayed(msg.sender), "You already played today");
+		require(isPlayer(msg.sender), "You must deposit before playing");
 		playersMap[msg.sender].lastGame = block.timestamp;
 
         if(storedPlayer.addr != address(0)) {
@@ -345,22 +360,26 @@ contract Tournament {
 		return players.length;
 	}
 
-	/**
-	 * Function that returns if the tournament is active (players are allowed to play)
-	 */
-	function isActive() public view returns (bool) {
-		return block.timestamp >= startTime && block.timestamp < endTime;
+	function timeToDate(uint256 _time) internal pure returns (uint256) {
+		return _time / (60 * 60 * 24);
 	}
 
 	function isEnded() public view returns (bool) {
-		return block.timestamp >= endTime;
+		return timeToDate(block.timestamp) >= timeToDate(endTime);
 	}
 
 	/**
 	 * Function that returns true if the tournament is not yet started
 	 */
 	function isFuture() public view returns (bool) {
-		return block.timestamp < startTime;
+		return timeToDate(block.timestamp) < timeToDate(startTime);
+	}
+
+	/**
+	 * Function that returns if the tournament is active (players are allowed to play)
+	 */
+	function isActive() public view returns (bool) {
+		return !isFuture() && !isEnded();
 	}
 
 	/**
@@ -374,8 +393,8 @@ contract Tournament {
 	 * Function that returns if the player has already played today (resets at O0:OO UTC)
 	 */
 	function alreadyPlayed(address _player) public view returns (bool) {
-		uint256 today = ( block.timestamp - ( block.timestamp % (60 * 60 * 24) ) ) / (60 * 60 * 24);
-		uint256 lastGame = ( playersMap[_player].lastGame - ( playersMap[_player].lastGame % (60 * 60 * 24) ) ) / (60 * 60 * 24);
+		uint256 today = timeToDate(block.timestamp);
+		uint256 lastGame = timeToDate(playersMap[_player].lastGame);
 		return today == lastGame;
 	}
 

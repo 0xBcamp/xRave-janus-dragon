@@ -9,14 +9,14 @@ import DeployedContracts from "~~/contracts/deployedContracts";
 export const Item = ({ tournament, player, score }: { tournament: string; player: string; score: number }) => {
   const connectedAddress: string = useAccount()?.address ?? "";
 
-  const { data: playerRank } = useContractRead({
+  const { data: playerRank, isLoading } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
     functionName: "getRank",
     args: [player],
   });
 
-  if (playerRank == undefined) {
+  if (playerRank == undefined || isLoading) {
     return <></>;
   }
 
