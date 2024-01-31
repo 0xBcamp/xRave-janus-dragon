@@ -14,4 +14,7 @@ artifacts
 artifacts-zk
 cache-zk
 
+#Foundry files
+out
+
 deployments/localhost
