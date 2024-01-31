@@ -7,6 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
+
       address: "0x7c02b58029beeA7c1FcC872803dC9818f57A0E61",
       abi: [
         {
@@ -807,6 +808,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
+
       address: "0x3818eAb6Ca8Bf427222bfACFA706c514145F4104",
       abi: [
         {
@@ -1055,6 +1057,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
+
       address: "0x18eb8AF587dcd7E4F575040F6D800a6B5Cef6CAf",
       abi: [
         {

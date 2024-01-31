@@ -14,6 +14,12 @@ contract TournamentFactory {
 	mapping(address => address) public TournamentPartner;
 	address public owner;
 
+	//// VRF deployment to Avax. @todo make structs for each chain? Pass in struct to createTournament() for vrf constructor args.
+	// uint64 subscriptionId = 1341;
+	// bytes32 gasLane = 0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61;
+	// uint32 callbackGasLimit = 500000;
+	// address vrfCoordinatorV2 = 0x2eD832Ba664535e5886b75D64C46EB9a228C2610;
+
 	// Events: a way to emit log statements from smart contract that can be listened to by external parties
 	event TournamentCreated(
 		address tournament
@@ -44,12 +50,34 @@ contract TournamentFactory {
 	 *
 	 * @return newTournament (address) - address of the new tournament
 	 */
-	function createTournament(string memory _name, address _poolIncentivized, uint256 _LPTokenAmount, uint256 _startTime, uint256 _endTime) public returns (Tournament newTournament) {
-		newTournament = new Tournament(owner, _name, _poolIncentivized, _LPTokenAmount, _startTime, _endTime);
+	function createTournament(
+		string memory _name, 
+		address _poolIncentivized, 
+		uint256 _LPTokenAmount, 
+		uint256 _startTime, 
+		uint256 _endTime, 
+		uint64 _subscriptionId, 
+		bytes32 _gasLane, 
+		uint32 _callbackGasLimit, 
+		address _vrfCoordinatorV2
+	) public returns (Tournament newTournament) {
+		newTournament = new Tournament(
+			owner, 
+			_name, 
+			_poolIncentivized, 
+			_LPTokenAmount, 
+			_startTime, 
+			_endTime, 
+			_subscriptionId, 
+			_gasLane, 
+			_callbackGasLimit, 
+			_vrfCoordinatorV2
+		);
 		TournamentArray.push(address(newTournament));
 		TournamentMap[address(newTournament)] = newTournament;
 		emit TournamentCreated(address(newTournament));
 	}
+
 
 	/**
 	 * Function that returns an array of all the tournament contracts
@@ -57,6 +85,7 @@ contract TournamentFactory {
 	function getAllTournaments() public view returns (address[] memory list) {
 		list = TournamentArray;
 	}
+
 
 	/**
 	 * Function that returns an array of all the active tournament contracts
@@ -92,6 +121,7 @@ contract TournamentFactory {
 
 		// First pass: Count the number of active tournaments
 		for (uint i = 0; i < TournamentArray.length; i++) {
+
 			if (TournamentMap[TournamentArray[i]].isEnded()) {
 				count++;
 			}
@@ -101,11 +131,13 @@ contract TournamentFactory {
 		address[] memory pastTournaments = new address[](count);
 		uint currentIndex = 0;
 		for (uint i = 0; i < TournamentArray.length; i++) {
+
 			if (TournamentMap[TournamentArray[i]].isEnded()) {
 				pastTournaments[currentIndex] = TournamentArray[i];
 				currentIndex++;
 			}
 		}
+
 
 		return pastTournaments;
 	}
@@ -115,6 +147,7 @@ contract TournamentFactory {
 	 */
 	function getAllFutureTournaments() external view returns (address[] memory) {
 		uint count = 0;
+
 
 		// First pass: Count the number of active tournaments
 		for (uint i = 0; i < TournamentArray.length; i++) {
@@ -153,11 +186,13 @@ contract TournamentFactory {
 		address[] memory playersTournaments = new address[](count);
 		uint currentIndex = 0;
 		for (uint i = 0; i < TournamentArray.length; i++) {
+
 			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
 				playersTournaments[currentIndex] = TournamentArray[i];
 				currentIndex++;
 			}
 		}
+
 
 		return playersTournaments;
 	}

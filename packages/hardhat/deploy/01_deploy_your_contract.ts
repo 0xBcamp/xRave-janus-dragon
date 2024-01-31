@@ -53,7 +53,7 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   // Get the deployed contract to interact with it after deploying.
 
-  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account
+  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; // Address of the front end burner account @note this is where you need to add your burnner address
   await UniswapV2Pair.transfer(frontBurner, hre.ethers.parseEther("1000"));
   await Vyper_contract.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };
