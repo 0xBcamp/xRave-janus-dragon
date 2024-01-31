@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useContractRead, useContractWrite } from "wagmi";
-import { useContractEvent } from "wagmi";
+import { erc20ABI, useContractEvent } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
-import ExternalContracts from "~~/contracts/externalContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 
 export const Enter = ({ tournament }: { tournament: string }) => {
@@ -31,14 +30,14 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   }
 
   const { data: balance } = useContractRead({
-    abi: ExternalContracts[31337].ERC20.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   const { data: allowance } = useContractRead({
-    abi: ExternalContracts[31337].ERC20.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "allowance",
     args: [connectedAddress, spender],
@@ -50,13 +49,13 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   }
 
   const { data: decimals } = useContractRead({
-    abi: ExternalContracts[31337].ERC20.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "decimals",
   });
 
   const { writeAsync: approve } = useContractWrite({
-    abi: ExternalContracts[31337].ERC20.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "approve",
     args: [spender, BigInt(amount)],
@@ -86,7 +85,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
 
   useContractEvent({
     address: LPaddr,
-    abi: ExternalContracts[31337].ERC20.abi,
+    abi: erc20ABI,
     eventName: "Approval",
     listener: log => {
       if (
@@ -109,7 +108,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
-            <div className="inline-flex rounded-md shadow-sm" role="group">
+            <div className="flex justify-center rounded-md shadow-sm space-x-4 mt-5" role="group">
               <button className="btn btn-secondary" disabled={approved} onClick={() => approveToken()}>
                 Approve {LPTokenSymbol}
               </button>

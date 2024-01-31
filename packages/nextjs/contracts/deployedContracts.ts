@@ -7,7 +7,8 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+
+      address: "0x7c02b58029beeA7c1FcC872803dC9818f57A0E61",
       abi: [
         {
           inputs: [
@@ -55,6 +56,63 @@ const deployedContracts = {
               type: "address",
             },
             {
+              indexed: true,
+              internalType: "address",
+              name: "opponent",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "day",
+              type: "uint256",
+            },
+          ],
+          name: "Draw",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "day",
+              type: "uint256",
+            },
+          ],
+          name: "Loser",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+          ],
+          name: "MoveSaved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+            {
               indexed: false,
               internalType: "uint256",
               name: "amount",
@@ -81,6 +139,25 @@ const deployedContracts = {
             },
           ],
           name: "Unstaked",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "day",
+              type: "uint256",
+            },
+          ],
+          name: "Winner",
           type: "event",
         },
         {
@@ -382,6 +459,11 @@ const deployedContracts = {
             {
               internalType: "uint256",
               name: "rEndTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "rPlayers",
               type: "uint256",
             },
           ],
@@ -726,7 +808,8 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TournamentFactory: {
-      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+
+      address: "0x3818eAb6Ca8Bf427222bfACFA706c514145F4104",
       abi: [
         {
           inputs: [
@@ -974,7 +1057,8 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+
+      address: "0x18eb8AF587dcd7E4F575040F6D800a6B5Cef6CAf",
       abi: [
         {
           inputs: [],
@@ -1030,6 +1114,19 @@ const deployedContracts = {
           ],
           name: "Transfer",
           type: "event",
+        },
+        {
+          inputs: [],
+          name: "_totalSupply",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
         },
         {
           inputs: [
@@ -1321,7 +1418,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      address: "0xA4aE77554847958aC0854f06601267c9F9C75dfD",
       abi: [
         {
           inputs: [],

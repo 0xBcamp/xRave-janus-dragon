@@ -121,7 +121,8 @@ contract TournamentFactory {
 
 		// First pass: Count the number of active tournaments
 		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive() == false) {
+
+			if (TournamentMap[TournamentArray[i]].isEnded()) {
 				count++;
 			}
 		}
@@ -130,14 +131,15 @@ contract TournamentFactory {
 		address[] memory pastTournaments = new address[](count);
 		uint currentIndex = 0;
 		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive() == false) {
+
+			if (TournamentMap[TournamentArray[i]].isEnded()) {
 				pastTournaments[currentIndex] = TournamentArray[i];
 				currentIndex++;
 			}
 		}
 
-		return pastTournaments;
 
+		return pastTournaments;
 	}
 
 	/**
@@ -145,6 +147,7 @@ contract TournamentFactory {
 	 */
 	function getAllFutureTournaments() external view returns (address[] memory) {
 		uint count = 0;
+
 
 		// First pass: Count the number of active tournaments
 		for (uint i = 0; i < TournamentArray.length; i++) {
@@ -157,14 +160,13 @@ contract TournamentFactory {
 		address[] memory futureTournaments = new address[](count);
 		uint currentIndex = 0;
 		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive() == false) {
+			if (TournamentMap[TournamentArray[i]].isFuture()) {
 				futureTournaments[currentIndex] = TournamentArray[i];
 				currentIndex++;
 			}
 		}
 
 		return futureTournaments;
-
 	}
 
 	/**
@@ -184,15 +186,15 @@ contract TournamentFactory {
 		address[] memory playersTournaments = new address[](count);
 		uint currentIndex = 0;
 		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive() == false) {
+
+			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
 				playersTournaments[currentIndex] = TournamentArray[i];
 				currentIndex++;
 			}
 		}
 
+
 		return playersTournaments;
-
-
 	}
 
 	/**
