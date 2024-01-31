@@ -8,11 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 interface YearnInterface {
 	function pricePerShare() external view returns (uint256);
+	function token() external view returns (address); // Underlying asset
 }
 
 interface UniswapInterface {
 	function getReserves() external view returns (uint256, uint256, uint256);
 	function totalSupply() external view returns (uint256);
+	function token0() external view returns (address); // Underlying asset
+	function token1() external view returns (address); // Underlying asset
 }
 
 contract Tournament {
