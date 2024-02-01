@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { Contract } from "ethers";
+import { Contract, randomBytes } from "ethers";
 
 /**
  * Deploys a contract named "YourContract" using the deployer account and
@@ -34,6 +34,10 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
       1,
       Date.now(),
       Date.now() + 60 * 60 * 24 * 15,
+      0,
+      randomBytes(32),
+      0,
+      "0x0000000000000000000000000000000000000000",
     ],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
