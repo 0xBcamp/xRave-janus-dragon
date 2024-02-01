@@ -43,9 +43,6 @@ contract Tournament is VRFConsumerBaseV2{
 	uint256 public contractLPToken; // amount of LP token held by the 
 	//@note why do we need IERC20Metadata??
 	IERC20Metadata poolIncentivized;
-	//@note do we need symbol and decimals??
-	string public LPTokenSymbol;
-	uint256 public LPTokenDecimals;
 	//@note change to depositAmout
 	uint256 public LPTokenAmount; // Min Amount of LP to be deposited by the players
 	uint256 public startTime;
@@ -189,9 +186,8 @@ contract Tournament is VRFConsumerBaseV2{
 			if(_poolIncentivized != address(0)) {
 				poolIncentivized = IERC20Metadata(_poolIncentivized);
 				//@note why do we need to check the symbol??
-				LPTokenSymbol = poolIncentivized.symbol();
-				LPTokenDecimals = poolIncentivized.decimals();
-				if(keccak256(abi.encode(LPTokenSymbol)) == keccak256("UNI-V2")) {
+				string memory symbol = poolIncentivized.symbol();
+				if(keccak256(abi.encode(symbol)) == keccak256("UNI-V2")) {
 					protocol = Protocol.Uniswap;
 				} else {
 					protocol = Protocol.Yearn;
@@ -463,7 +459,7 @@ contract Tournament is VRFConsumerBaseV2{
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
-		rLPTokenSymbol = LPTokenSymbol;
+		rLPTokenSymbol = getLPSymbol();
 		rLPTokenAmount = LPTokenAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
@@ -631,6 +627,14 @@ contract Tournament is VRFConsumerBaseV2{
 		LPToken = LPTokenAmountOfPlayer(_player);
 		score = playersMap[_player].score;
 		lastGame = playersMap[_player].lastGame;
+	}
+
+	function getLPDecimals() public view returns (uint8) {
+		return IERC20Metadata(poolIncentivized).decimals();
+	}
+
+	function getLPSymbol() public view returns (string memory) {
+		return IERC20Metadata(poolIncentivized).symbol();
 	}
 
 }

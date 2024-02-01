@@ -7,8 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-
-      address: "0x7c02b58029beeA7c1FcC872803dC9818f57A0E61",
+      address: "0x8b9d5A75328b5F3167b04B42AD00092E7d6c485c",
       abi: [
         {
           inputs: [
@@ -42,9 +41,78 @@ const deployedContracts = {
               name: "_endTime",
               type: "uint256",
             },
+            {
+              internalType: "uint64",
+              name: "_subscriptionId",
+              type: "uint64",
+            },
+            {
+              internalType: "bytes32",
+              name: "_gasLane",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "address",
+              name: "_vrfCoordinatorV2",
+              type: "address",
+            },
           ],
           stateMutability: "nonpayable",
           type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "InvalidMove",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotEnded",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotEnoughFunds",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotRegistered",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "have",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "want",
+              type: "address",
+            },
+          ],
+          name: "OnlyCoordinatorCanFulfill",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "move",
+              type: "uint256",
+            },
+          ],
+          name: "ContractPlayed",
+          type: "event",
         },
         {
           anonymous: false,
@@ -75,6 +143,19 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "GameResolved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
               indexed: true,
               internalType: "address",
               name: "player",
@@ -94,6 +175,19 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
+              indexed: false,
+              internalType: "uint256",
+              name: "move",
+              type: "uint256",
+            },
+          ],
+          name: "MoveMade",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
               indexed: true,
               internalType: "address",
               name: "player",
@@ -101,6 +195,51 @@ const deployedContracts = {
             },
           ],
           name: "MoveSaved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "playerMove",
+              type: "uint8",
+            },
+          ],
+          name: "PlayerPlayedAganistContract",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256[]",
+              name: "randomWords",
+              type: "uint256[]",
+            },
+          ],
+          name: "RequestFulfilled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+          ],
+          name: "RequestSent",
           type: "event",
         },
         {
@@ -193,32 +332,6 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "LPTokenDecimals",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "LPTokenSymbol",
-          outputs: [
-            {
-              internalType: "string",
-              name: "",
-              type: "string",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
           inputs: [
             {
               internalType: "address",
@@ -232,6 +345,50 @@ const deployedContracts = {
               internalType: "bool",
               name: "",
               type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "contractGameRequestId",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "playerMove",
+              type: "uint8",
+            },
+            {
+              internalType: "address",
+              name: "player",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "fulfilled",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "exists",
+              type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "vrfMove",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "winner",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -297,6 +454,81 @@ const deployedContracts = {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_requestId",
+              type: "uint256",
+            },
+          ],
+          name: "getGame",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "playerMove",
+              type: "uint8",
+            },
+            {
+              internalType: "address",
+              name: "gamePlayer",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "fulfilled",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "exists",
+              type: "bool",
+            },
+            {
+              internalType: "uint256[]",
+              name: "randomWords",
+              type: "uint256[]",
+            },
+            {
+              internalType: "uint256",
+              name: "vrfMove",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getLPDecimals",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getLPSymbol",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
             },
           ],
           stateMutability: "view",
@@ -530,6 +762,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "lastRequestId",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "name",
           outputs: [
             {
@@ -558,7 +803,7 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint8",
-              name: "_move",
+              name: "_playerMove",
               type: "uint8",
             },
           ],
@@ -566,7 +811,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "contractMove",
+              name: "requestId",
               type: "uint256",
             },
           ],
@@ -701,9 +946,65 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256[]",
+              name: "randomWords",
+              type: "uint256[]",
+            },
+          ],
+          name: "rawFulfillRandomWords",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "requestIds",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "resolveBatch",
           outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+          ],
+          name: "resolveVrfGame",
+          outputs: [
+            {
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "function",
         },
@@ -805,11 +1106,12 @@ const deployedContracts = {
           type: "function",
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        rawFulfillRandomWords: "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
+      },
     },
     TournamentFactory: {
-
-      address: "0x3818eAb6Ca8Bf427222bfACFA706c514145F4104",
+      address: "0x9BcA065E19b6d630032b53A8757fB093CbEAfC1d",
       abi: [
         {
           inputs: [
@@ -918,6 +1220,26 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_endTime",
               type: "uint256",
+            },
+            {
+              internalType: "uint64",
+              name: "_subscriptionId",
+              type: "uint64",
+            },
+            {
+              internalType: "bytes32",
+              name: "_gasLane",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "address",
+              name: "_vrfCoordinatorV2",
+              type: "address",
             },
           ],
           name: "createTournament",
@@ -1057,8 +1379,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-
-      address: "0x18eb8AF587dcd7E4F575040F6D800a6B5Cef6CAf",
+      address: "0xcb0A9835CDf63c84FE80Fcc59d91d7505871c98B",
       abi: [
         {
           inputs: [],
@@ -1114,19 +1435,6 @@ const deployedContracts = {
           ],
           name: "Transfer",
           type: "event",
-        },
-        {
-          inputs: [],
-          name: "_totalSupply",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
         },
         {
           inputs: [
@@ -1417,8 +1725,791 @@ const deployedContracts = {
         transferFrom: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       },
     },
+    VRFCoordinatorV2Mock: {
+      address: "0xf274De14171Ab928A5Ec19928cE35FaD91a42B64",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "uint96",
+              name: "_baseFee",
+              type: "uint96",
+            },
+            {
+              internalType: "uint96",
+              name: "_gasPriceLink",
+              type: "uint96",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "InsufficientBalance",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidConsumer",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidRandomWords",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidSubscription",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "MustBeSubOwner",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "Reentrant",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "TooManyConsumers",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [],
+          name: "ConfigSet",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "consumer",
+              type: "address",
+            },
+          ],
+          name: "ConsumerAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "consumer",
+              type: "address",
+            },
+          ],
+          name: "ConsumerRemoved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferRequested",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "outputSeed",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint96",
+              name: "payment",
+              type: "uint96",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "success",
+              type: "bool",
+            },
+          ],
+          name: "RandomWordsFulfilled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "keyHash",
+              type: "bytes32",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requestId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "preSeed",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "uint16",
+              name: "minimumRequestConfirmations",
+              type: "uint16",
+            },
+            {
+              indexed: false,
+              internalType: "uint32",
+              name: "callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              indexed: false,
+              internalType: "uint32",
+              name: "numWords",
+              type: "uint32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "RandomWordsRequested",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "SubscriptionCanceled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "SubscriptionCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint64",
+              name: "subId",
+              type: "uint64",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "oldBalance",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "newBalance",
+              type: "uint256",
+            },
+          ],
+          name: "SubscriptionFunded",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "BASE_FEE",
+          outputs: [
+            {
+              internalType: "uint96",
+              name: "",
+              type: "uint96",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "GAS_PRICE_LINK",
+          outputs: [
+            {
+              internalType: "uint96",
+              name: "",
+              type: "uint96",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MAX_CONSUMERS",
+          outputs: [
+            {
+              internalType: "uint16",
+              name: "",
+              type: "uint16",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "acceptOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+          ],
+          name: "acceptSubscriptionOwnerTransfer",
+          outputs: [],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "_consumer",
+              type: "address",
+            },
+          ],
+          name: "addConsumer",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "_to",
+              type: "address",
+            },
+          ],
+          name: "cancelSubscription",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "_consumer",
+              type: "address",
+            },
+          ],
+          name: "consumerIsAdded",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "createSubscription",
+          outputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_requestId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_consumer",
+              type: "address",
+            },
+          ],
+          name: "fulfillRandomWords",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_requestId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_consumer",
+              type: "address",
+            },
+            {
+              internalType: "uint256[]",
+              name: "_words",
+              type: "uint256[]",
+            },
+          ],
+          name: "fulfillRandomWordsWithOverride",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "uint96",
+              name: "_amount",
+              type: "uint96",
+            },
+          ],
+          name: "fundSubscription",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getConfig",
+          outputs: [
+            {
+              internalType: "uint16",
+              name: "minimumRequestConfirmations",
+              type: "uint16",
+            },
+            {
+              internalType: "uint32",
+              name: "maxGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "stalenessSeconds",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "gasAfterPaymentCalculation",
+              type: "uint32",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getFallbackWeiPerUnitLink",
+          outputs: [
+            {
+              internalType: "int256",
+              name: "",
+              type: "int256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getFeeConfig",
+          outputs: [
+            {
+              internalType: "uint32",
+              name: "fulfillmentFlatFeeLinkPPMTier1",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "fulfillmentFlatFeeLinkPPMTier2",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "fulfillmentFlatFeeLinkPPMTier3",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "fulfillmentFlatFeeLinkPPMTier4",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "fulfillmentFlatFeeLinkPPMTier5",
+              type: "uint32",
+            },
+            {
+              internalType: "uint24",
+              name: "reqsForTier2",
+              type: "uint24",
+            },
+            {
+              internalType: "uint24",
+              name: "reqsForTier3",
+              type: "uint24",
+            },
+            {
+              internalType: "uint24",
+              name: "reqsForTier4",
+              type: "uint24",
+            },
+            {
+              internalType: "uint24",
+              name: "reqsForTier5",
+              type: "uint24",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getRequestConfig",
+          outputs: [
+            {
+              internalType: "uint16",
+              name: "",
+              type: "uint16",
+            },
+            {
+              internalType: "uint32",
+              name: "",
+              type: "uint32",
+            },
+            {
+              internalType: "bytes32[]",
+              name: "",
+              type: "bytes32[]",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+          ],
+          name: "getSubscription",
+          outputs: [
+            {
+              internalType: "uint96",
+              name: "balance",
+              type: "uint96",
+            },
+            {
+              internalType: "uint64",
+              name: "reqCount",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "address[]",
+              name: "consumers",
+              type: "address[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+          ],
+          name: "pendingRequestExists",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "_consumer",
+              type: "address",
+            },
+          ],
+          name: "removeConsumer",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "_keyHash",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint64",
+              name: "_subId",
+              type: "uint64",
+            },
+            {
+              internalType: "uint16",
+              name: "_minimumRequestConfirmations",
+              type: "uint16",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "_numWords",
+              type: "uint32",
+            },
+          ],
+          name: "requestRandomWords",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "requestSubscriptionOwnerTransfer",
+          outputs: [],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "setConfig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        acceptSubscriptionOwnerTransfer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        addConsumer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        cancelSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        createSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        getRequestConfig: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        getSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        pendingRequestExists: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        removeConsumer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        requestRandomWords: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        requestSubscriptionOwnerTransfer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        acceptOwnership: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
+        owner: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
+        transferOwnership: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
+      },
+    },
     Vyper_contract: {
-      address: "0xA4aE77554847958aC0854f06601267c9F9C75dfD",
+      address: "0xFD296cCDB97C605bfdE514e9810eA05f421DEBc2",
       abi: [
         {
           inputs: [],

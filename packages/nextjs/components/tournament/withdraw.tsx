@@ -12,13 +12,13 @@ export const Withdraw = () => {
   const LPTokenSymbol = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
-    functionName: "LPTokenSymbol",
+    functionName: "getLPSymbol",
   });
 
   const LPTokenDecimals = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
-    functionName: "LPTokenDecimals",
+    functionName: "getLPDecimals",
   });
 
   const { data: LPTokenAmountOfPlayer } = useContractRead({

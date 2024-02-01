@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "../../lib/forge-std/src/Test.sol";
 import {console2} from "../../lib/forge-std/src/console2.sol";
@@ -123,8 +123,8 @@ contract TournamentTest is Test {
     }
 
     function testPlayAganistPlayer() public {
-        uint8 currentMove;
-        address currentPlayer;
+        //uint8 currentMove;
+        //address currentPlayer;
 
         //test unregistered player
         vm.prank(player1);
