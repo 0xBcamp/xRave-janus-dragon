@@ -17,6 +17,7 @@
     "@ethersproject/providers": "^5.7.2",
     "@heroicons/react": "^2.0.11",
     "@moonup/ethers": "^0.0.11",
+    "@moonup/moon-api": "^0.0.23",
     "@moonup/moon-rainbowkit": "^0.0.26",
     "@moonup/moon-sdk": "^0.0.43",
     "@moonup/wagmi-connector": "^0.0.21",

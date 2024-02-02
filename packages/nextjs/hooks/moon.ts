@@ -1,19 +1,9 @@
-import { useEffect, useState } from "react";
-import { AccountResponse } from "@moonup/moon-api";
+import { useState } from "react";
+import { CreateAccountInput } from "@moonup/moon-api";
 import { MoonSDK } from "@moonup/moon-sdk";
 import { AUTH, MOON_SESSION_KEY, Storage } from "@moonup/moon-types";
 
-interface MoonSDKHook {
-  moon: MoonSDK | null;
-  initialize: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  listAccounts: () => Promise<AccountResponse | undefined>;
-  updateToken: (token: string) => Promise<void>;
-  // signTransaction: (transaction: TransactionResponse) => Promise<Transaction>;
-  // Add other methods as needed
-}
-
-export function useMoonSDK(): MoonSDKHook {
+export const useMoonSDK = () => {
   const [moon, setMoon] = useState<MoonSDK | null>(null);
 
   const initialize = async () => {
@@ -27,45 +17,46 @@ export function useMoonSDK(): MoonSDKHook {
       },
     });
     setMoon(moonInstance);
-    moonInstance.login();
+    moonInstance.connect();
+  };
+
+  const connect = async () => {
+    if (moon) {
+      return moon.connect();
+    }
+  };
+
+  const updateToken = async (token: string, refreshToken: string) => {
+    if (moon) {
+      moon.updateToken(token);
+      moon.updateRefreshToken(refreshToken);
+
+      moon.connect();
+    }
+  };
+
+  const createAccount = async () => {
+    if (moon) {
+      const data: CreateAccountInput = {};
+      const newAccount = await moon?.getAccountsSDK().createAccount(data);
+      return newAccount;
+    }
   };
 
   const disconnect = async () => {
     if (moon) {
       await moon.disconnect();
+      sessionStorage.removeItem(MOON_SESSION_KEY);
       setMoon(null);
     }
   };
-  const listAccounts = async () => {
-    if (moon) {
-      return moon.listAccounts();
-    }
-  };
-  const updateToken = async (token: string) => {
-    if (moon) {
-      return moon.updateToken(token);
-    }
-  };
-
-  // const signTransaction = async (transaction: TransactionResponse) => {
-  // 	if (moon) {
-  // 		return moon.SignTransaction(transaction);
-  // 	}
-  // 	throw new Error('Moon SDK is not initialized');
-  // };
-
-  // Add other methods as needed
-
-  useEffect(() => {
-    initialize();
-  }, []);
 
   return {
     moon,
     initialize,
-    disconnect,
-    listAccounts,
+    connect,
     updateToken,
-    // Add other methods as needed
+    createAccount,
+    disconnect,
   };
-}
+};
