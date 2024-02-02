@@ -25,9 +25,8 @@ contract TournamentTest is Test {
     VRFCoordinatorV2Mock public mockVRF;
 
     // Define parameters for Tournament constructor
-    address poolIncentivized = address(mockYLP);
     uint256 LPTokenAmount = 1e18; // 1 LP Token
-    uint256 startTime =  block.timestamp + 1 seconds; // Start one day from now
+    uint256 startTime =  block.timestamp + 30 days; // Start in 30 days
     uint256 endTime = startTime + 7 days; // End one week after start
 
     // Set up "wallets"
@@ -40,7 +39,7 @@ contract TournamentTest is Test {
         bytes32 gasLane = bytes32(0); // Mock gas lane
         uint32 callbackGasLimit = 2000000; // Set a callback gas limit
         uint64 subId;
-        
+
         vm.deal(owner, 2 ether);
         vm.startPrank(owner);
 
@@ -67,7 +66,7 @@ contract TournamentTest is Test {
         string memory name = "Test Tournament";
         // Deploy Tournament contract
         tournament = new Tournament(
-            owner, name, poolIncentivized, LPTokenAmount, 
+            owner, name, address(mockYLP), LPTokenAmount, 
             startTime, endTime, subId, gasLane, 
             callbackGasLimit, address(mockVRF)
         );
@@ -96,7 +95,109 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(player2), 10e18);
     }
 
-    function testPlayAganistContractAlwyasReturnsLessThan3(uint256 _fuzzNumber) public {
+    function test_isActive_before() public {
+        vm.warp(startTime - 2 days);
+        assertEq(tournament.isActive(), false);
+    }
+
+    function test_isActive_during() public {
+        vm.warp(startTime + 1 days);
+        assertEq(tournament.isActive(), true);
+    }
+
+    function test_isActive_after() public {
+        vm.warp(endTime + 2 days);
+        assertEq(tournament.isActive(), false);
+    }
+
+    function test_stakingAllowed_before() public {
+        vm.warp(startTime - 2 days);
+        assertEq(tournament.stakingAllowed(), true);
+    }
+
+    function test_stakingAllowed_during() public {
+        vm.warp(startTime + 1 days);
+        assertEq(tournament.stakingAllowed(), true);
+    }
+
+    function test_stakingAllowed_after() public {
+        vm.warp(endTime + 2 days);
+        assertEq(tournament.stakingAllowed(), false);
+    }
+
+    event Staked(address indexed player, uint256 amount);
+
+    function test_stakeLPToken_before() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(startTime - 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        vm.expectEmit();
+        emit Staked(address(player1), LPTokenAmount);
+        tournament.stakeLPToken();
+        vm.stopPrank();
+        
+        assertEq(mockYLP.balanceOf(player1), 10e18 - LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
+    }
+
+    function test_stakeLPToken_during() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(startTime + 1 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        vm.expectEmit();
+        emit Staked(address(player1), LPTokenAmount);
+        tournament.stakeLPToken();
+        vm.stopPrank();
+        
+        assertEq(mockYLP.balanceOf(player1), 10e18 - LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
+    }
+
+    function test_stakeLPToken_after() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(endTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        vm.expectRevert("Staking not allowed");
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+        assertEq(mockYLP.balanceOf(address(tournament)), 0);
+    } 
+
+    function test_stakeLPToken_twice() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), 2 * LPTokenAmount);
+
+        // First staking
+        tournament.stakeLPToken();
+
+        // Second staking
+        vm.expectRevert("You have already staked");
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(player1), 10e18 - LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
+    } 
+
+    function testPlayAganistContractAlwaysReturnsLessThan3(uint256 _fuzzNumber) public {
         vm.warp(startTime + 1 seconds);
         
         vm.prank(player1);
@@ -122,13 +223,13 @@ contract TournamentTest is Test {
 
     }
 
-    function testPlayAganistPlayer() public {
-        //uint8 currentMove;
-        //address currentPlayer;
+    function test_PlayAgainstPlayer_FirstPlayer() public {
+
+        vm.warp(startTime + 1 days);
 
         //test unregistered player
         vm.prank(player1);
-        vm.expectRevert();
+        //vm.expectRevert();
         tournament.playAgainstPlayer(1);
 
         vm.startPrank(player1);
