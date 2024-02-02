@@ -37,6 +37,7 @@ contract TournamentTest is Test {
     address player2 = makeAddr("player2");
     address player3 = makeAddr("player3");
     address player4 = makeAddr("player4");
+    address player5 = makeAddr("player5");
 
     /// /// /// /// ///
     // Functions to avoid repeting the same code on several tests
@@ -79,11 +80,12 @@ contract TournamentTest is Test {
         mockYLP.transfer(player2, 10e18);
         mockYLP.transfer(player3, 10e18);
         mockYLP.transfer(player4, 10e18);
+        mockYLP.transfer(player5, 10e18);
         mockUniLP.transfer(player1, 10e18);
         mockUniLP.transfer(player2, 10e18);
         mockUniLP.transfer(player3, 10e18);
         mockUniLP.transfer(player4, 10e18);
-
+        mockUniLP.transfer(player5, 10e18);
 
         //from mock vrf 
         //constructor(uint96 _baseFee, uint96 _gasPriceLink) 
@@ -668,6 +670,24 @@ contract TournamentTest is Test {
         (uint256 rank4, uint256 split4) = tournament.getRank(player4);
         assertEq(rank4, 2);
         assertEq(split4, 2);
+    }
+
+    function test_getRank_notPlayer() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        stakePlayStakeForTest(1, player3, player4);
+
+        vm.startPrank(player4);
+        tournament.playAgainstPlayer(1);
+        vm.stopPrank();
+
+        vm.expectRevert("Not a player");
+        tournament.getRank(player5);
     }
 
     function test_getPrizeShare() public {
