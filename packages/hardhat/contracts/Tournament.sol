@@ -229,9 +229,9 @@ contract Tournament is VRFConsumerBaseV2{
 		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
-		uint256 extraPoolPrize = (1 ether - fees) / 1 ether * (LPTokenAmount - amount); // How much LP token is left by the user
+		uint256 extraPoolPrize = (1 ether - fees) * (LPTokenAmount - amount) / 1 ether; // How much LP token is left by the user
 		realizedPoolPrize += extraPoolPrize;
-		realizedFees += LPTokenAmount - extraPoolPrize;
+		realizedFees += LPTokenAmount - amount - extraPoolPrize;
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
 		// unclaimedPoolPrize -= share; // TODO: useful?
@@ -479,7 +479,7 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that returns the current price per share from the LP token contract
 	 */
-	function getPricePerShare() private view returns(uint256, uint256) {
+	function getPricePerShare() public view returns(uint256, uint256) {
 		if(Protocol.Yearn == protocol) {
 			YearnInterface yearn = YearnInterface(address(poolIncentivized));
 			return ( yearn.pricePerShare(), 0 );
@@ -556,7 +556,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the amount of fees accrued by the protocol on this tournament
 	 */
 	function getFees() public view returns (uint256) {
-		return (fees / 1 ether) * getPoolPrize();
+		return fees * getPoolPrize() / 1 ether;
 	}
 
 	function getNumberOfPlayers() public view returns (uint256) {

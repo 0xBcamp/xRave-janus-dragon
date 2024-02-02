@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Test} from "../../lib/forge-std/src/Test.sol";
+import {Test, stdStorage, StdStorage} from "../../lib/forge-std/src/Test.sol";
 import {console2} from "../../lib/forge-std/src/console2.sol";
 import {Tournament} from "../../contracts/Tournament.sol"; // 
 import {Vyper_contract} from "../../contracts/Vyper_contract.sol"; // Mock Yearn LP
@@ -19,6 +19,8 @@ import {VRFCoordinatorV2Mock} from "@chainlink/contracts/src/v0.8/mocks/VRFCoord
  */
 
 contract TournamentTest is Test {
+    using stdStorage for StdStorage;
+
     Tournament public tournament;
     UniswapV2Pair public mockUniLP;
     Vyper_contract public mockYLP;
@@ -125,6 +127,51 @@ contract TournamentTest is Test {
         assertEq(tournament.stakingAllowed(), false);
     }
 
+    function test_getLPDecimals() public {
+        assertEq(tournament.getLPDecimals(), 18);
+    }
+
+    function test_isPlayer() public {
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.isPlayer(player1), true);
+        assertEq(tournament.isPlayer(player2), false);
+    }
+
+/*     function test_alreadyPlayed_player() public {
+        assertEq(tournament.alreadyPlayed(player1), true);
+    } */
+
+    function test_getNumberOfPlayers() public {
+        assertEq(tournament.getNumberOfPlayers(), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.getNumberOfPlayers(), 1);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player2);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.getNumberOfPlayers(), 2);
+    }
+
     event Staked(address indexed player, uint256 amount);
 
     function test_stakeLPToken_before() public {
@@ -197,6 +244,49 @@ contract TournamentTest is Test {
         assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
     }
 
+    function test_getPricePerShare() public {
+        (uint val1, uint val2) = tournament.getPricePerShare();
+        assertEq(val1, 100000);
+        assertEq(val2, 0);
+
+        mockYLP.setPricePerShare(150000);
+
+        (val1, val2) = tournament.getPricePerShare();
+        assertEq(val1, 150000);
+        assertEq(val2, 0);
+    }
+
+    function test_LPTokenAmountOfPlayer_unchanged() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.LPTokenAmountOfPlayer(player1), LPTokenAmount);
+    }
+
+    function test_LPTokenAmountOfPlayer_valorized() public {
+        assertEq(mockYLP.balanceOf(player1), 10e18);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+
+        tournament.stakeLPToken();
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(150000);
+
+        assertEq(tournament.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
+    }
+
+
     function test_unstakeLPToken_before() public {
         vm.warp(startTime - 2 days);
         vm.startPrank(player1);
@@ -226,6 +316,20 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
         mockYLP.approve(address(tournament), LPTokenAmount);
         tournament.stakeLPToken();
+
+        uint depositPPS = stdstore
+            .target(address(tournament))
+            .sig("playersMap(address)")
+            .with_key(player1)
+            .depth(2)
+            .read_uint();
+        console2.log("Deposit PPS: ", depositPPS);
+
+        uint amount = stdstore
+            .target(address(tournament))
+            .sig("LPTokenAmount()")
+            .read_uint();
+        console2.log("Amount: ", amount);
 
         vm.warp(endTime + 2 days);
         vm.expectEmit();
@@ -269,32 +373,355 @@ contract TournamentTest is Test {
 
     }
 
+    function test_PlayAgainstPlayer_invalidMove() public {
+
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+        vm.expectRevert("Invalid move");
+        tournament.playAgainstPlayer(3);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstPlayer_before() public {
+
+        vm.warp(startTime - 2 days);
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+        vm.expectRevert("Tournament is not active");
+        tournament.playAgainstPlayer(1);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstPlayer_after() public {
+
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.warp(endTime + 2 days);
+        vm.expectRevert("Tournament is not active");
+        tournament.playAgainstPlayer(1);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstPlayer_notPlayer() public {
+
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+
+        vm.expectRevert("You must deposit before playing");        
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+    }
+
+    event MoveSaved(address indexed player);
+
     function test_PlayAgainstPlayer_FirstPlayer() public {
 
-        vm.warp(startTime + 1 days);
-
-        //test unregistered player
-        vm.prank(player1);
-        //vm.expectRevert();
-        tournament.playAgainstPlayer(1);
+        vm.warp(startTime + 2 days);
 
         vm.startPrank(player1);
         //approve LP tokens
         mockYLP.approve(address(tournament), 10e18);
-
-        // Check player1's token balance before approving
-        // uint256 player1Balance = mockYLP.balanceOf(player1);
-        // console2.log("Player1 Balance: ", player1Balance);
-
-        // deposit to enter
         tournament.stakeLPToken();
-        // test can't play w/ 0 move
-        vm.expectRevert();
+
+        vm.expectEmit();
+        emit MoveSaved(player1);
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+    }
+
+    event Draw(address indexed player, address indexed opponent, uint256 day);
+
+    function test_PlayAgainstPlayer_RockRock() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
         tournament.playAgainstPlayer(0);
 
-        //assertEq(currentMove, 1);
-        //assertEq(currentPlayer, player1);
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(0);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 2);
+        assertEq(tournament.pointsOfPlayer(player2), 2);
     }
+
+    function test_PlayAgainstPlayer_PaperPaper() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 2);
+        assertEq(tournament.pointsOfPlayer(player2), 2);
+    }
+
+    function test_PlayAgainstPlayer_ScissorsScissors() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 2);
+        assertEq(tournament.pointsOfPlayer(player2), 2);
+    }
+
+    event Winner(address indexed player, uint256 day);
+
+	event Loser(address indexed player, uint256 day);
+
+    function test_PlayAgainstPlayer_RockPaper() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(0);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player2, block.timestamp / (60 * 60 * 24));
+        emit Loser(player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 4);
+    }
+
+    function test_PlayAgainstPlayer_RockScissors() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(0);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player1, block.timestamp / (60 * 60 * 24));
+        emit Loser(player2, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 4);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+    }
+
+    function test_PlayAgainstPlayer_PaperRock() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player1, block.timestamp / (60 * 60 * 24));
+        emit Loser(player2, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(0);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 4);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+    }
+
+    function test_PlayAgainstPlayer_PaperScissors() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player2, block.timestamp / (60 * 60 * 24));
+        emit Loser(player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 4);
+    }
+
+    function test_PlayAgainstPlayer_ScissorsRock() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player2, block.timestamp / (60 * 60 * 24));
+        emit Loser(player1, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(0);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 4);
+    }
+
+    function test_PlayAgainstPlayer_ScissorsPaper() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+
+        vm.warp(startTime + 2 days);
+
+        vm.startPrank(player1);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+        
+        vm.startPrank(player2);
+        //approve LP tokens
+        mockYLP.approve(address(tournament), 10e18);
+        tournament.stakeLPToken();
+
+        vm.expectEmit();
+        emit Winner(player1, block.timestamp / (60 * 60 * 24));
+        emit Loser(player2, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 4);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+    }
+
 
 
 }
