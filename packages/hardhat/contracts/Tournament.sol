@@ -507,9 +507,16 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the player's rank and how many players share this rank
 	 */
 	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
+		uint256 cumulativePlayers;
 		for(uint i=topScore; i>=playersMap[_player].score; i--) {
 			if(scoreToPlayers[i].length > 0) {
+				cumulativePlayers += scoreToPlayers[i].length;
 				rank += 1;
+			}
+			if(i == 0) { // If the player did not score, he won't be in in the mapping
+				rank += 1;
+				split = players.length - cumulativePlayers;
+				return (rank, split);
 			}
 		}
 		split = scoreToPlayers[playersMap[_player].score].length;
