@@ -147,7 +147,7 @@ contract TournamentTest is Test {
     function test_stakeLPToken_during() public {
         assertEq(mockYLP.balanceOf(player1), 10e18);
 
-        vm.warp(startTime + 1 days);
+        vm.warp(startTime + 2 days);
 
         vm.startPrank(player1);
         mockYLP.approve(address(tournament), LPTokenAmount);
@@ -195,7 +195,53 @@ contract TournamentTest is Test {
 
         assertEq(mockYLP.balanceOf(player1), 10e18 - LPTokenAmount);
         assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
-    } 
+    }
+
+    function test_unstakeLPToken_before() public {
+        vm.warp(startTime - 2 days);
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+        tournament.stakeLPToken();
+
+        vm.expectRevert("Unstaking not allowed");
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+    }
+
+    function test_unstakeLPToken_during() public {
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+        tournament.stakeLPToken();
+
+        vm.expectRevert("Unstaking not allowed");
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+   }
+
+    event Unstaked(address indexed player, uint256 amount);
+
+    function test_unstakeLPToken_after() public {
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+        mockYLP.approve(address(tournament), LPTokenAmount);
+        tournament.stakeLPToken();
+
+        vm.warp(endTime + 2 days);
+        vm.expectEmit();
+        emit Unstaked(address(player1), LPTokenAmount);
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+    }
+
+    function test_unstakeLPToken_notPlayer() public {
+        vm.warp(endTime + 2 days);
+        vm.startPrank(player1);
+
+        vm.expectRevert("You have nothing to withdraw");
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+    }
 
     function testPlayAganistContractAlwaysReturnsLessThan3(uint256 _fuzzNumber) public {
         vm.warp(startTime + 1 seconds);
