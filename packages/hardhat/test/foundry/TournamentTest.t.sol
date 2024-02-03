@@ -455,6 +455,36 @@ contract TournamentTest is Test {
 
         assertEq(mockYLP.balanceOf(player1), initPlayerBalance + LPTokenAmount / 2 + 0.45 ether);
         assertEq(mockYLP.balanceOf(address(tournament)), initContractBalance - (LPTokenAmount / 2 + 0.45 ether));
+
+        vm.startPrank(player2);
+        vm.expectEmit();
+        emit Unstaked(address(player2), LPTokenAmount / 2 + 0.225 ether);
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+    }
+
+    function test_unstakeLPToken_twice() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        uint initPlayerBalance = mockYLP.balanceOf(player1);
+        uint initContractBalance = mockYLP.balanceOf(address(tournament));
+
+        vm.warp(endTime + 2 days);
+        vm.expectEmit();
+        emit Unstaked(address(player1), LPTokenAmount);
+        tournament.unstakeLPToken();
+
+        assertEq(mockYLP.balanceOf(player1), initPlayerBalance + LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournament)), initContractBalance - LPTokenAmount);
+
+        vm.expectRevert("You have nothing to withdraw");
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(player1), initPlayerBalance + LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournament)), initContractBalance - LPTokenAmount);
     }
 
     function testPlayAgainstContractAlwaysReturnsLessThan3(uint256 _fuzzNumber) public {
@@ -826,7 +856,14 @@ contract TournamentTest is Test {
         tournament.getRank(player5);
     }
 
-    function test_getPrizeShare() public {
+    function test_getPrizeShare_1Player() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        
+        assertEq(tournament.getPrizeShare(player1), 0.5 ether);
+    }
+
+    function test_getPrizeShare_4Players() public {
         vm.warp(startTime + 2 days);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -844,6 +881,7 @@ contract TournamentTest is Test {
         assertEq(tournament.getPrizeShare(player2), 0.125 ether);
         assertEq(tournament.getPrizeShare(player3), 0.125 ether);
         assertEq(tournament.getPrizeShare(player4), 0.125 ether);
+        assertEq(tournament.getPrizeShare(player5), 0);
     }
 
     function test_getPoolPrize_noPlayer() public {
