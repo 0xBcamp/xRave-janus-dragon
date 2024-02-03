@@ -230,10 +230,10 @@ contract Tournament is VRFConsumerBaseV2{
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) * (LPTokenAmount - amount) / 1 ether; // How much LP token is left by the user
-		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - amount - extraPoolPrize;
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
+		realizedPoolPrize += extraPoolPrize;
 		// unclaimedPoolPrize -= share; // TODO: useful?
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
@@ -496,6 +496,9 @@ contract Tournament is VRFConsumerBaseV2{
 	 */
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		// We prevent user to receive more LP than deposited in exeptional case where pPS disminushes
+		pPS = (pPS < playersMap[_player].depositPricePerShare) ? playersMap[_player].depositPricePerShare : pPS;
+		pPS2 = (pPS2 < playersMap[_player].depositPricePerShare2) ? playersMap[_player].depositPricePerShare2 : pPS2;
 		if(Protocol.Yearn == protocol) {
 			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
