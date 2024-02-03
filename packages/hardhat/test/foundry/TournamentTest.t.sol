@@ -29,7 +29,7 @@ contract TournamentTest is Test {
     // Define parameters for Tournament constructor
     uint256 LPTokenAmount = 1e18; // 1 LP Token
     uint256 startTime =  block.timestamp + 30 days; // Start in 30 days
-    uint256 endTime = startTime + 7 days; // End one week after start
+    uint256 endTime = startTime + 30 days; // End one week after start
 
     // Set up "wallets"
     address owner = makeAddr("owner");
@@ -642,6 +642,7 @@ contract TournamentTest is Test {
         assertEq(tournament.pointsOfPlayer(player2), 0);
         assertEq(tournament.pointsOfPlayer(player3), 2);
         assertEq(tournament.pointsOfPlayer(player4), 2);
+        assertEq(tournament.topScore(), 4);
     }
 
     function test_getRank() public {
@@ -708,6 +709,152 @@ contract TournamentTest is Test {
         assertEq(tournament.getPrizeShare(player2), 0.125 ether);
         assertEq(tournament.getPrizeShare(player3), 0.125 ether);
         assertEq(tournament.getPrizeShare(player4), 0.125 ether);
+    }
+
+    function test_getPoolPrize_noPlayer() public {
+        assertEq(tournament.getPoolPrize(), 0);
+    }
+
+    function test_getPoolPrize_noValorization_noWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        assertEq(tournament.getPoolPrize(), 0);
+    }
+
+    function test_getPoolPrize_valorization_noWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubled
+        uint contractBalance = mockYLP.balanceOf(address(tournament));
+        uint fees = tournament.fees();
+
+        assertEq(tournament.getPoolPrize(), contractBalance * (1 ether - fees) / 2 ether);
+    }
+
+    function test_getPoolPrize_noValorization_withdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+
+        vm.warp(endTime + 2 days);
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.getPoolPrize(), 0);
+    }
+
+    function test_getPoolPrize_valorizationBeforeWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+
+        uint contractBalance = mockYLP.balanceOf(address(tournament));
+        uint fees = tournament.fees();
+        
+        vm.warp(endTime + 2 days);
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+
+        assertEq(tournament.getPoolPrize(), contractBalance * (1 ether - fees) / 2 ether);
+    }
+
+    function test_getPoolPrize_valorizationBeforeAfterWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+
+        uint fees = tournament.fees();
+        
+        vm.warp(endTime + 2 days);
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(400000); // Value of LP doubles again
+
+        assertEq(tournament.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
+    }
+
+    function test_getPrizeAmount_noValorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        assertEq(tournament.getPrizeAmount(player1), 0);
+        assertEq(tournament.getPrizeAmount(player2), 0);
+    }
+
+    function test_getPrizeAmount_valorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+
+        assertEq(tournament.getPrizeAmount(player1), tournament.getPoolPrize() * 5 / 10);
+        assertEq(tournament.getPrizeAmount(player2), tournament.getPoolPrize() * 25 / 100);
+    }
+
+    function test_getExpectedPoolPrize_noValorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        vm.warp(startTime + 7 days);
+
+        assertEq(tournament.getExpectedPoolPrize(), 0);
+    }
+
+    function test_getExpectedPoolPrize_valorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        vm.warp(startTime + 7 days);
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+
+        assertEq(tournament.getExpectedPoolPrize(), tournament.getPoolPrize() * 30 / 7);
+    }
+
+    function test_getExpectedPoolPrize_future() public {
+        vm.warp(startTime - 2 days);
+        stakeForTest(player1);
+        stakeForTest(player2);
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+
+        assertEq(tournament.getExpectedPoolPrize(), 0);
     }
 
 
