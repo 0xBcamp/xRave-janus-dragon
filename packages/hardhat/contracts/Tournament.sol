@@ -179,7 +179,11 @@ contract Tournament is VRFConsumerBaseV2{
 		address _vrfCoordinatorV2
 		)  VRFConsumerBaseV2(_vrfCoordinatorV2) {
 			require(_startTime < _endTime, "Start time must be before end time");
-			require(_startTime > block.timestamp, "Start time must be in the future");
+			// Defaults to current block timestamp
+			startTime = _startTime == 0 ? block.timestamp : _startTime;
+			require(startTime >= block.timestamp, "Start time must be today or in the future");
+			require(_endTime > block.timestamp, "End time must be in the future");
+			require(_LPTokenAmount > 0, "Amount to stake must be greater than 0");
 			owner = _owner;
 			name = _name;
 			LPTokenAmount = _LPTokenAmount;
@@ -193,7 +197,6 @@ contract Tournament is VRFConsumerBaseV2{
 					protocol = Protocol.Yearn;
 				}
 			}
-			startTime = _startTime;
 			endTime = _endTime;
 			//VRF
 			i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
