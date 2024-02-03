@@ -179,7 +179,11 @@ contract Tournament is VRFConsumerBaseV2{
 		address _vrfCoordinatorV2
 		)  VRFConsumerBaseV2(_vrfCoordinatorV2) {
 			require(_startTime < _endTime, "Start time must be before end time");
-			require(_startTime > block.timestamp, "Start time must be in the future");
+			// Defaults to current block timestamp
+			startTime = _startTime == 0 ? block.timestamp : _startTime;
+			require(startTime >= block.timestamp, "Start time must be today or in the future");
+			require(_endTime > block.timestamp, "End time must be in the future");
+			require(_LPTokenAmount > 0, "Amount to stake must be greater than 0");
 			owner = _owner;
 			name = _name;
 			LPTokenAmount = _LPTokenAmount;
@@ -193,7 +197,6 @@ contract Tournament is VRFConsumerBaseV2{
 					protocol = Protocol.Yearn;
 				}
 			}
-			startTime = _startTime;
 			endTime = _endTime;
 			//VRF
 			i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
@@ -225,15 +228,15 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that allows anyone to unstake their LP token once the tournament is over
 	 */
 	function unstakeLPToken() public {
-		require(isPlayer(msg.sender), "You have nothing to withdraw");
+		require(isPlayer(msg.sender), "You have nothing to withdraw"); // Address never staked or already withdrew
 		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
 		uint256 extraPoolPrize = (1 ether - fees) * (LPTokenAmount - amount) / 1 ether; // How much LP token is left by the user
-		realizedPoolPrize += extraPoolPrize;
 		realizedFees += LPTokenAmount - amount - extraPoolPrize;
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
+		realizedPoolPrize += extraPoolPrize;
 		// unclaimedPoolPrize -= share; // TODO: useful?
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
@@ -496,6 +499,9 @@ contract Tournament is VRFConsumerBaseV2{
 	 */
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		// We prevent user to receive more LP than deposited in exeptional case where pPS disminushes
+		pPS = (pPS < playersMap[_player].depositPricePerShare) ? playersMap[_player].depositPricePerShare : pPS;
+		pPS2 = (pPS2 < playersMap[_player].depositPricePerShare2) ? playersMap[_player].depositPricePerShare2 : pPS2;
 		if(Protocol.Yearn == protocol) {
 			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
@@ -507,7 +513,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the player's rank and how many players share this rank
 	 */
 	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
-		require(isPlayer(_player), "Not a player");
+		if(!isPlayer(_player)) return (0, 0);
 		uint256 cumulativePlayers;
 		for(uint i=topScore; i>=playersMap[_player].score; i--) {
 			if(scoreToPlayers[i].length > 0) {
@@ -529,7 +535,7 @@ contract Tournament is VRFConsumerBaseV2{
 	function getPrizeShare(address _player) public view returns (uint256) {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
-		if(split == 0) { return 0; }
+		if(split == 0) return 0; // Not a player = no share
 		return (1 ether / (2 ** rank)) / split;
 	}
 
@@ -564,7 +570,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the amount of fees accrued by the protocol on this tournament
 	 */
 	function getFees() public view returns (uint256) {
-		return fees * getPoolPrize() / 1 ether;
+		return getPoolPrize() * fees / (1 ether - fees);
 	}
 
 	function getNumberOfPlayers() public view returns (uint256) {
@@ -628,11 +634,12 @@ contract Tournament is VRFConsumerBaseV2{
 	}
 
 	function getPlayersAtScore(uint256 _score) public view returns (address[] memory) {
+		if(_score == 0) return new address[](0); // We don't return the list of players without any point
 		return scoreToPlayers[_score];
 	}
 
-	function player(address _player) public view returns (uint256 LPToken, uint256 score, uint256 lastGame) {
-		LPToken = LPTokenAmountOfPlayer(_player);
+	function player(address _player) public view returns (uint256 rank, uint256 score, uint256 lastGame) {
+		(rank, ) = getRank(_player);
 		score = playersMap[_player].score;
 		lastGame = playersMap[_player].lastGame;
 	}
