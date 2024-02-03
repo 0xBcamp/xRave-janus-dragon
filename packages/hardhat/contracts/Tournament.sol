@@ -215,7 +215,7 @@ contract Tournament is VRFConsumerBaseV2{
 	function stakeLPToken() public {
 		require(!isPlayer(msg.sender), "You have already staked");
 		require(stakingAllowed(), "Staking not allowed");
-		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount), "Transfer of LP token Failed");
+		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount)); // Revert message handled by the ERC20 transferFrom function
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
 		playersMap[msg.sender].depositPricePerShare = pPS;
 		playersMap[msg.sender].depositPricePerShare2 = pPS2;

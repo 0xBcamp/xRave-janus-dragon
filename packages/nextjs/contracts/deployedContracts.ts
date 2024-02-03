@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x8b9d5A75328b5F3167b04B42AD00092E7d6c485c",
+      address: "0x084815D1330eCC3eF94193a19Ec222C0C73dFf2d",
       abi: [
         {
           inputs: [
@@ -593,6 +593,24 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "getPricePerShare",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "address",
@@ -843,7 +861,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "LPToken",
+              name: "rank",
               type: "uint256",
             },
             {
@@ -1111,7 +1129,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x9BcA065E19b6d630032b53A8757fB093CbEAfC1d",
+      address: "0x76a999d5F7EFDE0a300e710e6f52Fb0A4b61aD58",
       abi: [
         {
           inputs: [
@@ -1379,7 +1397,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0xcb0A9835CDf63c84FE80Fcc59d91d7505871c98B",
+      address: "0xAE246E208ea35B3F23dE72b697D47044FC594D5F",
       abi: [
         {
           inputs: [],
@@ -1726,7 +1744,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0xf274De14171Ab928A5Ec19928cE35FaD91a42B64",
+      address: "0xa4d0806d597146df93796A38435ABB2a3cb96677",
       abi: [
         {
           inputs: [
@@ -2509,7 +2527,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0xFD296cCDB97C605bfdE514e9810eA05f421DEBc2",
+      address: "0x82BBAA3B0982D88741B275aE1752DB85CAfe3c65",
       abi: [
         {
           inputs: [],

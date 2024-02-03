@@ -192,6 +192,21 @@ contract TournamentTest is Test {
         assertEq(tournament.stakingAllowed(), false);
     }
 
+    function test_unstakingAllowed_before() public {
+        vm.warp(startTime - 2 days);
+        assertEq(tournament.unstakingAllowed(), false);
+    }
+
+    function test_unstakingAllowed_during() public {
+        vm.warp(startTime + 2 days);
+        assertEq(tournament.unstakingAllowed(), false);
+    }
+
+    function test_unstakingAllowed_after() public {
+        vm.warp(endTime + 2 days);
+        assertEq(tournament.unstakingAllowed(), true);
+    }
+
     function test_getLPDecimals() public {
         assertEq(tournament.getLPDecimals(), 18);
     }
@@ -293,6 +308,20 @@ contract TournamentTest is Test {
         assertEq(mockYLP.balanceOf(address(tournament)), LPTokenAmount);
     }
 
+    function test_stakeLPToken_unapproved() public {
+        uint initBalance = mockYLP.balanceOf(player1);
+        vm.warp(startTime - 2 days);
+
+        vm.startPrank(player1);
+
+        vm.expectRevert();
+        tournament.stakeLPToken();
+        vm.stopPrank();
+        
+        assertEq(mockYLP.balanceOf(player1), initBalance);
+        assertEq(mockYLP.balanceOf(address(tournament)), 0);
+    }
+
     function test_getPricePerShare() public {
         (uint val1, uint val2) = tournament.getPricePerShare();
         assertEq(val1, 100000);
@@ -373,6 +402,27 @@ contract TournamentTest is Test {
         vm.expectRevert("You have nothing to withdraw");
         tournament.unstakeLPToken();
         vm.stopPrank();
+    }
+
+    function test_unstakeLPToken_noBalance() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+
+        uint initPlayerBalance = mockYLP.balanceOf(player1);
+        uint initContractBalance = mockYLP.balanceOf(address(tournament));
+
+        vm.prank(address(tournament));
+        mockYLP.approve(address(this), initContractBalance);
+        mockYLP.transferFrom(address(tournament), player2, initContractBalance);
+
+        vm.warp(endTime + 2 days);
+        vm.startPrank(player1);
+        vm.expectRevert();
+        tournament.unstakeLPToken();
+        vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(player1), initPlayerBalance);
+        assertEq(mockYLP.balanceOf(address(tournament)), 0);
     }
 
     event Unstaked(address indexed player, uint256 amount);
@@ -555,6 +605,18 @@ contract TournamentTest is Test {
         vm.expectRevert("You must deposit before playing");        
         tournament.playAgainstPlayer(1);
 
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstPlayer_twice() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+        tournament.playAgainstPlayer(1);
+
+        vm.expectRevert("You already played today");
+        tournament.playAgainstPlayer(1);
         vm.stopPrank();
     }
 
@@ -778,6 +840,56 @@ contract TournamentTest is Test {
         assertEq(tournament.pointsOfPlayer(player3), 2);
         assertEq(tournament.pointsOfPlayer(player4), 2);
         assertEq(tournament.topScore(), 4);
+    }
+
+    function test_PlayAgainstPlayer_4Players_2Days() public {
+        assertEq(tournament.pointsOfPlayer(player1), 0);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+        assertEq(tournament.pointsOfPlayer(player3), 0);
+        assertEq(tournament.pointsOfPlayer(player4), 0);
+
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+        vm.startPrank(player2);
+
+        vm.expectEmit();
+        emit Winner(player1, block.timestamp / (60 * 60 * 24));
+        emit Loser(player2, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(2);
+
+        vm.stopPrank();
+
+        stakePlayStakeForTest(1, player3, player4);
+        vm.startPrank(player4);
+
+        vm.expectEmit();
+        emit Draw(player4, player3, block.timestamp / (60 * 60 * 24));
+        tournament.playAgainstPlayer(1);
+
+        vm.stopPrank();
+
+        assertEq(tournament.pointsOfPlayer(player1), 4);
+        assertEq(tournament.pointsOfPlayer(player2), 0);
+        assertEq(tournament.pointsOfPlayer(player3), 2);
+        assertEq(tournament.pointsOfPlayer(player4), 2);
+        assertEq(tournament.topScore(), 4);
+
+        skip(1 days);
+
+        vm.prank(player1);
+        tournament.playAgainstPlayer(1);
+        vm.prank(player3);
+        tournament.playAgainstPlayer(2);
+        vm.prank(player2);
+        tournament.playAgainstPlayer(0);
+        vm.prank(player4);
+        tournament.playAgainstPlayer(0);
+
+        assertEq(tournament.pointsOfPlayer(player1), 4);
+        assertEq(tournament.pointsOfPlayer(player2), 2);
+        assertEq(tournament.pointsOfPlayer(player3), 6);
+        assertEq(tournament.pointsOfPlayer(player4), 4);
+        assertEq(tournament.topScore(), 6);
     }
 
     function test_alreadyPlayed_notStaked() public {
