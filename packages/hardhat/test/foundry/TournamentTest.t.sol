@@ -175,10 +175,6 @@ contract TournamentTest is Test {
         assertEq(tournament.isPlayer(player2), false);
     }
 
-/*     function test_alreadyPlayed_player() public {
-        assertEq(tournament.alreadyPlayed(player1), true);
-    } */
-
     function test_getNumberOfPlayers() public {
         assertEq(tournament.getNumberOfPlayers(), 0);
 
@@ -645,6 +641,36 @@ contract TournamentTest is Test {
         assertEq(tournament.topScore(), 4);
     }
 
+    function test_alreadyPlayed_notStaked() public {
+        vm.warp(startTime + 2 days);
+        assertEq(tournament.alreadyPlayed(player1), false);
+    }
+
+    function test_alreadyPlayed_stakedNotPlayed() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        assertEq(tournament.alreadyPlayed(player1), false);
+    }
+
+    function test_alreadyPlayed_playedToday() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.prank(player1);
+        tournament.playAgainstPlayer(0);
+
+        assertEq(tournament.alreadyPlayed(player1), true);
+    }
+
+    function test_alreadyPlayed_playedYesterday() public {
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.prank(player1);
+        tournament.playAgainstPlayer(0);
+
+        vm.warp(startTime + 3 days);
+        assertEq(tournament.alreadyPlayed(player1), false);
+    }
+
     function test_getRank() public {
         vm.warp(startTime + 2 days);
         stakePlayStakeForTest(0, player1, player2);
@@ -857,7 +883,50 @@ contract TournamentTest is Test {
         assertEq(tournament.getExpectedPoolPrize(), 0);
     }
 
+    function test_getFees_noValorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
 
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        assertEq(tournament.getFees(), 0);
+    }
+
+    function test_getFees_valorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubled
+        uint contractBalance = mockYLP.balanceOf(address(tournament));
+        uint fees = tournament.fees();
+
+        assertEq(tournament.getFees(), contractBalance * fees / 2 ether);
+    }
+
+    function test_getNumberOfPlayers_noPlayer() public {
+        assertEq(tournament.getNumberOfPlayers(), 0);
+    }
+
+    function test_getNumberOfPlayers_onePlayer() public {
+        vm.warp(startTime - 2 days);
+        stakeForTest(player1);
+
+        assertEq(tournament.getNumberOfPlayers(), 1);
+    }
+
+    function test_getNumberOfPlayers_twoPlayers() public {
+        vm.warp(startTime - 2 days);
+        stakeForTest(player1);
+        stakeForTest(player2);
+
+        assertEq(tournament.getNumberOfPlayers(), 2);
+    }
 
 
 

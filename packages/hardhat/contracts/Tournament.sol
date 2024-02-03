@@ -564,7 +564,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the amount of fees accrued by the protocol on this tournament
 	 */
 	function getFees() public view returns (uint256) {
-		return fees * getPoolPrize() / 1 ether;
+		return getPoolPrize() * fees / (1 ether - fees);
 	}
 
 	function getNumberOfPlayers() public view returns (uint256) {
