@@ -532,7 +532,7 @@ contract Tournament is VRFConsumerBaseV2{
 	function getPrizeShare(address _player) public view returns (uint256) {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
-		if(split == 0) { return 0; }
+		if(split == 0) return 0; // Not a player = no share
 		return (1 ether / (2 ** rank)) / split;
 	}
 
@@ -631,6 +631,7 @@ contract Tournament is VRFConsumerBaseV2{
 	}
 
 	function getPlayersAtScore(uint256 _score) public view returns (address[] memory) {
+		if(_score == 0) return new address[](0); // We don't return the list of players without any point
 		return scoreToPlayers[_score];
 	}
 

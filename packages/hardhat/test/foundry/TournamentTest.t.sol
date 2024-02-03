@@ -852,8 +852,9 @@ contract TournamentTest is Test {
         tournament.playAgainstPlayer(1);
         vm.stopPrank();
 
-        vm.expectRevert("Not a player");
-        tournament.getRank(player5);
+        (uint rank, uint split) = tournament.getRank(player5);
+        assertEq(rank, 0);
+        assertEq(split, 0);
     }
 
     function test_getPrizeShare_1Player() public {
@@ -881,7 +882,7 @@ contract TournamentTest is Test {
         assertEq(tournament.getPrizeShare(player2), 0.125 ether);
         assertEq(tournament.getPrizeShare(player3), 0.125 ether);
         assertEq(tournament.getPrizeShare(player4), 0.125 ether);
-        assertEq(tournament.getPrizeShare(player5), 0);
+        assertEq(tournament.getPrizeShare(player5), 0); // Not a player
     }
 
     function test_getPoolPrize_noPlayer() public {
@@ -979,6 +980,20 @@ contract TournamentTest is Test {
         assertEq(tournament.getPrizeAmount(player2), 0);
     }
 
+    function test_getPrizeAmount_devalorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(50000); // Value of LP drops
+
+        assertEq(tournament.getPrizeAmount(player1), 0);
+        assertEq(tournament.getPrizeAmount(player2), 0);
+    }
+
     function test_getPrizeAmount_valorization() public {
         vm.warp(startTime + 2 days);
         stakePlayStakeForTest(0, player1, player2);
@@ -1002,6 +1017,20 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         vm.warp(startTime + 7 days);
+
+        assertEq(tournament.getExpectedPoolPrize(), 0);
+    }
+
+    function test_getExpectedPoolPrize_devalorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        vm.warp(startTime + 7 days);
+        mockYLP.setPricePerShare(50000); // Value of LP drops
 
         assertEq(tournament.getExpectedPoolPrize(), 0);
     }
@@ -1056,6 +1085,19 @@ contract TournamentTest is Test {
         assertEq(tournament.getFees(), contractBalance * fees / 2 ether);
     }
 
+    function test_getFees_devalorization() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(50000); // Value of LP drops
+
+        assertEq(tournament.getFees(), 0);
+    }
+
     function test_getNumberOfPlayers_noPlayer() public {
         assertEq(tournament.getNumberOfPlayers(), 0);
     }
@@ -1075,6 +1117,24 @@ contract TournamentTest is Test {
         assertEq(tournament.getNumberOfPlayers(), 2);
     }
 
+    function test_getPlayersAtScore() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournament.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        stakePlayStakeForTest(1, player3, player4);
+
+        vm.startPrank(player4);
+        tournament.playAgainstPlayer(1);
+        vm.stopPrank();
+        
+        assertEq(keccak256(abi.encodePacked(tournament.getPlayersAtScore(4))), keccak256(abi.encodePacked([address(player1)])));
+        assertEq(keccak256(abi.encodePacked(tournament.getPlayersAtScore(0))), keccak256(abi.encodePacked(new address[](0))));
+        assertEq(keccak256(abi.encodePacked(tournament.getPlayersAtScore(2))), keccak256(abi.encodePacked([address(player4), address(player3)])));
+    }
 
 
 }
