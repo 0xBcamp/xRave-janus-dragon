@@ -483,7 +483,7 @@ contract Tournament is VRFConsumerBaseV2{
 		if(Protocol.Yearn == protocol) {
 			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
-			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
+			return LPTokenAmount * 1 ether / ( ( ( 1 ether * pPS / playersMap[_player].depositPricePerShare ) + ( 1 ether * pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
 		}
 	}
 
