@@ -127,7 +127,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.owner(), owner);
         assertEq(tournamentY.name(), "Yearn Tournament");
         //assertEq(tournamentY.poolIncentivized(), address(mockYLP));
-        assertEq(tournamentY.LPTokenAmount(), 1e18);
+        assertEq(tournamentY.depositAmount(), 1e18);
         assertEq(tournamentY.startTime(), startTime);
         assertEq(tournamentY.endTime(), endTime);
         //assertEq(tournamentY.subId(), 1);
@@ -223,6 +223,31 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getLPDecimals(), 18);
     }
 
+    function test_getLPSymbol() public {
+        assertEq(keccak256(abi.encodePacked(tournamentY.getLPSymbol())), keccak256("yvUSDT"));
+    }
+
+    function test_getTournament() public {
+        (
+            string memory rName,
+            address contractAddress,
+            address rPoolIncentivized,
+            string memory rLPTokenSymbol,
+            uint256 rdepositAmount,
+            uint256 rStartTime,
+            uint256 rEndTime,
+            uint256 rPlayers
+        ) = tournamentY.getTournament();
+        assertEq(keccak256(abi.encodePacked(rName)), keccak256(abi.encodePacked("Yearn Tournament")));
+        assertEq(contractAddress, address(tournamentY));
+        assertEq(rPoolIncentivized, address(mockYLP));
+        assertEq(keccak256(abi.encodePacked(rLPTokenSymbol)), keccak256(abi.encodePacked("yvUSDT")));
+        assertEq(rdepositAmount, 1e18);
+        assertEq(rStartTime, startTime);
+        assertEq(rEndTime, endTime);
+        assertEq(rPlayers, 0);
+    }
+
     function test_isPlayer() public {
         vm.warp(startTime + 2 days);
 
@@ -233,6 +258,7 @@ contract TournamentTest is Test {
     }
 
     function test_getNumberOfPlayers() public {
+        assertEq(tournamentY.getNumberOfPlayers(), 0);
         uint initPlayers = tournamentY.getNumberOfPlayers();
 
         vm.warp(startTime + 2 days);
@@ -244,6 +270,23 @@ contract TournamentTest is Test {
         stakeForTest(player2);
 
         assertEq(tournamentY.getNumberOfPlayers(), initPlayers + 2);
+    }
+
+    function test_getPlayers() public {
+        assertEq(keccak256(abi.encodePacked(tournamentY.getPlayers())), keccak256(abi.encodePacked(new address[](0))));
+
+        vm.warp(startTime + 2 days);
+
+        stakeForTest(player1);
+
+        assertEq(tournamentY.getPlayers().length, 1);
+        assertEq(tournamentY.players(0), player1);
+
+        stakeForTest(player2);
+
+        assertEq(tournamentY.getPlayers().length, 2);
+        assertEq(tournamentY.players(0), player1);
+        assertEq(tournamentY.players(1), player2);
     }
 
     event Staked(address indexed player, uint256 amount);
@@ -770,6 +813,25 @@ contract TournamentTest is Test {
     }
 
     event Draw(address indexed player, address indexed opponent, uint256 day);
+
+    function test_PlayAgainstContract_invalidRequest() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.expectEmit();
+        emit MoveSaved(player1, 1);
+        tournamentY.playAgainstContract(1);
+
+        uint[] memory randomWords = new uint[](1);
+        randomWords[0] = 1;
+
+        vm.expectRevert("nonexistent request");
+        mockVRF.fulfillRandomWordsWithOverride(10, address(tournamentY), randomWords);
+
+        vm.stopPrank();
+    }
 
     function test_PlayAgainstContract_resolvedDraw() public {
 
@@ -1482,23 +1544,51 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getFees(), 0);
     }
 
-    function test_getNumberOfPlayers_noPlayer() public {
-        assertEq(tournamentY.getNumberOfPlayers(), 0);
+    function test_withdrawFees_notOwner() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+        mockUniLP.setReserves(200000, 200000);
+
+        vm.startPrank(player1);
+        vm.expectRevert("Not the Owner");
+        tournamentY.withdrawFees();
+        vm.stopPrank();
     }
 
-    function test_getNumberOfPlayers_onePlayer() public {
-        vm.warp(startTime - 2 days);
-        stakeForTest(player1);
+    function test_withdrawFees_ownerNoWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
 
-        assertEq(tournamentY.getNumberOfPlayers(), 1);
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+        mockUniLP.setReserves(200000, 200000);
+
+        vm.startPrank(owner);
+        vm.expectRevert("No fees to withdraw");
+        tournamentY.withdrawFees();
+        vm.stopPrank();
     }
 
-    function test_getNumberOfPlayers_twoPlayers() public {
-        vm.warp(startTime - 2 days);
-        stakeForTest(player1);
-        stakeForTest(player2);
+    function test_withdrawFees_ownerWithdrawal() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
 
-        assertEq(tournamentY.getNumberOfPlayers(), 2);
+        mockYLP.setPricePerShare(200000); // Value of LP doubles
+        mockUniLP.setReserves(200000, 200000);
+
+        vm.warp(endTime + 2 days);
+        vm.startPrank(player1);
+        tournamentY.unstakeLPToken();
+        vm.stopPrank();
+
+        uint initBalance = mockYLP.balanceOf(address(owner));
+
+        vm.startPrank(owner);
+        tournamentY.withdrawFees();
+        vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(address(owner)), initBalance + 0.05 ether);
     }
 
     function test_getPlayersAtScore() public {
@@ -1520,6 +1610,19 @@ contract TournamentTest is Test {
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(2))), keccak256(abi.encodePacked([address(player4), address(player3)])));
     }
 
+    function test_getPlayer() public {
+        vm.warp(startTime + 2 days);
+        stakePlayStakeForTest(0, player1, player2);
+
+        vm.startPrank(player2);
+        tournamentY.playAgainstPlayer(2);
+        vm.stopPrank();
+
+        (uint rank, uint score, uint lastGame) = tournamentY.getPlayer(player1);
+        assertEq(rank, 1);
+        assertEq(score, 4);
+        assertEq(lastGame, block.timestamp);
+    }
 
 }
 

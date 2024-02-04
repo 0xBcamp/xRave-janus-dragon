@@ -32,17 +32,17 @@ contract Tournament is VRFConsumerBaseV2{
 
 	address public immutable owner;
 	
-	//TOURNAMENT INFO?
-	// @todo could probably put all tournament info in a struct, probaly dont need LPTokenSymbols or Decimals
+	//TOURNAMENT INFO
+	// @todo could probably put all tournament info in a struct
 	string public name; // Name of the tournament
-	uint256 public contractLPToken; // amount of LP token held by the 
-	//@note why do we need IERC20Metadata??
 	IERC20Metadata poolIncentivized;
-	//@note change to depositAmout
-	uint256 public LPTokenAmount; // Min Amount of LP to be deposited by the players
+	uint256 public depositAmount; // Exact Amount of LP to be deposited by the players
 	uint256 public startTime;
 	uint256 public endTime;
-	//@note is this necessary??
+	enum Protocol {
+		Uniswap,
+		Yearn
+	}
 	Protocol public protocol;
 	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
@@ -55,24 +55,17 @@ contract Tournament is VRFConsumerBaseV2{
 	mapping(uint256 => address[]) public scoreToPlayers; // Used for ranking
 	mapping(address => Player) public playersMap; //address => Player Struct
 
-	//@note if we only allow one pool we don't need 2 depositPricePerShare variables
 	struct Player {
 		uint score; // how many points each player has
 		uint lastGame; // when the player last played (used to determine if the player already played today)
 		uint depositPricePerShare; // price per share at deposit
-		uint depositPricePerShare2; // price per share at deposit (only used for UniswapV2 LPs)
+		uint depositPricePerShare2; // price per share at deposit (only used for token pairs like UniswapV2 LPs)
 	}
 	struct StoredPlayer {
 		uint8 move;
 		address addr;
 	}
 	StoredPlayer private storedPlayer;
-
-	//@note is this necessary? 
-	enum Protocol {
-		Uniswap,
-		Yearn
-	}
 
 
 	///////////////////////////////
@@ -99,10 +92,8 @@ contract Tournament is VRFConsumerBaseV2{
     uint64 private immutable i_subscriptionId;
     bytes32 private immutable i_gasLane;
     uint32 private gasLimit;
-    //uint256 private immutable i_entranceFee;
-    //@todo uint8s??
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
-    uint32 private constant NUM_WORDS = 1;
+    uint8 private constant REQUEST_CONFIRMATIONS = 3;
+    uint8 private constant NUM_WORDS = 1;
     
     /// VRF END ///
 
@@ -114,7 +105,6 @@ contract Tournament is VRFConsumerBaseV2{
 	event Staked(address indexed player, uint256 amount);
 	event Unstaked(address indexed player, uint256 amount);
 
-	// Against a player
 	event MoveSaved(
 		address indexed player,
 		uint vrf
@@ -156,7 +146,7 @@ contract Tournament is VRFConsumerBaseV2{
 		address _owner, 
 		string memory _name, 
 		address _poolIncentivized, 
-		uint256 _LPTokenAmount, 
+		uint256 _depositAmount, 
 		uint256 _startTime, 
 		uint256 _endTime,
 		//VRF
@@ -170,13 +160,12 @@ contract Tournament is VRFConsumerBaseV2{
 			startTime = _startTime == 0 ? block.timestamp : _startTime;
 			require(startTime >= block.timestamp, "Start time must be today or in the future");
 			require(_endTime > block.timestamp, "End time must be in the future");
-			require(_LPTokenAmount > 0, "Amount to stake must be greater than 0");
+			require(_depositAmount > 0, "Amount to stake must be greater than 0");
 			owner = _owner;
 			name = _name;
-			LPTokenAmount = _LPTokenAmount;
+			depositAmount = _depositAmount;
 			if(_poolIncentivized != address(0)) {
 				poolIncentivized = IERC20Metadata(_poolIncentivized);
-				//@note why do we need to check the symbol??
 				string memory symbol = poolIncentivized.symbol();
 				if(keccak256(abi.encodePacked(symbol)) == keccak256("UNI-V2")) {
 					protocol = Protocol.Uniswap;
@@ -202,13 +191,13 @@ contract Tournament is VRFConsumerBaseV2{
 	function stakeLPToken() public {
 		require(!isPlayer(msg.sender), "You have already staked");
 		require(stakingAllowed(), "Staking not allowed");
-		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), LPTokenAmount)); // Revert message handled by the ERC20 transferFrom function
+		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), depositAmount)); // Revert message handled by the ERC20 transferFrom function
 		(uint256 pPS, uint256 pPS2) = getPricePerShare();
 		playersMap[msg.sender].depositPricePerShare = pPS;
 		playersMap[msg.sender].depositPricePerShare2 = pPS2;
 		players.push(msg.sender);
 		// emit: keyword used to trigger an event
-		emit Staked(msg.sender, LPTokenAmount);
+		emit Staked(msg.sender, depositAmount);
 	}
 
 	/**
@@ -219,8 +208,8 @@ contract Tournament is VRFConsumerBaseV2{
 		require(unstakingAllowed(), "Unstaking not allowed");
 		// Get back its deposited value of underlying assets
 		uint256 amount = LPTokenAmountOfPlayer(msg.sender); // corresponds to deposited underlying assets
-		uint256 extraPoolPrize = (1 ether - fees) * (LPTokenAmount - amount) / 1 ether; // How much LP token is left by the user
-		realizedFees += LPTokenAmount - amount - extraPoolPrize;
+		uint256 extraPoolPrize = (1 ether - fees) * (depositAmount - amount) / 1 ether; // How much LP token is left by the user
+		realizedFees += depositAmount - amount - extraPoolPrize;
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
 		realizedPoolPrize += extraPoolPrize;
@@ -238,7 +227,6 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Total fees will be available for withdrawal once all players have withdrawn
 	 * Partial fees can be withdran at any time after players begun to withdraw
 	 */
-	//updated to follow CEI
 	function withdrawFees() public onlyOwner {
 		require(realizedFees > 0, "No fees to withdraw");
 		uint256 _realizedFees = realizedFees;
@@ -276,7 +264,6 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that allows the player to submit a move for play against Chainlink VRF
 	 */
-	//@note must update lastgame in Player struct 
 	function playAgainstContract(uint8 _move) public returns(uint256 requestId) {
 		require(_move <= 2, "Invalid move");
 		require(isActive(), "Tournament is not active");
@@ -433,13 +420,13 @@ contract Tournament is VRFConsumerBaseV2{
 	/// Getter Funcs ///
 	////////////////////
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rLPTokenAmount, uint256 rStartTime, uint256 rEndTime, uint256 rPlayers) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rdepositAmount, uint256 rStartTime, uint256 rEndTime, uint256 rPlayers) {
 
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
 		rLPTokenSymbol = getLPSymbol();
-		rLPTokenAmount = LPTokenAmount;
+		rdepositAmount = depositAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
 		rPlayers = players.length;
@@ -479,9 +466,9 @@ contract Tournament is VRFConsumerBaseV2{
 		pPS = (pPS < playersMap[_player].depositPricePerShare) ? playersMap[_player].depositPricePerShare : pPS;
 		pPS2 = (pPS2 < playersMap[_player].depositPricePerShare2) ? playersMap[_player].depositPricePerShare2 : pPS2;
 		if(Protocol.Yearn == protocol) {
-			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
+			return depositAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
-			return LPTokenAmount * 1 ether / ( ( ( 1 ether * pPS / playersMap[_player].depositPricePerShare ) + ( 1 ether * pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
+			return depositAmount * 1 ether / ( ( ( 1 ether * pPS / playersMap[_player].depositPricePerShare ) + ( 1 ether * pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
 		}
 	}
 
@@ -522,7 +509,7 @@ contract Tournament is VRFConsumerBaseV2{
 		uint256 extraLP = 0;
 		for (uint i=0; i<players.length; i++) {
 			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
-			extraLP += LPTokenAmount - LPTokenAmountOfPlayer(players[i]);
+			extraLP += depositAmount - LPTokenAmountOfPlayer(players[i]);
 		}
 		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
 	}
@@ -547,10 +534,6 @@ contract Tournament is VRFConsumerBaseV2{
 	 */
 	function getFees() public view returns (uint256) {
 		return getPoolPrize() * fees / (1 ether - fees);
-	}
-
-	function getNumberOfPlayers() public view returns (uint256) {
-		return players.length;
 	}
 
 	function timeToDate(uint256 _time) internal pure returns (uint256) {
@@ -605,6 +588,10 @@ contract Tournament is VRFConsumerBaseV2{
 		return isEnded();
 	}
 
+	function getNumberOfPlayers() public view returns (uint256) {
+		return players.length;
+	}
+
 	function getPlayers() public view returns (address[] memory) {
 		return players;
 	}
@@ -614,7 +601,7 @@ contract Tournament is VRFConsumerBaseV2{
 		return scoreToPlayers[_score];
 	}
 
-	function player(address _player) public view returns (uint256 rank, uint256 score, uint256 lastGame) {
+	function getPlayer(address _player) public view returns (uint256 rank, uint256 score, uint256 lastGame) {
 		(rank, ) = getRank(_player);
 		score = playersMap[_player].score;
 		lastGame = playersMap[_player].lastGame;
