@@ -117,7 +117,7 @@ contract Tournament is VRFConsumerBaseV2{
 	// Against a player
 	event MoveSaved(
 		address indexed player,
-		bool vrf
+		uint vrf
 	);
 
 	event Winner(
@@ -135,8 +135,6 @@ contract Tournament is VRFConsumerBaseV2{
 		address indexed opponent,
 		uint256 day
 	);
-
-
 
 	/////////////////
 	/// MODIFIERS ///
@@ -272,7 +270,7 @@ contract Tournament is VRFConsumerBaseV2{
             storedPlayer.addr = msg.sender;
         }
         
-        emit MoveSaved(msg.sender, false);
+        emit MoveSaved(msg.sender, 0);
 	}
 
 	/**
@@ -289,7 +287,7 @@ contract Tournament is VRFConsumerBaseV2{
         requestId = _requestRandomWords(_move, msg.sender);
 
         require(requestId > 0, "Your move could not be processed");
-		emit MoveSaved(msg.sender, true);
+		emit MoveSaved(msg.sender, requestId);
 	}
 
 	////////////////////////

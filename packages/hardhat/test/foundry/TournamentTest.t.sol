@@ -754,7 +754,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
     }
 
-    event MoveSaved(address indexed player, bool vrf);
+    event MoveSaved(address indexed player, uint vrf);
 
     function test_PlayAgainstPlayer_FirstPlayer() public {
 
@@ -763,7 +763,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         vm.expectEmit();
-        emit MoveSaved(player1, false);
+        emit MoveSaved(player1, 0);
         tournamentY.playAgainstPlayer(1);
 
         vm.stopPrank();
