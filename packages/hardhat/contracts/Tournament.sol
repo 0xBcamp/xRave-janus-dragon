@@ -25,12 +25,7 @@ contract Tournament is VRFConsumerBaseV2{
 	//////////////
 	/// ERRORS ///
 	//////////////
-	
-    error InvalidMove();
-    error NotEnoughFunds();
-	error NotRegistered();	
-	error NotEnded();
-	
+		
 	///////////////////////
 	/// State Variables ///
 	///////////////////////
@@ -89,7 +84,7 @@ contract Tournament is VRFConsumerBaseV2{
         bool fulfilled; // whether the request has been successfully fulfilled
         bool exists; // whether a requestId exists
         uint256[] randomWords;
-        uint256 vrfMove;
+        uint8 vrfMove;
         address winner;
     }
 
@@ -119,20 +114,10 @@ contract Tournament is VRFConsumerBaseV2{
 	event Staked(address indexed player, uint256 amount);
 	event Unstaked(address indexed player, uint256 amount);
 
-	event ContractPlayed(uint256 move);
-    event MoveMade(uint256 move);
-    event PlayerPlayedAganistContract(uint8 playerMove);
-    event GameResolved(address winner);
-    event RequestSent(uint256 requestId);
-    event RequestFulfilled(uint256 requestId, uint256[] randomWords);
-
-
-	/////////////////
-	/// MODIFIERS ///
-	/////////////////
-
+	// Against a player
 	event MoveSaved(
-		address indexed player
+		address indexed player,
+		uint vrf
 	);
 
 	event Winner(
@@ -151,7 +136,9 @@ contract Tournament is VRFConsumerBaseV2{
 		uint256 day
 	);
 
-
+	/////////////////
+	/// MODIFIERS ///
+	/////////////////
 
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
@@ -191,7 +178,7 @@ contract Tournament is VRFConsumerBaseV2{
 				poolIncentivized = IERC20Metadata(_poolIncentivized);
 				//@note why do we need to check the symbol??
 				string memory symbol = poolIncentivized.symbol();
-				if(keccak256(abi.encode(symbol)) == keccak256("UNI-V2")) {
+				if(keccak256(abi.encodePacked(symbol)) == keccak256("UNI-V2")) {
 					protocol = Protocol.Uniswap;
 				} else {
 					protocol = Protocol.Yearn;
@@ -283,23 +270,24 @@ contract Tournament is VRFConsumerBaseV2{
             storedPlayer.addr = msg.sender;
         }
         
-        emit MoveSaved(msg.sender);
+        emit MoveSaved(msg.sender, 0);
 	}
 
 	/**
 	 * Function that allows the player to submit a move for play against Chainlink VRF
 	 */
 	//@note must update lastgame in Player struct 
-	function playAgainstContract(uint8 _playerMove) public returns (uint256 requestId) {
+	function playAgainstContract(uint8 _move) public returns(uint256 requestId) {
+		require(_move <= 2, "Invalid move");
 		require(isActive(), "Tournament is not active");
+		require(!alreadyPlayed(msg.sender), "You already played today");
+		require(isPlayer(msg.sender), "You must deposit before playing");
+		playersMap[msg.sender].lastGame = block.timestamp;
 
-		if(_playerMove > 2){
-            revert InvalidMove();
-        }
+        requestId = _requestRandomWords(_move, msg.sender);
 
-        requestId = _requestRandomWords(_playerMove, msg.sender);
-
-        emit PlayerPlayedAganistContract(_playerMove);
+        require(requestId > 0, "Your move could not be processed");
+		emit MoveSaved(msg.sender, requestId);
 	}
 
 	////////////////////////
@@ -326,21 +314,18 @@ contract Tournament is VRFConsumerBaseV2{
                 NUM_WORDS
             );
 
-            contractGameRequestId[requestId] = ContractGame({
-                playerMove: _playerMove,
-                player: _player,
-                fulfilled: false,
-                exists: true,
-                randomWords: new uint256[](0),
-                vrfMove: 3, // Placeholder value indicating unfulfilled request
-                winner: address(0)
-            });
+            contractGameRequestId[requestId] = ContractGame(
+                _playerMove,
+                _player,
+                false,
+                true,
+                new uint256[](0),
+                3, // Placeholder value indicating unfulfilled request
+                address(0)
+            );
 
             requestIds.push(requestId);
             lastRequestId = requestId;
-
-            emit RequestSent(requestId);
-            return requestId;
     }
 
 
@@ -353,7 +338,7 @@ contract Tournament is VRFConsumerBaseV2{
         require(contractGameRequestId[requestId].exists, "request not found");
       
         // number of moves size 3 (0rock 1paper 2scissor)
-        uint256 vrfMove = randomWords[0] % 3;
+        uint8 vrfMove = uint8(randomWords[0] % 3);
 
         ContractGame storage game = contractGameRequestId[requestId];
 
@@ -362,8 +347,6 @@ contract Tournament is VRFConsumerBaseV2{
         game.vrfMove = vrfMove;
 
         resolveVrfGame(requestId);
-        
-        emit ContractPlayed(vrfMove);
     }
 
 	//////////////////////////////
@@ -381,18 +364,15 @@ contract Tournament is VRFConsumerBaseV2{
             // Draw
 			updateScore(msg.sender, 2);
 			updateScore(storedPlayer.addr, 2);
-            // winner = address(0);
 			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
-        } else if (((3 +_move - storedPlayer.move) % 3) == 1) {
+        } else if (((3 + _move - storedPlayer.move) % 3) == 1) {
             // msg.sender wins
 			updateScore(msg.sender, 4);
-            // winner = msg.sender;
 			emit Winner(msg.sender, timeToDate(block.timestamp));
 			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
         } else {
 			// storedPlayer wins
 			updateScore(storedPlayer.addr, 4);
-            // winner = storedPlayer.addr;
 			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
 			emit Loser(msg.sender, timeToDate(block.timestamp));
         }
@@ -402,32 +382,28 @@ contract Tournament is VRFConsumerBaseV2{
 
 	/**
 	 * @param requestId is the requestId generated by chainlink and used to grab the game struct
-	 * @return winner address of winner
 	 * @dev this resolves a game aganist the contract
 	 */
     //@todo make one function that resolves both pvp and vrf games
 	//@todo make it only callable by VRF fulfillRandomwords
-    function resolveVrfGame(uint256 requestId) public returns (address winner) {
+    function resolveVrfGame(uint256 requestId) internal {
         ContractGame storage game = contractGameRequestId[requestId]; 
         if(game.playerMove == game.vrfMove){
             //draw
-            //playersPoints[game.player] += 1;
 			updateScore(game.player, 1);
-            //livesLeft[game.player] += 1;
+			emit Draw(game.player, address(0), timeToDate(block.timestamp));
             game.winner = address(0);
-        } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
-            // player loses 
-            game.winner = address(i_vrfCoordinator);
-        } else {
-            //player wins
-            //playersPoints[game.player] += 2;
+        } else if (((3 + game.playerMove - game.vrfMove) % 3) == 1) {
+        // } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
+            // player wins 
 			updateScore(game.player, 2);
-            //livesLeft[game.player] += 1;
-            game.winner = game.player;
+			emit Winner(game.player, timeToDate(block.timestamp));
+        	game.winner = game.player;
+        } else {
+            //player loses
+    		emit Loser(game.player, timeToDate(block.timestamp));
+            game.winner = address(i_vrfCoordinator);
         }
-
-        winner = game.winner;
-        emit GameResolved(winner);
     }
 
 	/**
@@ -505,7 +481,7 @@ contract Tournament is VRFConsumerBaseV2{
 		if(Protocol.Yearn == protocol) {
 			return LPTokenAmount * playersMap[_player].depositPricePerShare / pPS;
 		} else { // Uniswap
-			return LPTokenAmount / ( ( ( pPS / playersMap[_player].depositPricePerShare ) + ( pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
+			return LPTokenAmount * 1 ether / ( ( ( 1 ether * pPS / playersMap[_player].depositPricePerShare ) + ( 1 ether * pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
 		}
 	}
 

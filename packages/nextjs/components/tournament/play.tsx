@@ -12,6 +12,7 @@ export const Play = () => {
   const params = useParams<{ addr: string }>();
   const [move, setMove] = useState(3);
   const [result, setResult] = useState("none");
+  const [VRFrequest, setVRFrequest] = useState(0);
 
   const { data: alreadyPlayed } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
@@ -70,6 +71,7 @@ export const Play = () => {
     eventName: "MoveSaved",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
+        setVRFrequest(Number(log[0].args.vrf) || 0);
         if (result == "sent" || result == "none") setResult("saved");
       }
     },
@@ -152,6 +154,14 @@ export const Play = () => {
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>That&apos;s a draw!</p>
             </div>
+          ) : result == "saved" && VRFrequest > 0 ? (
+            <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
+              <p>
+                Waiting for the move of the contract (request: {VRFrequest.toString()}).
+                <br />
+                You can close this window or wait for the resolution.
+              </p>
+            </div>
           ) : result == "saved" ? (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <p>
@@ -178,7 +188,7 @@ export const Play = () => {
                 </button>
               </div>
               <div className="flex justify-center rounded-md shadow-sm space-x-4" role="group">
-                <button className="btn btn-secondary" disabled={true} onClick={() => playAgainstContract()}>
+                <button className="btn btn-secondary" disabled={move > 2} onClick={() => playAgainstContract()}>
                   Instant play against the contract
                 </button>
                 <button className="btn btn-secondary" disabled={move > 2} onClick={() => playAgainstHuman()}>

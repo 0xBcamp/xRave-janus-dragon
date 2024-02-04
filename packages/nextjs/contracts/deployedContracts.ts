@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x084815D1330eCC3eF94193a19Ec222C0C73dFf2d",
+      address: "0xeA8AE08513f8230cAA8d031D28cB4Ac8CE720c68",
       abi: [
         {
           inputs: [
@@ -66,26 +66,6 @@ const deployedContracts = {
           type: "constructor",
         },
         {
-          inputs: [],
-          name: "InvalidMove",
-          type: "error",
-        },
-        {
-          inputs: [],
-          name: "NotEnded",
-          type: "error",
-        },
-        {
-          inputs: [],
-          name: "NotEnoughFunds",
-          type: "error",
-        },
-        {
-          inputs: [],
-          name: "NotRegistered",
-          type: "error",
-        },
-        {
           inputs: [
             {
               internalType: "address",
@@ -100,19 +80,6 @@ const deployedContracts = {
           ],
           name: "OnlyCoordinatorCanFulfill",
           type: "error",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "move",
-              type: "uint256",
-            },
-          ],
-          name: "ContractPlayed",
-          type: "event",
         },
         {
           anonymous: false,
@@ -143,19 +110,6 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
-              indexed: false,
-              internalType: "address",
-              name: "winner",
-              type: "address",
-            },
-          ],
-          name: "GameResolved",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
               indexed: true,
               internalType: "address",
               name: "player",
@@ -175,71 +129,19 @@ const deployedContracts = {
           anonymous: false,
           inputs: [
             {
-              indexed: false,
-              internalType: "uint256",
-              name: "move",
-              type: "uint256",
-            },
-          ],
-          name: "MoveMade",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
               indexed: true,
               internalType: "address",
               name: "player",
               type: "address",
             },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "vrf",
+              type: "uint256",
+            },
           ],
           name: "MoveSaved",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "uint8",
-              name: "playerMove",
-              type: "uint8",
-            },
-          ],
-          name: "PlayerPlayedAganistContract",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "requestId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256[]",
-              name: "randomWords",
-              type: "uint256[]",
-            },
-          ],
-          name: "RequestFulfilled",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "requestId",
-              type: "uint256",
-            },
-          ],
-          name: "RequestSent",
           type: "event",
         },
         {
@@ -381,9 +283,9 @@ const deployedContracts = {
               type: "bool",
             },
             {
-              internalType: "uint256",
+              internalType: "uint8",
               name: "vrfMove",
-              type: "uint256",
+              type: "uint8",
             },
             {
               internalType: "address",
@@ -821,7 +723,7 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint8",
-              name: "_playerMove",
+              name: "_move",
               type: "uint8",
             },
           ],
@@ -1011,25 +913,6 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "requestId",
-              type: "uint256",
-            },
-          ],
-          name: "resolveVrfGame",
-          outputs: [
-            {
-              internalType: "address",
-              name: "winner",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
               name: "",
               type: "uint256",
             },
@@ -1129,7 +1012,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x76a999d5F7EFDE0a300e710e6f52Fb0A4b61aD58",
+      address: "0x6431AF84d34F0522cAA58b221d94A150B5AdAC69",
       abi: [
         {
           inputs: [
@@ -1397,7 +1280,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0xAE246E208ea35B3F23dE72b697D47044FC594D5F",
+      address: "0x1d460d731Bd5a0fF2cA07309dAEB8641a7b175A1",
       abi: [
         {
           inputs: [],
@@ -1744,7 +1627,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0xa4d0806d597146df93796A38435ABB2a3cb96677",
+      address: "0x41219a0a9C0b86ED81933c788a6B63Dfef8f17eE",
       abi: [
         {
           inputs: [
@@ -2527,7 +2410,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x82BBAA3B0982D88741B275aE1752DB85CAfe3c65",
+      address: "0xF67e26649037695DdFAB19f4E22d5c9Fd1564592",
       abi: [
         {
           inputs: [],
