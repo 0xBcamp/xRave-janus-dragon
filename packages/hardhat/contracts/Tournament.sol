@@ -84,7 +84,7 @@ contract Tournament is VRFConsumerBaseV2{
         bool fulfilled; // whether the request has been successfully fulfilled
         bool exists; // whether a requestId exists
         uint256[] randomWords;
-        uint256 vrfMove;
+        uint8 vrfMove;
         address winner;
     }
 
@@ -314,15 +314,15 @@ contract Tournament is VRFConsumerBaseV2{
                 NUM_WORDS
             );
 
-            contractGameRequestId[requestId] = ContractGame({
-                playerMove: _playerMove,
-                player: _player,
-                fulfilled: false,
-                exists: true,
-                randomWords: new uint256[](0),
-                vrfMove: 3, // Placeholder value indicating unfulfilled request
-                winner: address(0)
-            });
+            contractGameRequestId[requestId] = ContractGame(
+                _playerMove,
+                _player,
+                false,
+                true,
+                new uint256[](0),
+                3, // Placeholder value indicating unfulfilled request
+                address(0)
+            );
 
             requestIds.push(requestId);
             lastRequestId = requestId;
@@ -338,7 +338,7 @@ contract Tournament is VRFConsumerBaseV2{
         require(contractGameRequestId[requestId].exists, "request not found");
       
         // number of moves size 3 (0rock 1paper 2scissor)
-        uint256 vrfMove = randomWords[0] % 3;
+        uint8 vrfMove = uint8(randomWords[0] % 3);
 
         ContractGame storage game = contractGameRequestId[requestId];
 
@@ -391,18 +391,18 @@ contract Tournament is VRFConsumerBaseV2{
         if(game.playerMove == game.vrfMove){
             //draw
 			updateScore(game.player, 1);
-			emit Draw(msg.sender, address(0), timeToDate(block.timestamp));
+			emit Draw(game.player, address(0), timeToDate(block.timestamp));
             game.winner = address(0);
         } else if (((3 + game.playerMove - game.vrfMove) % 3) == 1) {
         // } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
             // player wins 
 			updateScore(game.player, 2);
 			emit Winner(game.player, timeToDate(block.timestamp));
-            game.winner = address(i_vrfCoordinator);
+        	game.winner = game.player;
         } else {
             //player loses
     		emit Loser(game.player, timeToDate(block.timestamp));
-        	game.winner = game.player;
+            game.winner = address(i_vrfCoordinator);
         }
     }
 

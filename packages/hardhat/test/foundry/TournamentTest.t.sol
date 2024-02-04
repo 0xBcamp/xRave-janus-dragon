@@ -697,6 +697,100 @@ contract TournamentTest is Test {
 
     }
 
+    function test_PlayAgainstContract_invalidMove() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.expectRevert("Invalid move");
+        tournamentY.playAgainstContract(3);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstContract_before() public {
+
+        vm.warp(startTime - 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.expectRevert("Tournament is not active");
+        tournamentY.playAgainstContract(1);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstContract_after() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.warp(endTime + 2 days);
+        vm.expectRevert("Tournament is not active");
+        tournamentY.playAgainstContract(1);
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstContract_notPlayer() public {
+
+        vm.warp(startTime + 2 days);
+        vm.startPrank(player1);
+
+        vm.expectRevert("You must deposit before playing");        
+        tournamentY.playAgainstContract(1);
+
+        vm.stopPrank();
+    }
+
+    function test_PlayAgainstContract_twice() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+        tournamentY.playAgainstContract(1);
+
+        vm.expectRevert("You already played today");
+        tournamentY.playAgainstContract(1);
+        vm.stopPrank();
+    }
+
+    event MoveSaved(address indexed player, uint vrf);
+
+    function test_PlayAgainstContract_unresolved() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.expectEmit();
+        emit MoveSaved(player1, 1);
+        tournamentY.playAgainstContract(1);
+
+        vm.stopPrank();
+    }
+
+    event Draw(address indexed player, address indexed opponent, uint256 day);
+
+    function test_PlayAgainstContract_resolvedDraw() public {
+
+        vm.warp(startTime + 2 days);
+        stakeForTest(player1);
+        vm.startPrank(player1);
+
+        vm.expectEmit();
+        emit MoveSaved(player1, 1);
+        tournamentY.playAgainstContract(1);
+
+        uint[] memory randomWords = new uint[](1);
+        randomWords[0] = 1;
+
+        vm.expectEmit();
+        emit Draw(player1, address(0), block.timestamp / (60 * 60 * 24));
+        mockVRF.fulfillRandomWordsWithOverride(1, address(tournamentY), randomWords);
+
+        vm.stopPrank();
+    }
+
     function test_PlayAgainstPlayer_invalidMove() public {
 
         vm.warp(startTime + 2 days);
@@ -754,9 +848,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
     }
 
-    event MoveSaved(address indexed player, uint vrf);
-
-    function test_PlayAgainstPlayer_FirstPlayer() public {
+    function test_PlayAgainstPlayer_firstPlayer() public {
 
         vm.warp(startTime + 2 days);
         stakeForTest(player1);
@@ -768,8 +860,6 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
     }
-
-    event Draw(address indexed player, address indexed opponent, uint256 day);
 
     function test_PlayAgainstPlayer_RockRock() public {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
