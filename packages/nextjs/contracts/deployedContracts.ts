@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x8b9d5A75328b5F3167b04B42AD00092E7d6c485c",
+      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
       abi: [
         {
           inputs: [
@@ -1107,11 +1107,12 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        rawFulfillRandomWords: "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
+        rawFulfillRandomWords:
+          "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
       },
     },
     TournamentFactory: {
-      address: "0x9BcA065E19b6d630032b53A8757fB093CbEAfC1d",
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
       abi: [
         {
           inputs: [
@@ -1379,7 +1380,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     UniswapV2Pair: {
-      address: "0xcb0A9835CDf63c84FE80Fcc59d91d7505871c98B",
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [],
@@ -1726,7 +1727,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0xf274De14171Ab928A5Ec19928cE35FaD91a42B64",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [
@@ -2493,23 +2494,35 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        acceptSubscriptionOwnerTransfer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        addConsumer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        cancelSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        createSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        getRequestConfig: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        getSubscription: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        pendingRequestExists: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        removeConsumer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        requestRandomWords: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        requestSubscriptionOwnerTransfer: "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
-        acceptOwnership: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
+        acceptSubscriptionOwnerTransfer:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        addConsumer:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        cancelSubscription:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        createSubscription:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        getRequestConfig:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        getSubscription:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        pendingRequestExists:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        removeConsumer:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        requestRandomWords:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        requestSubscriptionOwnerTransfer:
+          "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
+        acceptOwnership:
+          "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
         owner: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
-        transferOwnership: "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
+        transferOwnership:
+          "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol",
       },
     },
     Vyper_contract: {
-      address: "0xFD296cCDB97C605bfdE514e9810eA05f421DEBc2",
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
       abi: [
         {
           inputs: [],

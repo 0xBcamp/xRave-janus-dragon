@@ -13234,6 +13234,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "se-2@workspace:."
   dependencies:
+    "@moonup/moon-api": ^0.0.23
     "@moonup/moon-rainbowkit": ^0.0.26
     "@moonup/moon-sdk": ^0.0.43
     husky: ^8.0.1

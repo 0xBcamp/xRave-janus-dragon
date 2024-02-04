@@ -39,6 +39,7 @@
     "usehooks-ts@^2.7.2": "patch:usehooks-ts@npm:^2.7.2#./.yarn/patches/usehooks-ts-npm-2.7.2-fceffe0e43.patch"
   },
   "dependencies": {
+    "@moonup/moon-api": "^0.0.23",
     "@moonup/moon-rainbowkit": "^0.0.26",
     "@moonup/moon-sdk": "^0.0.43"
   }
