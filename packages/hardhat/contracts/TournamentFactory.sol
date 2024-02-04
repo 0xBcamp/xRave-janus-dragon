@@ -45,10 +45,10 @@ contract TournamentFactory {
 	 * @param _name (string) - name of the tournament
 	 * @param _poolIncentivized (address) - address of the pool to incentivize and from which we will accept the LP token
 	 * @param _LPTokenAmount (uint256) - amount of the ERC-20 LP token to stake in order to participate
-	 * @param _startTime (uint256) - block number at which the tournament starts
-	 * @param _endTime (uint256) - block number at which the tournament ends
+	 * @param _startTime (uint256) - block timestamp at which the tournament starts
+	 * @param _endTime (uint256) - block timestamp at which the tournament ends
 	 *
-	 * @return newTournament (address) - address of the new tournament
+	 * @return newTournament (Tournament) - instance of the new tournament
 	 */
 	function createTournament(
 		string memory _name, 

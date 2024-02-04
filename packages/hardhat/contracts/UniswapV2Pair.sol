@@ -13,14 +13,18 @@ contract UniswapV2Pair is ERC20 {
   uint reserve0 = 100000;
   uint reserve1 = 100000;
 
-  uint private _totalSupply = 100000;
-
   function getReserves() public view returns (uint, uint, uint) {
     return (reserve0, reserve1, block.timestamp - 60);
   }
 
   function setTotalSupply(uint _supply) public {
-    _totalSupply = _supply;    
+    if(_supply > totalSupply()) {
+        uint mint = _supply - totalSupply();
+        _mint( msg.sender , mint);
+    } else {
+        uint burn = totalSupply() - _supply;
+        _burn( msg.sender , burn);
+    }
   }
 
   function setReserves(uint _reserve0, uint _reserve1) public {
