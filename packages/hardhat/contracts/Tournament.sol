@@ -59,7 +59,6 @@ contract Tournament is VRFConsumerBaseV2{
 		uint score; // how many points each player has
 		uint lastGame; // when the player last played (used to determine if the player already played today)
 		uint depositPricePerShare; // price per share at deposit
-		uint depositPricePerShare2; // price per share at deposit (only used for token pairs like UniswapV2 LPs)
 	}
 	struct StoredPlayer {
 		uint8 move;
@@ -192,9 +191,7 @@ contract Tournament is VRFConsumerBaseV2{
 		require(!isPlayer(msg.sender), "You have already staked");
 		require(stakingAllowed(), "Staking not allowed");
 		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), depositAmount)); // Revert message handled by the ERC20 transferFrom function
-		(uint256 pPS, uint256 pPS2) = getPricePerShare();
-		playersMap[msg.sender].depositPricePerShare = pPS;
-		playersMap[msg.sender].depositPricePerShare2 = pPS2;
+		playersMap[msg.sender].depositPricePerShare = getPricePerShare();
 		players.push(msg.sender);
 		// emit: keyword used to trigger an event
 		emit Staked(msg.sender, depositAmount);
@@ -445,15 +442,15 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that returns the current price per share from the LP token contract
 	 */
-	function getPricePerShare() public view returns(uint256, uint256) {
+	function getPricePerShare() public view returns(uint256) {
 		if(Protocol.Yearn == protocol) {
 			YearnInterface yearn = YearnInterface(address(poolIncentivized));
-			return ( yearn.pricePerShare(), 0 );
+			return yearn.pricePerShare();
 		} else { // Uniswap
 			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
 			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
 			uint supply = uniswap.totalSupply();
-			return ( 1 ether * res0 / supply, 1 ether * res1 / supply );
+			return 1 ether * res0 * res1 / supply;
 		}
 	}
 
@@ -461,15 +458,11 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the current amount of LP token entitled to the player on withdrawal (before adding earned prizes)
 	 */
 	function LPTokenAmountOfPlayer(address _player) public view returns (uint256) {
-		(uint256 pPS, uint256 pPS2) = getPricePerShare();
+		uint256 pPS = getPricePerShare();
+		if(playersMap[_player].depositPricePerShare == 0) { return 0; } // User aleady withdrew
 		// We prevent user to receive more LP than deposited in exeptional case where pPS disminushes
 		pPS = (pPS < playersMap[_player].depositPricePerShare) ? playersMap[_player].depositPricePerShare : pPS;
-		pPS2 = (pPS2 < playersMap[_player].depositPricePerShare2) ? playersMap[_player].depositPricePerShare2 : pPS2;
-		if(Protocol.Yearn == protocol) {
-			return depositAmount * playersMap[_player].depositPricePerShare / pPS;
-		} else { // Uniswap
-			return depositAmount * 1 ether / ( ( ( 1 ether * pPS / playersMap[_player].depositPricePerShare ) + ( 1 ether * pPS2 / playersMap[_player].depositPricePerShare2 ) ) / 2 );
-		}
+		return depositAmount * playersMap[_player].depositPricePerShare / pPS;
 	}
 
 	/**
