@@ -31,6 +31,9 @@ contract TournamentTest is Test {
     uint256 LPTokenAmount = 1e18; // 1 LP Token
     uint256 startTime =  block.timestamp + 30 days; // Start in 30 days
     uint256 endTime = startTime + 30 days; // End one week after start
+    uint beforeTime = startTime - 2 days;
+    uint duringTime = startTime + 2 days;
+    uint afterTime = endTime + 2 days;
 
     // Set up "wallets"
     address owner = makeAddr("owner");
@@ -61,6 +64,12 @@ contract TournamentTest is Test {
         vm.stopPrank();
         
         stakeForTest(_playerB);
+    }
+
+    function newAddress(uint _fuzz) public {
+        address player = makeAddr(vm.toString(_fuzz));
+        mockYLP.transfer(player, 10e18);
+        mockUniLP.transfer(player, 10e18);
     }
 
     /// /// /// /// ///
@@ -145,77 +154,77 @@ contract TournamentTest is Test {
     /// /// /// /// ///
 
     function test_isActive_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         assertEq(tournamentY.isActive(), false);
     }
 
     function test_isActive_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.isActive(), true);
     }
 
     function test_isActive_after() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         assertEq(tournamentY.isActive(), false);
     }
 
     function test_isFuture_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         assertEq(tournamentY.isFuture(), true);
     }
 
     function test_isFuture_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.isFuture(), false);
     }
 
     function test_isFuture_after() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         assertEq(tournamentY.isFuture(), false);
     }
 
     function test_isEnded_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         assertEq(tournamentY.isEnded(), false);
     }
 
     function test_isEnded_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.isEnded(), false);
     }
 
     function test_isEnded_after() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         assertEq(tournamentY.isEnded(), true);
     }
 
     function test_stakingAllowed_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         assertEq(tournamentY.stakingAllowed(), true);
     }
 
     function test_stakingAllowed_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.stakingAllowed(), true);
     }
 
     function test_stakingAllowed_after() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         assertEq(tournamentY.stakingAllowed(), false);
     }
 
     function test_unstakingAllowed_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         assertEq(tournamentY.unstakingAllowed(), false);
     }
 
     function test_unstakingAllowed_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.unstakingAllowed(), false);
     }
 
     function test_unstakingAllowed_after() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         assertEq(tournamentY.unstakingAllowed(), true);
     }
 
@@ -249,7 +258,7 @@ contract TournamentTest is Test {
     }
 
     function test_isPlayer() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
@@ -261,7 +270,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getNumberOfPlayers(), 0);
         uint initPlayers = tournamentY.getNumberOfPlayers();
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
@@ -275,7 +284,7 @@ contract TournamentTest is Test {
     function test_getPlayers() public {
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayers())), keccak256(abi.encodePacked(new address[](0))));
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
@@ -295,7 +304,7 @@ contract TournamentTest is Test {
         uint initBalanceY = mockYLP.balanceOf(player1);
         uint initBalanceU = mockUniLP.balanceOf(player1);
 
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
 
         vm.startPrank(player1);
 
@@ -322,7 +331,7 @@ contract TournamentTest is Test {
         uint initBalanceY = mockYLP.balanceOf(player1);
         uint initBalanceU = mockUniLP.balanceOf(player1);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         vm.startPrank(player1);
 
@@ -349,7 +358,7 @@ contract TournamentTest is Test {
         uint initBalanceY = mockYLP.balanceOf(player1);
         uint initBalanceU = mockUniLP.balanceOf(player1);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
 
         vm.startPrank(player1);
 
@@ -372,7 +381,7 @@ contract TournamentTest is Test {
         uint initBalanceY = mockYLP.balanceOf(player1);
         uint initBalanceU = mockUniLP.balanceOf(player1);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         vm.startPrank(player1);
         mockUniLP.approve(address(tournamentU), 2 * LPTokenAmount);
@@ -397,7 +406,7 @@ contract TournamentTest is Test {
 
     function test_stakeLPToken_unapproved() public {
         uint initBalance = mockYLP.balanceOf(player1);
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
 
         vm.startPrank(player1);
 
@@ -410,51 +419,37 @@ contract TournamentTest is Test {
     }
 
     function test_getPricePerShare_Yearn() public {
-        (uint val1, uint val2) = tournamentY.getPricePerShare();
-        assertEq(val1, 100000);
-        assertEq(val2, 0);
+        assertEq(tournamentY.getPricePerShare(), 100000);
 
         mockYLP.setPricePerShare(150000);
 
-        (val1, val2) = tournamentY.getPricePerShare();
-        assertEq(val1, 150000);
-        assertEq(val2, 0);
+        assertEq(tournamentY.getPricePerShare(), 150000);
 
         mockYLP.setPricePerShare(50000);
 
-        (val1, val2) = tournamentY.getPricePerShare();
-        assertEq(val1, 50000);
-        assertEq(val2, 0);
+        assertEq(tournamentY.getPricePerShare(), 50000);
     }
 
     function test_getPricePerShare_Uniswap() public {
         vm.warp(startTime);
 
-        (uint val1, uint val2) = tournamentU.getPricePerShare();
-        assertEq(val1, 100);
-        assertEq(val2, 100);
+        assertEq(tournamentU.getPricePerShare(), 10000000);
 
         mockUniLP.setReserves(150000, 200000);
 
-        (val1, val2) = tournamentU.getPricePerShare();
-        assertEq(val1, 150);
-        assertEq(val2, 200);
+        assertEq(tournamentU.getPricePerShare(), 30000000);
 
         mockUniLP.setReserves(250000, 50000);
 
-        (val1, val2) = tournamentU.getPricePerShare();
-        assertEq(val1, 250);
-        assertEq(val2, 50);
+        assertEq(tournamentU.getPricePerShare(), 12500000);
 
         mockUniLP.setTotalSupply(2000 ether);
         
-        (val1, val2) = tournamentU.getPricePerShare();
-        assertEq(val1, 125);
-        assertEq(val2, 25);
+        assertEq(tournamentU.getPricePerShare(), 12500000 / 2);
     }
 
-    function test_LPTokenAmountOfPlayer_unchanged() public {
-        vm.warp(startTime + 2 days);
+    function test_LPTokenAmountOfPlayer_notValorized() public {
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
@@ -463,26 +458,26 @@ contract TournamentTest is Test {
     }
 
     function test_LPTokenAmountOfPlayer_valorized() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
         mockYLP.setPricePerShare(150000);
-        mockUniLP.setReserves(300000, 300000);
+        mockUniLP.setReserves(150000, 200000);
         mockUniLP.setTotalSupply(2000 ether);
 
 
         assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
 
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(200000, 100000);
         mockUniLP.setTotalSupply(1000 ether);
 
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount / 2);
     }
 
     function test_LPTokenAmountOfPlayer_devalorized() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
 
         stakeForTest(player1);
 
@@ -498,7 +493,7 @@ contract TournamentTest is Test {
     }
 
     function test_unstakeLPToken_before() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
 
         stakeForTest(player1);
         vm.startPrank(player1);
@@ -511,7 +506,7 @@ contract TournamentTest is Test {
     }
 
     function test_unstakeLPToken_during() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -523,7 +518,7 @@ contract TournamentTest is Test {
    }
 
     function test_unstakeLPToken_notPlayer() public {
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.startPrank(player1);
 
         vm.expectRevert("You have nothing to withdraw");
@@ -534,7 +529,7 @@ contract TournamentTest is Test {
     }
 
     function test_unstakeLPToken_noBalance() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
 
         uint initPlayerBalance = mockYLP.balanceOf(player1);
@@ -544,7 +539,7 @@ contract TournamentTest is Test {
         mockYLP.approve(address(this), initContractBalance);
         mockYLP.transferFrom(address(tournamentY), player2, initContractBalance);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.startPrank(player1);
         vm.expectRevert();
         tournamentY.unstakeLPToken();
@@ -556,8 +551,8 @@ contract TournamentTest is Test {
 
     event Unstaked(address indexed player, uint256 amount);
 
-    function test_unstakeLPToken_after_unchanged() public {
-        vm.warp(startTime + 2 days);
+    function test_unstakeLPToken_after_notValorized() public {
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -566,7 +561,7 @@ contract TournamentTest is Test {
         uint initPlayerBalanceU = mockUniLP.balanceOf(player1);
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.expectEmit();
         emit Unstaked(address(player1), LPTokenAmount);
         tournamentY.unstakeLPToken();
@@ -582,18 +577,22 @@ contract TournamentTest is Test {
     }
 
     function test_unstakeLPToken_after_notPlayed_devalorized() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
-        vm.startPrank(player1);
+        stakeForTest(player2);
 
         uint initPlayerBalanceY = mockYLP.balanceOf(player1);
+        uint initPlayer2BalanceY = mockYLP.balanceOf(player2);
         uint initContractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint initPlayerBalanceU = mockUniLP.balanceOf(player1);
+        uint initPlayer2BalanceU = mockUniLP.balanceOf(player2);
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(50000);
         mockUniLP.setReserves(50000, 50000);
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
+    
+        vm.startPrank(player1);
         vm.expectEmit();
         emit Unstaked(address(player1), LPTokenAmount);
         tournamentY.unstakeLPToken();
@@ -601,27 +600,41 @@ contract TournamentTest is Test {
         emit Unstaked(address(player1), LPTokenAmount);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
+   
+        vm.startPrank(player2);
+        vm.expectEmit();
+        emit Unstaked(address(player2), LPTokenAmount);
+        tournamentY.unstakeLPToken();
+        vm.expectEmit();
+        emit Unstaked(address(player2), LPTokenAmount);
+        tournamentU.unstakeLPToken();
+        vm.stopPrank();
 
         assertEq(mockYLP.balanceOf(player1), initPlayerBalanceY + LPTokenAmount);
-        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - LPTokenAmount);
+        assertEq(mockYLP.balanceOf(player2), initPlayer2BalanceY + LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - 2 * LPTokenAmount);
         assertEq(mockUniLP.balanceOf(player1), initPlayerBalanceU + LPTokenAmount);
-        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - LPTokenAmount);
+        assertEq(mockUniLP.balanceOf(player2), initPlayer2BalanceU + LPTokenAmount);
+        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - 2 * LPTokenAmount);
     }
 
     function test_unstakeLPToken_after_played_devalorized() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.prank(player2);
         tournamentY.playAgainstPlayer(2);
 
         uint initPlayerBalanceY = mockYLP.balanceOf(player1);
+        uint initPlayer2BalanceY = mockYLP.balanceOf(player2);
         uint initContractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint initPlayerBalanceU = mockUniLP.balanceOf(player1);
+        uint initPlayer2BalanceU = mockUniLP.balanceOf(player2);
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(90000);
         mockUniLP.setReserves(90000, 90000);
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
+
         vm.startPrank(player1);
         vm.expectEmit();
         emit Unstaked(address(player1), LPTokenAmount);
@@ -630,15 +643,26 @@ contract TournamentTest is Test {
         emit Unstaked(address(player1), LPTokenAmount);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
+   
+        vm.startPrank(player2);
+        vm.expectEmit();
+        emit Unstaked(address(player2), LPTokenAmount);
+        tournamentY.unstakeLPToken();
+        vm.expectEmit();
+        emit Unstaked(address(player2), LPTokenAmount);
+        tournamentU.unstakeLPToken();
+        vm.stopPrank();
 
         assertEq(mockYLP.balanceOf(player1), initPlayerBalanceY + LPTokenAmount);
-        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - LPTokenAmount);
+        assertEq(mockYLP.balanceOf(player2), initPlayer2BalanceY + LPTokenAmount);
+        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - 2 * LPTokenAmount);
         assertEq(mockUniLP.balanceOf(player1), initPlayerBalanceU + LPTokenAmount);
-        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - LPTokenAmount);
+        assertEq(mockUniLP.balanceOf(player2), initPlayer2BalanceU + LPTokenAmount);
+        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - 2 * LPTokenAmount);
     }
 
     function test_unstakeLPToken_after_played_valorized() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.prank(player2);
         tournamentY.playAgainstPlayer(2);
@@ -646,13 +670,15 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         uint initPlayerBalanceY = mockYLP.balanceOf(player1);
+        uint initPlayer2BalanceY = mockYLP.balanceOf(player2);
         uint initContractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint initPlayerBalanceU = mockUniLP.balanceOf(player1);
+        uint initPlayer2BalanceU = mockUniLP.balanceOf(player2);
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(200000);
-        mockUniLP.setReserves(200000, 200000);
-        vm.warp(endTime + 2 days);
+        mockUniLP.setReserves(200000, 100000);
+        vm.warp(afterTime);
 
         vm.startPrank(player1);
         vm.expectEmit();
@@ -662,6 +688,10 @@ contract TournamentTest is Test {
         emit Unstaked(address(player1), LPTokenAmount / 2 + 0.45 ether);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
+
+        mockYLP.setPricePerShare(200000);
+        mockUniLP.setReserves(200000, 100000);
+        vm.warp(afterTime);
 
         assertEq(mockYLP.balanceOf(player1), initPlayerBalanceY + LPTokenAmount / 2 + 0.45 ether);
         assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - (LPTokenAmount / 2 + 0.45 ether));
@@ -676,10 +706,15 @@ contract TournamentTest is Test {
         emit Unstaked(address(player2), LPTokenAmount / 2 + 0.225 ether);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
+
+        assertEq(mockYLP.balanceOf(player2), initPlayer2BalanceY + LPTokenAmount / 2 + 0.225 ether);
+        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - (LPTokenAmount + 0.45 ether + 0.225 ether));
+        assertEq(mockUniLP.balanceOf(player2), initPlayer2BalanceU + LPTokenAmount / 2 + 0.225 ether);
+        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - (LPTokenAmount + 0.45 ether + 0.225 ether));
     }
 
     function test_unstakeLPToken_twice() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -688,7 +723,7 @@ contract TournamentTest is Test {
         uint initPlayerBalanceU = mockUniLP.balanceOf(player1);
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.expectEmit();
         emit Unstaked(address(player1), LPTokenAmount);
         tournamentY.unstakeLPToken();
@@ -715,7 +750,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContractAlwaysReturnsLessThan3(uint256 _fuzzNumber) public {
                 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
         uint256 requestId = tournamentY.playAgainstContract(1);
@@ -742,7 +777,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_invalidMove() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -753,7 +788,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_before() public {
 
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -764,11 +799,11 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_after() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.expectRevert("Tournament is not active");
         tournamentY.playAgainstContract(1);
         vm.stopPrank();
@@ -776,7 +811,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_notPlayer() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         vm.startPrank(player1);
 
         vm.expectRevert("You must deposit before playing");        
@@ -787,7 +822,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_twice() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
         tournamentY.playAgainstContract(1);
@@ -801,7 +836,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_unresolved() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -816,7 +851,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_invalidRequest() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -835,7 +870,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstContract_resolvedDraw() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -855,7 +890,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_invalidMove() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -866,7 +901,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_before() public {
 
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -877,11 +912,11 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_after() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.expectRevert("Tournament is not active");
         tournamentY.playAgainstPlayer(1);
         vm.stopPrank();
@@ -889,7 +924,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_notPlayer() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         vm.startPrank(player1);
 
         vm.expectRevert("You must deposit before playing");        
@@ -900,7 +935,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_twice() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
         tournamentY.playAgainstPlayer(1);
@@ -912,7 +947,7 @@ contract TournamentTest is Test {
 
     function test_PlayAgainstPlayer_firstPlayer() public {
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
 
@@ -927,7 +962,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
@@ -945,7 +980,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
@@ -963,7 +998,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
@@ -985,7 +1020,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
@@ -1004,7 +1039,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
@@ -1023,7 +1058,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
@@ -1042,7 +1077,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
@@ -1061,7 +1096,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
@@ -1080,7 +1115,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
@@ -1101,7 +1136,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player3), 0);
         assertEq(tournamentY.pointsOfPlayer(player4), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
@@ -1134,7 +1169,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player3), 0);
         assertEq(tournamentY.pointsOfPlayer(player4), 0);
 
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
@@ -1179,18 +1214,18 @@ contract TournamentTest is Test {
     }
 
     function test_alreadyPlayed_notStaked() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         assertEq(tournamentY.alreadyPlayed(player1), false);
     }
 
     function test_alreadyPlayed_stakedNotPlayed() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         assertEq(tournamentY.alreadyPlayed(player1), false);
     }
 
     function test_alreadyPlayed_playedToday() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.prank(player1);
         tournamentY.playAgainstPlayer(0);
@@ -1199,7 +1234,7 @@ contract TournamentTest is Test {
     }
 
     function test_alreadyPlayed_playedYesterday() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         vm.prank(player1);
         tournamentY.playAgainstPlayer(0);
@@ -1209,7 +1244,7 @@ contract TournamentTest is Test {
     }
 
     function test_getRank() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1237,7 +1272,7 @@ contract TournamentTest is Test {
     }
 
     function test_getRank_notPlayer() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1256,7 +1291,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPrizeShare_1Player() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakeForTest(player1);
         
         assertEq(tournamentY.getPrizeShare(player1), 0.5 ether);
@@ -1264,7 +1299,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPrizeShare_4Players() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1297,7 +1332,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPoolPrize_noValorization_noWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1310,7 +1345,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPoolPrize_valorization_noWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1319,7 +1354,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubled
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(200000, 100000);
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
         uint fees = tournamentY.fees();
@@ -1329,14 +1364,14 @@ contract TournamentTest is Test {
     }
 
     function test_getPoolPrize_noValorization_withdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
         tournamentY.playAgainstPlayer(2);
         tournamentU.playAgainstPlayer(2);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         tournamentY.unstakeLPToken();
         tournamentU.unstakeLPToken();
         vm.stopPrank();
@@ -1346,7 +1381,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPoolPrize_valorizationBeforeWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1354,13 +1389,13 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(200000, 100000);
 
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
         uint fees = tournamentY.fees();
         
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         tournamentY.unstakeLPToken();
         tournamentU.unstakeLPToken();
         vm.stopPrank();
@@ -1370,7 +1405,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPoolPrize_valorizationBeforeAfterWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1378,24 +1413,24 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(200000, 100000);
 
         uint fees = tournamentY.fees();
         
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         tournamentY.unstakeLPToken();
         tournamentU.unstakeLPToken();
         vm.stopPrank();
 
         mockYLP.setPricePerShare(400000); // Value of LP doubles again
-        mockUniLP.setReserves(400000, 400000);
+        mockUniLP.setReserves(200000, 200000);
 
         assertEq(tournamentY.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
         assertEq(tournamentU.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
     }
 
     function test_getPrizeAmount_noValorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1410,7 +1445,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPrizeAmount_devalorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1428,7 +1463,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPrizeAmount_valorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1446,7 +1481,7 @@ contract TournamentTest is Test {
     }
 
     function test_getExpectedPoolPrize_noValorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1461,7 +1496,7 @@ contract TournamentTest is Test {
     }
 
     function test_getExpectedPoolPrize_devalorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1477,7 +1512,7 @@ contract TournamentTest is Test {
     }
 
     function test_getExpectedPoolPrize_valorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1494,7 +1529,7 @@ contract TournamentTest is Test {
     }
 
     function test_getExpectedPoolPrize_future() public {
-        vm.warp(startTime - 2 days);
+        vm.warp(beforeTime);
         stakeForTest(player1);
         stakeForTest(player2);
 
@@ -1506,7 +1541,7 @@ contract TournamentTest is Test {
     }
 
     function test_getFees_noValorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1517,7 +1552,7 @@ contract TournamentTest is Test {
     }
 
     function test_getFees_valorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1532,7 +1567,7 @@ contract TournamentTest is Test {
     }
 
     function test_getFees_devalorization() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1545,7 +1580,7 @@ contract TournamentTest is Test {
     }
 
     function test_withdrawFees_notOwner() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
@@ -1558,7 +1593,7 @@ contract TournamentTest is Test {
     }
 
     function test_withdrawFees_ownerNoWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
@@ -1571,13 +1606,13 @@ contract TournamentTest is Test {
     }
 
     function test_withdrawFees_ownerWithdrawal() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(200000, 200000);
 
-        vm.warp(endTime + 2 days);
+        vm.warp(afterTime);
         vm.startPrank(player1);
         tournamentY.unstakeLPToken();
         vm.stopPrank();
@@ -1592,7 +1627,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPlayersAtScore() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
@@ -1611,7 +1646,7 @@ contract TournamentTest is Test {
     }
 
     function test_getPlayer() public {
-        vm.warp(startTime + 2 days);
+        vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
