@@ -227,7 +227,7 @@ contract Tournament is VRFConsumerBaseV2{
 	 */
 	function withdrawFees() public onlyOwner {
 		require(realizedFees > 0, "No fees to withdraw");
-		uint256 _realizedFees = realizedFees;
+		uint256 _realizedFees = unclaimedPoolPrize == 0 ? poolIncentivized.balanceOf(address(this)) : realizedFees;
 		realizedFees = 0;
 		require(IERC20(poolIncentivized).transfer(msg.sender, _realizedFees), "Transfer of LP token Failed");		
 	}
