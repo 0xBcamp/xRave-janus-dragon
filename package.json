@@ -32,6 +32,7 @@
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
+    "hardhat-foundry": "^0.0.5",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3"
   },
