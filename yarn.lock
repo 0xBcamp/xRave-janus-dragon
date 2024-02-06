@@ -13146,6 +13146,7 @@ __metadata:
   dependencies:
     "@moonup/moon-rainbowkit": ^0.0.26
     "@moonup/moon-sdk": ^0.0.43
+    hardhat-foundry: ^0.0.5
     husky: ^8.0.1
     lint-staged: ^13.0.3
   languageName: unknown
