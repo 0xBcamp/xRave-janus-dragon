@@ -46,7 +46,7 @@ contract Tournament is VRFConsumerBaseV2{
 	Protocol public protocol;
 	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
-	// uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
+	uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
 	uint256 public topScore = 0;
 	uint256 private nbRanks = 1;
@@ -211,7 +211,7 @@ contract Tournament is VRFConsumerBaseV2{
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
 		realizedPoolPrize += extraPoolPrize;
-		// unclaimedPoolPrize -= share; // TODO: useful?
+		unclaimedPoolPrize -= getPrizeShare(msg.sender);
 		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
 		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
@@ -505,19 +505,26 @@ contract Tournament is VRFConsumerBaseV2{
 	 * Function that returns the amount of LP token in the pool prize
 	 */
 	function getPoolPrize() public view returns (uint256) {
+		return realizedPoolPrize + getRemainingPoolPrize();
+	}
+
+	/**
+	 * Function that returns the amount of LP token remaining in the pool prize
+	 */
+	function getRemainingPoolPrize() public view returns (uint256) {
 		uint256 extraLP = 0;
 		for (uint i=0; i<players.length; i++) {
 			if(playersMap[players[i]].depositPricePerShare == 0) continue; // Already counted in realizedPoolPrize
 			extraLP += depositAmount - LPTokenAmountOfPlayer(players[i]);
 		}
-		return realizedPoolPrize + extraLP * (1 ether - fees) / 1 ether;
+		return extraLP * (1 ether - fees) / 1 ether;
 	}
 
 	/**
 	 * Function that returns the amount of LP token earned by the player
 	 */
 	function getPrizeAmount(address _player) public view returns (uint256) {
-		return getPoolPrize() * getPrizeShare(_player) / 1 ether;
+		return getRemainingPoolPrize() * getPrizeShare(_player) / unclaimedPoolPrize;
 	}
 
 	/**

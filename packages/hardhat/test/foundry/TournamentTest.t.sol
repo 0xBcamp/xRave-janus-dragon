@@ -66,8 +66,8 @@ contract TournamentTest is Test {
         stakeForTest(_playerB);
     }
 
-    function newAddress(uint _fuzz) public {
-        address player = makeAddr(vm.toString(_fuzz));
+    function newAddress(uint _fuzz) public returns(address player) {
+        player = makeAddr(vm.toString(_fuzz));
         mockYLP.transfer(player, 10e18);
         mockUniLP.transfer(player, 10e18);
     }
@@ -280,6 +280,20 @@ contract TournamentTest is Test {
 
         assertEq(tournamentY.getNumberOfPlayers(), initPlayers + 2);
     }
+
+/*     function testFuzz_getNumberOfPlayers(uint32 nb) public {
+        assertEq(tournamentY.getNumberOfPlayers(), 0);
+        uint initPlayers = tournamentY.getNumberOfPlayers();
+
+        vm.warp(duringTime);
+
+        for (uint i = 0; i < nb; i++) {
+            address player = newAddress(i);
+            stakeForTest(player);
+        }
+
+        assertEq(tournamentY.getNumberOfPlayers(), initPlayers + nb);
+    } */
 
     function test_getPlayers() public {
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayers())), keccak256(abi.encodePacked(new address[](0))));
