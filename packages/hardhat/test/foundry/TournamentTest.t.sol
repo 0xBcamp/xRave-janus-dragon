@@ -448,7 +448,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPricePerShare(), 12500000 / 2);
     }
 
-    function test_LPTokenAmountOfPlayer_notValorized() public {
+    function test_LPTokenAmountOfPlayer_notValuated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
@@ -457,7 +457,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount);
     }
 
-    function test_LPTokenAmountOfPlayer_valorized() public {
+    function test_LPTokenAmountOfPlayer_valuated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
@@ -476,7 +476,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount / 2);
     }
 
-    function test_LPTokenAmountOfPlayer_devalorized() public {
+    function test_LPTokenAmountOfPlayer_devaluated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
@@ -551,7 +551,7 @@ contract TournamentTest is Test {
 
     event Unstaked(address indexed player, uint256 amount);
 
-    function test_unstakeLPToken_after_notValorized() public {
+    function test_unstakeLPToken_after_notValuated() public {
         vm.warp(duringTime);
         stakeForTest(player1);
         vm.startPrank(player1);
@@ -576,7 +576,7 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - LPTokenAmount);
     }
 
-    function test_unstakeLPToken_after_notPlayed_devalorized() public {
+    function test_unstakeLPToken_after_notPlayed_devaluated() public {
         vm.warp(duringTime);
         stakeForTest(player1);
         stakeForTest(player2);
@@ -618,7 +618,7 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - 2 * LPTokenAmount);
     }
 
-    function test_unstakeLPToken_after_played_devalorized() public {
+    function test_unstakeLPToken_after_played_devaluated() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.prank(player2);
@@ -661,7 +661,7 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - 2 * LPTokenAmount);
     }
 
-    function test_unstakeLPToken_after_played_valorized() public {
+    function test_unstakeLPToken_after_played_valuated() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
         vm.prank(player2);
@@ -1331,7 +1331,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), 0);
     }
 
-    function test_getPoolPrize_noValorization_noWithdrawal() public {
+    function test_getPoolPrize_noValuation_noWithdrawal() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1344,7 +1344,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), 0);
     }
 
-    function test_getPoolPrize_valorization_noWithdrawal() public {
+    function test_getPoolPrize_valuation_noWithdrawal() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1363,7 +1363,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), contractBalanceU * (1 ether - fees) / 2 ether);
     }
 
-    function test_getPoolPrize_noValorization_withdrawal() public {
+    function test_getPoolPrize_noValuation_withdrawal() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1380,7 +1380,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), 0);
     }
 
-    function test_getPoolPrize_valorizationBeforeWithdrawal() public {
+    function test_getPoolPrize_valuationBeforeWithdrawal() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1404,7 +1404,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), contractBalanceU * (1 ether - fees) / 2 ether);
     }
 
-    function test_getPoolPrize_valorizationBeforeAfterWithdrawal() public {
+    function test_getPoolPrize_valuationBeforeAfterWithdrawal() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1429,7 +1429,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
     }
 
-    function test_getPrizeAmount_noValorization() public {
+    function test_getPrizeAmount_noValuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1444,7 +1444,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPrizeAmount(player2), 0);
     }
 
-    function test_getPrizeAmount_devalorization() public {
+    function test_getPrizeAmount_devaluation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1462,7 +1462,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPrizeAmount(player2), 0);
     }
 
-    function test_getPrizeAmount_valorization() public {
+    function test_getPrizeAmount_valuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1480,7 +1480,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPrizeAmount(player2), tournamentU.getPoolPrize() * 25 / 100);
     }
 
-    function test_getExpectedPoolPrize_noValorization() public {
+    function test_getExpectedPoolPrize_noValuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1495,7 +1495,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getExpectedPoolPrize(), 0);
     }
 
-    function test_getExpectedPoolPrize_devalorization() public {
+    function test_getExpectedPoolPrize_devaluation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1511,7 +1511,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getExpectedPoolPrize(), 0);
     }
 
-    function test_getExpectedPoolPrize_valorization() public {
+    function test_getExpectedPoolPrize_valuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1540,7 +1540,7 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getExpectedPoolPrize(), 0);
     }
 
-    function test_getFees_noValorization() public {
+    function test_getFees_noValuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1551,7 +1551,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getFees(), 0);
     }
 
-    function test_getFees_valorization() public {
+    function test_getFees_valuation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
@@ -1566,7 +1566,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getFees(), contractBalance * fees / 2 ether);
     }
 
-    function test_getFees_devalorization() public {
+    function test_getFees_devaluation() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
