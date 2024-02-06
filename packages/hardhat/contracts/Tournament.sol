@@ -49,7 +49,7 @@ contract Tournament is VRFConsumerBaseV2{
 	// uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
 	uint256 public fees = 0.1 ether; // 10% fees on pool prize
 	uint256 public topScore = 0;
-	uint256 private nbRanks = 0;
+	uint256 private nbRanks = 1;
 
 	// PLAYER INFO
 	address[] public players;
@@ -497,7 +497,7 @@ contract Tournament is VRFConsumerBaseV2{
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
 		if(split == 0) return 0; // Not a player = no share
-		uint multiplier = (nbRanks == rank) ? 2 : 1; // We double the allocation for the last rank so that sum of shares is 100%
+		uint8 multiplier = (nbRanks == rank) ? 2 : 1; // We double the allocation for the last rank so that sum of shares is 100%
 		return (multiplier * 1 ether / (2 ** rank)) / split;
 	}
 

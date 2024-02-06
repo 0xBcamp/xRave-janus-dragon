@@ -689,10 +689,6 @@ contract TournamentTest is Test {
         tournamentU.unstakeLPToken();
         vm.stopPrank();
 
-        mockYLP.setPricePerShare(200000);
-        mockUniLP.setReserves(200000, 100000);
-        vm.warp(afterTime);
-
         assertEq(mockYLP.balanceOf(player1), initPlayerBalanceY + LPTokenAmount / 2 + 0.45 ether);
         assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - (LPTokenAmount / 2 + 0.45 ether));
         assertEq(mockUniLP.balanceOf(player1), initPlayerBalanceU + LPTokenAmount / 2 + 0.45 ether);
@@ -700,17 +696,17 @@ contract TournamentTest is Test {
 
         vm.startPrank(player2);
         vm.expectEmit();
-        emit Unstaked(address(player2), LPTokenAmount / 2 + 0.225 ether);
+        emit Unstaked(address(player2), LPTokenAmount / 2 + 0.45 ether);
         tournamentY.unstakeLPToken();
         vm.expectEmit();
-        emit Unstaked(address(player2), LPTokenAmount / 2 + 0.225 ether);
+        emit Unstaked(address(player2), LPTokenAmount / 2 + 0.45 ether);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
 
-        assertEq(mockYLP.balanceOf(player2), initPlayer2BalanceY + LPTokenAmount / 2 + 0.225 ether);
-        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - (LPTokenAmount + 0.45 ether + 0.225 ether));
-        assertEq(mockUniLP.balanceOf(player2), initPlayer2BalanceU + LPTokenAmount / 2 + 0.225 ether);
-        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - (LPTokenAmount + 0.45 ether + 0.225 ether));
+        assertEq(mockYLP.balanceOf(player2), initPlayer2BalanceY + LPTokenAmount / 2 + 0.45 ether);
+        assertEq(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY - (LPTokenAmount + 0.45 ether + 0.45 ether));
+        assertEq(mockUniLP.balanceOf(player2), initPlayer2BalanceU + LPTokenAmount / 2 + 0.45 ether);
+        assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - (LPTokenAmount + 0.45 ether + 0.45 ether));
     }
 
     function test_unstakeLPToken_twice() public {
@@ -1294,8 +1290,8 @@ contract TournamentTest is Test {
         vm.warp(duringTime);
         stakeForTest(player1);
         
-        assertEq(tournamentY.getPrizeShare(player1), 0.5 ether);
-        assertEq(tournamentU.getPrizeShare(player1), 0.5 ether);
+        assertEq(tournamentY.getPrizeShare(player1), 1 ether);
+        assertEq(tournamentU.getPrizeShare(player1), 1 ether);
     }
 
     function test_getPrizeShare_4Players() public {
@@ -1315,12 +1311,12 @@ contract TournamentTest is Test {
         vm.stopPrank();
         
         assertEq(tournamentY.getPrizeShare(player1), 0.5 ether);
-        assertEq(tournamentY.getPrizeShare(player2), 0.125 ether);
+        assertEq(tournamentY.getPrizeShare(player2), 0.25 ether);
         assertEq(tournamentY.getPrizeShare(player3), 0.125 ether);
         assertEq(tournamentY.getPrizeShare(player4), 0.125 ether);
         assertEq(tournamentY.getPrizeShare(player5), 0); // Not a player
         assertEq(tournamentU.getPrizeShare(player1), 0.5 ether);
-        assertEq(tournamentU.getPrizeShare(player2), 0.125 ether);
+        assertEq(tournamentU.getPrizeShare(player2), 0.25 ether);
         assertEq(tournamentU.getPrizeShare(player3), 0.125 ether);
         assertEq(tournamentU.getPrizeShare(player4), 0.125 ether);
         assertEq(tournamentU.getPrizeShare(player5), 0); // Not a player
@@ -1475,9 +1471,9 @@ contract TournamentTest is Test {
         mockUniLP.setReserves(200000, 200000);
 
         assertEq(tournamentY.getPrizeAmount(player1), tournamentY.getPoolPrize() * 5 / 10);
-        assertEq(tournamentY.getPrizeAmount(player2), tournamentY.getPoolPrize() * 25 / 100);
+        assertEq(tournamentY.getPrizeAmount(player2), tournamentY.getPoolPrize() * 5 / 10);
         assertEq(tournamentU.getPrizeAmount(player1), tournamentU.getPoolPrize() * 5 / 10);
-        assertEq(tournamentU.getPrizeAmount(player2), tournamentU.getPoolPrize() * 25 / 100);
+        assertEq(tournamentU.getPrizeAmount(player2), tournamentU.getPoolPrize() * 5 / 10);
     }
 
     function test_getExpectedPoolPrize_noValuation() public {
