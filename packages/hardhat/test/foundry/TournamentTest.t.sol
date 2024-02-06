@@ -723,6 +723,38 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - (LPTokenAmount + 0.45 ether + 0.45 ether));
     }
 
+    function test_unstakeLPToken_after_played_valuated_noRemaining() public {
+        uint initContractBalanceY = mockYLP.balanceOf(address(tournamentY));
+        uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
+
+        vm.warp(duringTime);
+        stakePlayStakeForTest(0, player1, player2);
+        vm.prank(player2);
+        tournamentY.playAgainstPlayer(2);
+        vm.prank(player2);
+        tournamentU.playAgainstPlayer(2);
+
+        mockYLP.setPricePerShare(200000);
+        mockUniLP.setReserves(200000, 100000);
+        vm.warp(afterTime);
+
+        vm.startPrank(player1);
+        tournamentY.unstakeLPToken();
+        tournamentU.unstakeLPToken();
+        vm.stopPrank();
+
+        mockYLP.setPricePerShare(400000);
+        mockUniLP.setReserves(200000, 150000);
+        
+        vm.startPrank(player2);
+        tournamentY.unstakeLPToken();
+        tournamentU.unstakeLPToken();
+        vm.stopPrank();
+
+        assertApproxEqAbs(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY + tournamentY.getFees(), 1);
+        assertApproxEqAbs(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU + tournamentU.getFees(), 1);
+    }
+
     function test_unstakeLPToken_twice() public {
         vm.warp(duringTime);
         stakeForTest(player1);
