@@ -102,10 +102,10 @@ export const Withdraw = () => {
             <span className="block text-4xl font-bold">and get your rewards</span>
           </h1>
           <p className="text-center text-lg">
-            {formatUnits(LPTokenAmountOfPlayer || 0n, Number(LPTokenDecimals.data) || 18)}{" "}
+            {Number(formatUnits(LPTokenAmountOfPlayer || 0n, Number(LPTokenDecimals.data) || 18)).toFixed(2)}{" "}
             {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data}
             can be withdrawn from your deposit and you earned{" "}
-            {formatUnits(prizeAmount || 0n, Number(LPTokenDecimals.data) || 18)}{" "}
+            {Number(formatUnits(prizeAmount || 0n, Number(LPTokenDecimals.data) || 18)).toFixed(2)}{" "}
             {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data}.
             <button
               className="btn btn-secondary"
