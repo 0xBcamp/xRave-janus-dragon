@@ -67,9 +67,13 @@ contract TournamentTest is Test {
     }
 
     function newAddress(uint _fuzz) public returns(address player) {
+        vm.startPrank(owner);
+
         player = makeAddr(vm.toString(_fuzz));
-        mockYLP.transfer(player, 10e18);
-        mockUniLP.transfer(player, 10e18);
+        mockYLP.transfer(player, 1e18);
+        mockUniLP.transfer(player, 1e18);
+
+        vm.stopPrank();
     }
 
     /// /// /// /// ///
@@ -281,7 +285,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getNumberOfPlayers(), initPlayers + 2);
     }
 
-/*     function testFuzz_getNumberOfPlayers(uint32 nb) public {
+    function testFuzz_getNumberOfPlayers(uint8 nb) public {
         assertEq(tournamentY.getNumberOfPlayers(), 0);
         uint initPlayers = tournamentY.getNumberOfPlayers();
 
@@ -293,7 +297,7 @@ contract TournamentTest is Test {
         }
 
         assertEq(tournamentY.getNumberOfPlayers(), initPlayers + nb);
-    } */
+    }
 
     function test_getPlayers() public {
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayers())), keccak256(abi.encodePacked(new address[](0))));
@@ -444,22 +448,50 @@ contract TournamentTest is Test {
         assertEq(tournamentY.getPricePerShare(), 50000);
     }
 
+    function testFuzz_getPricePerShare_Yearn(uint _fuzz) public {
+        mockYLP.setPricePerShare(_fuzz);
+
+        assertEq(tournamentY.getPricePerShare(), _fuzz);
+    }
+
     function test_getPricePerShare_Uniswap() public {
         vm.warp(startTime);
 
-        assertEq(tournamentU.getPricePerShare(), 10000000);
+        assertEq(tournamentU.getPricePerShare(), 1000 ether);
 
-        mockUniLP.setReserves(150000, 200000);
+        mockUniLP.setReserves(1500 ether, 2000 ether);
 
-        assertEq(tournamentU.getPricePerShare(), 30000000);
+        assertEq(tournamentU.getPricePerShare(), 3000 ether);
 
-        mockUniLP.setReserves(250000, 50000);
+        mockUniLP.setReserves(2500 ether, 500 ether);
 
-        assertEq(tournamentU.getPricePerShare(), 12500000);
+        assertEq(tournamentU.getPricePerShare(), 1250 ether);
 
         mockUniLP.setTotalSupply(2000 ether);
         
-        assertEq(tournamentU.getPricePerShare(), 12500000 / 2);
+        assertEq(tournamentU.getPricePerShare(), 1250 ether / 2);
+    }
+
+    function sqrt(uint y) internal pure returns (uint z) {
+        if (y > 3) {
+            z = y;
+            uint x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
+    }
+
+    function testFuzz_getPricePerShare_Uniswap(uint112 _fuzz0, uint112 _fuzz1) public {
+        vm.assume(sqrt(uint(_fuzz0) * uint(_fuzz1)) >= 1000 ether);
+        vm.warp(startTime);
+
+        mockUniLP.setReserves(_fuzz0, _fuzz1);
+
+        assertEq(tournamentU.getPricePerShare(), uint(_fuzz0) * uint(_fuzz1) / 1000 ether);
     }
 
     function test_LPTokenAmountOfPlayer_notValuated() public {
@@ -477,14 +509,13 @@ contract TournamentTest is Test {
         stakeForTest(player1);
 
         mockYLP.setPricePerShare(150000);
-        mockUniLP.setReserves(150000, 200000);
+        mockUniLP.setReserves(1500 ether, 2000 ether);
         mockUniLP.setTotalSupply(2000 ether);
-
 
         assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
 
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
         mockUniLP.setTotalSupply(1000 ether);
 
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount / 2);
@@ -496,7 +527,7 @@ contract TournamentTest is Test {
         stakeForTest(player1);
 
         mockYLP.setPricePerShare(50000);
-        mockUniLP.setReserves(50000, 50000);
+        mockUniLP.setReserves(500 ether, 500 ether);
 
         assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount);
         assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount);
@@ -603,7 +634,7 @@ contract TournamentTest is Test {
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(50000);
-        mockUniLP.setReserves(50000, 50000);
+        mockUniLP.setReserves(500 ether, 500 ether);
         vm.warp(afterTime);
     
         vm.startPrank(player1);
@@ -646,7 +677,7 @@ contract TournamentTest is Test {
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(90000);
-        mockUniLP.setReserves(90000, 90000);
+        mockUniLP.setReserves(900 ether, 900 ether);
         vm.warp(afterTime);
 
         vm.startPrank(player1);
@@ -691,7 +722,7 @@ contract TournamentTest is Test {
         uint initContractBalanceU = mockUniLP.balanceOf(address(tournamentU));
 
         mockYLP.setPricePerShare(200000);
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
         vm.warp(afterTime);
 
         vm.startPrank(player1);
@@ -735,7 +766,7 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         mockYLP.setPricePerShare(200000);
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
         vm.warp(afterTime);
 
         vm.startPrank(player1);
@@ -744,7 +775,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(400000);
-        mockUniLP.setReserves(200000, 150000);
+        mockUniLP.setReserves(2000 ether, 1500 ether);
         
         vm.startPrank(player2);
         tournamentY.unstakeLPToken();
@@ -1396,7 +1427,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubled
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
         uint fees = tournamentY.fees();
@@ -1431,7 +1462,7 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
 
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
@@ -1455,7 +1486,7 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 100000);
+        mockUniLP.setReserves(2000 ether, 1000 ether);
 
         uint fees = tournamentY.fees();
         
@@ -1465,7 +1496,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(400000); // Value of LP doubles again
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         assertEq(tournamentY.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
         assertEq(tournamentU.getPoolPrize(), LPTokenAmount * (1 ether - fees) / 2 ether + LPTokenAmount * (1 ether - fees) * 3 / 4 ether);
@@ -1496,7 +1527,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(50000); // Value of LP drops
-        mockUniLP.setReserves(50000, 50000);
+        mockUniLP.setReserves(500 ether, 500 ether);
 
         assertEq(tournamentY.getPrizeAmount(player1), 0);
         assertEq(tournamentY.getPrizeAmount(player2), 0);
@@ -1514,7 +1545,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         assertEq(tournamentY.getPrizeAmount(player1), tournamentY.getPoolPrize() * 5 / 10);
         assertEq(tournamentY.getPrizeAmount(player2), tournamentY.getPoolPrize() * 5 / 10);
@@ -1548,7 +1579,7 @@ contract TournamentTest is Test {
 
         vm.warp(startTime + 7 days);
         mockYLP.setPricePerShare(50000); // Value of LP drops
-        mockUniLP.setReserves(50000, 50000);
+        mockUniLP.setReserves(500 ether, 500 ether);
 
         assertEq(tournamentU.getExpectedPoolPrize(), 0);
     }
@@ -1564,7 +1595,7 @@ contract TournamentTest is Test {
 
         vm.warp(startTime + 7 days);
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         assertEq(tournamentY.getExpectedPoolPrize(), tournamentY.getPoolPrize() * 30 / 7);
         assertEq(tournamentU.getExpectedPoolPrize(), tournamentU.getPoolPrize() * 30 / 7);
@@ -1576,7 +1607,7 @@ contract TournamentTest is Test {
         stakeForTest(player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         assertEq(tournamentY.getExpectedPoolPrize(), 0);
         assertEq(tournamentU.getExpectedPoolPrize(), 0);
@@ -1626,7 +1657,7 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         vm.startPrank(player1);
         vm.expectRevert("Not the Owner");
@@ -1639,7 +1670,7 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         vm.startPrank(owner);
         vm.expectRevert("No fees to withdraw");
@@ -1652,7 +1683,7 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
-        mockUniLP.setReserves(200000, 200000);
+        mockUniLP.setReserves(2000 ether, 2000 ether);
 
         vm.warp(afterTime);
         vm.startPrank(player1);
