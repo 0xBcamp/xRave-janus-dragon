@@ -29,11 +29,11 @@ contract TournamentTest is Test {
 
     // Define parameters for Tournament constructor
     uint256 LPTokenAmount = 1e18; // 1 LP Token
-    uint256 startTime =  block.timestamp + 30 days; // Start in 30 days
-    uint256 endTime = startTime + 30 days; // End one week after start
-    uint beforeTime = startTime - 2 days;
-    uint duringTime = startTime + 2 days;
-    uint afterTime = endTime + 2 days;
+    uint32 startTime =  uint32(block.timestamp) + 30 days; // Start in 30 days
+    uint32 endTime = startTime + 30 days; // End one week after start
+    uint32 beforeTime = startTime - 2 days;
+    uint32 duringTime = startTime + 2 days;
+    uint32 afterTime = endTime + 2 days;
 
     // Set up "wallets"
     address owner = makeAddr("owner");
@@ -74,6 +74,19 @@ contract TournamentTest is Test {
         mockUniLP.transfer(player, 1e18);
 
         vm.stopPrank();
+    }
+
+    function sqrt(uint y) internal pure returns (uint z) {
+        if (y > 3) {
+            z = y;
+            uint x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
     }
 
     /// /// /// /// ///
@@ -472,21 +485,8 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPricePerShare(), 1250 ether / 2);
     }
 
-    function sqrt(uint y) internal pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;
-            }
-        } else if (y != 0) {
-            z = 1;
-        }
-    }
-
     function testFuzz_getPricePerShare_Uniswap(uint112 _fuzz0, uint112 _fuzz1) public {
-        vm.assume(sqrt(uint(_fuzz0) * uint(_fuzz1)) >= 1000 ether);
+        vm.assume(sqrt(uint(_fuzz0) * uint(_fuzz1)) >= 1000 ether); 
         vm.warp(startTime);
 
         mockUniLP.setReserves(_fuzz0, _fuzz1);
