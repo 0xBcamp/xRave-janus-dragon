@@ -14,7 +14,7 @@ interface YearnInterface {
 }
 
 interface UniswapInterface {
-	function getReserves() external view returns (uint256, uint256, uint256);
+	function getReserves() external view returns (uint112, uint112, uint32);
 	function totalSupply() external view returns (uint256);
 	function token0() external view returns (address); // Underlying asset
 	function token1() external view returns (address); // Underlying asset
@@ -453,9 +453,9 @@ contract Tournament is VRFConsumerBaseV2{
 			return yearn.pricePerShare();
 		} else { // Uniswap
 			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
-			(uint256 res0, uint256 res1, ) = uniswap.getReserves();
-			uint supply = uniswap.totalSupply();
-			return 1 ether * res0 * res1 / supply;
+			(uint112 res0, uint112 res1, ) = uniswap.getReserves();
+			uint256 supply = uniswap.totalSupply();
+			return uint256(res0) * uint256(res1) / supply;
 		}
 	}
 

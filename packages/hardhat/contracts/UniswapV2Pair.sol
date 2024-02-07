@@ -7,14 +7,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract UniswapV2Pair is ERC20 {
   constructor() ERC20("Uniswap V2", "UNI-V2") {
-    _mint( msg.sender , 1000 * 10 ** 18);
+    _mint( msg.sender , 1000 ether);
   }
 
-  uint reserve0 = 100000;
-  uint reserve1 = 100000;
+  // totalSupply is sqrt( res0 * res 1 ) at start
+  uint112 reserve0 = 1000 ether;
+  uint112 reserve1 = 1000 ether;
 
-  function getReserves() public view returns (uint, uint, uint) {
-    return (reserve0, reserve1, block.timestamp - 60);
+  function getReserves() public view returns (uint112, uint112, uint32) {
+    uint32 time = uint32(block.timestamp) - 60;
+    return (reserve0, reserve1, time);
   }
 
   function setTotalSupply(uint _supply) public {
@@ -27,7 +29,7 @@ contract UniswapV2Pair is ERC20 {
     }
   }
 
-  function setReserves(uint _reserve0, uint _reserve1) public {
+  function setReserves(uint112 _reserve0, uint112 _reserve1) public {
     reserve0 = _reserve0;
     reserve1 = _reserve1;
   }
