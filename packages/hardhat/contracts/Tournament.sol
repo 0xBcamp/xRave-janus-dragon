@@ -58,6 +58,7 @@ contract Tournament is VRFConsumerBaseV2{
 
 	struct Player {
 		uint16 score; // how many points each player has
+		uint8 streak; // number of consecutive wins
 		uint32 lastGame; // when the player last played (used to determine if the player already played today)
 		uint depositPricePerShare; // price per share at deposit
 	}
@@ -347,17 +348,19 @@ contract Tournament is VRFConsumerBaseV2{
 	function _resolveGame(uint8 _move) internal {
 		if(_move == storedPlayer.move) {
             // Draw
-			updateScore(msg.sender, 2);
-			updateScore(storedPlayer.addr, 2);
+			updateScore(msg.sender, 1);
+			updateScore(storedPlayer.addr, 1);
 			emit Draw(msg.sender, storedPlayer.addr, timeToDate(uint32(block.timestamp)));
         } else if (((3 + _move - storedPlayer.move) % 3) == 1) {
             // msg.sender wins
-			updateScore(msg.sender, 4);
+			updateScore(msg.sender, 2);
+			updateScore(storedPlayer.addr, 0);
 			emit Winner(msg.sender, timeToDate(uint32(block.timestamp)));
 			emit Loser(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
         } else {
 			// storedPlayer wins
-			updateScore(storedPlayer.addr, 4);
+			updateScore(storedPlayer.addr, 2);
+			updateScore(msg.sender, 0);
 			emit Winner(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
 			emit Loser(msg.sender, timeToDate(uint32(block.timestamp)));
         }
@@ -386,6 +389,7 @@ contract Tournament is VRFConsumerBaseV2{
         	game.winner = game.player;
         } else {
             //player loses
+			updateScore(game.player, 0);
     		emit Loser(game.player, timeToDate(uint32(block.timestamp)));
             game.winner = address(i_vrfCoordinator);
         }
@@ -393,10 +397,17 @@ contract Tournament is VRFConsumerBaseV2{
 
 	/**
 	 * Function that updates the player score by adding the points
+	 * @param _player is the address of the player
+	 * @param _points 0 = lost, 1 = draw, 2 = won
 	 */
 	// @note MUST CALL AFTER RESOLVING GAME
 	function updateScore(address _player, uint8 _points) internal {
-		if(_points == 0) { return; }
+		if(_points == 0) {
+			playersMap[_player].streak = 0;
+			return;
+		} else if(_points == 2) {
+			playersMap[_player].streak += 1;
+		}
 		// We first remove the player from it's current rank
 		uint16 score = playersMap[_player].score;
 		for(uint i=0; i<scoreToPlayers[score].length; i++) {
@@ -410,7 +421,7 @@ contract Tournament is VRFConsumerBaseV2{
 			if(scoreToPlayers[score].length == 0) { nbRanks -= 1; } // No more players at this rank
 		}
 		// Now we can update the score and push the user to its new rank
-		playersMap[_player].score += _points;
+		playersMap[_player].score += _points**playersMap[_player].streak;
 		if(topScore < playersMap[_player].score) {
 			topScore = playersMap[_player].score;
 		}

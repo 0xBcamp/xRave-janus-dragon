@@ -1045,8 +1045,8 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 2);
-        assertEq(tournamentY.pointsOfPlayer(player2), 2);
+        assertEq(tournamentY.pointsOfPlayer(player1), 1);
+        assertEq(tournamentY.pointsOfPlayer(player2), 1);
     }
 
     function test_PlayAgainstPlayer_PaperPaper() public {
@@ -1063,8 +1063,8 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 2);
-        assertEq(tournamentY.pointsOfPlayer(player2), 2);
+        assertEq(tournamentY.pointsOfPlayer(player1), 1);
+        assertEq(tournamentY.pointsOfPlayer(player2), 1);
     }
 
     function test_PlayAgainstPlayer_ScissorsScissors() public {
@@ -1081,8 +1081,8 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 2);
-        assertEq(tournamentY.pointsOfPlayer(player2), 2);
+        assertEq(tournamentY.pointsOfPlayer(player1), 1);
+        assertEq(tournamentY.pointsOfPlayer(player2), 1);
     }
 
     event Winner(address indexed player, uint256 day);
@@ -1105,7 +1105,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
-        assertEq(tournamentY.pointsOfPlayer(player2), 4);
+        assertEq(tournamentY.pointsOfPlayer(player2), 2);
     }
 
     function test_PlayAgainstPlayer_RockScissors() public {
@@ -1123,7 +1123,7 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
     }
 
@@ -1142,7 +1142,7 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
     }
 
@@ -1162,7 +1162,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
-        assertEq(tournamentY.pointsOfPlayer(player2), 4);
+        assertEq(tournamentY.pointsOfPlayer(player2), 2);
     }
 
     function test_PlayAgainstPlayer_ScissorsRock() public {
@@ -1181,7 +1181,7 @@ contract TournamentTest is Test {
         vm.stopPrank();
 
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
-        assertEq(tournamentY.pointsOfPlayer(player2), 4);
+        assertEq(tournamentY.pointsOfPlayer(player2), 2);
     }
 
     function test_PlayAgainstPlayer_ScissorsPaper() public {
@@ -1199,7 +1199,7 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
     }
 
@@ -1229,11 +1229,11 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
-        assertEq(tournamentY.pointsOfPlayer(player3), 2);
-        assertEq(tournamentY.pointsOfPlayer(player4), 2);
-        assertEq(tournamentY.topScore(), 4);
+        assertEq(tournamentY.pointsOfPlayer(player3), 1);
+        assertEq(tournamentY.pointsOfPlayer(player4), 1);
+        assertEq(tournamentY.topScore(), 2);
     }
 
     function test_PlayAgainstPlayer_4Players_2Days() public {
@@ -1262,11 +1262,11 @@ contract TournamentTest is Test {
 
         vm.stopPrank();
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
-        assertEq(tournamentY.pointsOfPlayer(player3), 2);
-        assertEq(tournamentY.pointsOfPlayer(player4), 2);
-        assertEq(tournamentY.topScore(), 4);
+        assertEq(tournamentY.pointsOfPlayer(player3), 1);
+        assertEq(tournamentY.pointsOfPlayer(player4), 1);
+        assertEq(tournamentY.topScore(), 2);
 
         skip(1 days);
 
@@ -1279,11 +1279,11 @@ contract TournamentTest is Test {
         vm.prank(player4);
         tournamentY.playAgainstPlayer(0);
 
-        assertEq(tournamentY.pointsOfPlayer(player1), 4);
-        assertEq(tournamentY.pointsOfPlayer(player2), 2);
-        assertEq(tournamentY.pointsOfPlayer(player3), 6);
-        assertEq(tournamentY.pointsOfPlayer(player4), 4);
-        assertEq(tournamentY.topScore(), 6);
+        assertEq(tournamentY.pointsOfPlayer(player1), 2);
+        assertEq(tournamentY.pointsOfPlayer(player2), 1);
+        assertEq(tournamentY.pointsOfPlayer(player3), 3);
+        assertEq(tournamentY.pointsOfPlayer(player4), 2);
+        assertEq(tournamentY.topScore(), 3);
     }
 
     function test_alreadyPlayed_notStaked() public {
@@ -1713,9 +1713,9 @@ contract TournamentTest is Test {
         tournamentY.playAgainstPlayer(1);
         vm.stopPrank();
         
-        assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(4))), keccak256(abi.encodePacked([address(player1)])));
+        assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(2))), keccak256(abi.encodePacked([address(player1)])));
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(0))), keccak256(abi.encodePacked(new address[](0))));
-        assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(2))), keccak256(abi.encodePacked([address(player4), address(player3)])));
+        assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(1))), keccak256(abi.encodePacked([address(player4), address(player3)])));
     }
 
     function test_getPlayer() public {
@@ -1728,7 +1728,7 @@ contract TournamentTest is Test {
 
         (uint rank, uint score, uint lastGame) = tournamentY.getPlayer(player1);
         assertEq(rank, 1);
-        assertEq(score, 4);
+        assertEq(score, 2);
         assertEq(lastGame, block.timestamp);
     }
 
