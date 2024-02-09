@@ -37,8 +37,8 @@ contract Tournament is VRFConsumerBaseV2{
 	string public name; // Name of the tournament
 	IERC20Metadata poolIncentivized;
 	uint256 public depositAmount; // Exact Amount of LP to be deposited by the players
-	uint256 public startTime;
-	uint256 public endTime;
+	uint32 public startTime;
+	uint32 public endTime;
 	enum Protocol {
 		Uniswap,
 		Yearn
@@ -46,19 +46,20 @@ contract Tournament is VRFConsumerBaseV2{
 	Protocol public protocol;
 	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
 	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
-	uint256 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
-	uint256 public fees = 0.1 ether; // 10% fees on pool prize
-	uint256 public topScore = 0;
+	uint64 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
+	uint64 public fees = 0.1 ether; // 10% fees on pool prize
+	uint16 public topScore = 0;
 	uint256 private nbRanks = 1;
 
 	// PLAYER INFO
 	address[] public players;
-	mapping(uint256 => address[]) public scoreToPlayers; // Used for ranking
+	mapping(uint16 => address[]) public scoreToPlayers; // Used for ranking
 	mapping(address => Player) public playersMap; //address => Player Struct
 
 	struct Player {
-		uint score; // how many points each player has
-		uint lastGame; // when the player last played (used to determine if the player already played today)
+		uint16 score; // how many points each player has
+		uint8 streak; // number of consecutive wins
+		uint32 lastGame; // when the player last played (used to determine if the player already played today)
 		uint depositPricePerShare; // price per share at deposit
 	}
 	struct StoredPlayer {
@@ -147,8 +148,8 @@ contract Tournament is VRFConsumerBaseV2{
 		string memory _name, 
 		address _poolIncentivized, 
 		uint256 _depositAmount, 
-		uint256 _startTime, 
-		uint256 _endTime,
+		uint32 _startTime, 
+		uint32 _endTime,
 		//VRF
 		uint64 _subscriptionId, 
 		bytes32 _gasLane, 
@@ -157,7 +158,7 @@ contract Tournament is VRFConsumerBaseV2{
 		)  VRFConsumerBaseV2(_vrfCoordinatorV2) {
 			require(_startTime < _endTime, "Start time must be before end time");
 			// Defaults to current block timestamp
-			startTime = _startTime == 0 ? block.timestamp : _startTime;
+			startTime = _startTime == 0 ? uint32(block.timestamp) : _startTime;
 			require(startTime >= block.timestamp, "Start time must be today or in the future");
 			require(_endTime > block.timestamp, "End time must be in the future");
 			require(_depositAmount > 0, "Amount to stake must be greater than 0");
@@ -245,7 +246,7 @@ contract Tournament is VRFConsumerBaseV2{
 		require(isActive(), "Tournament is not active");
 		require(!alreadyPlayed(msg.sender), "You already played today");
 		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = block.timestamp;
+		playersMap[msg.sender].lastGame = uint32(block.timestamp);
 
         if(storedPlayer.addr != address(0)) {
 			// A player is already waiting to be matched
@@ -267,7 +268,7 @@ contract Tournament is VRFConsumerBaseV2{
 		require(isActive(), "Tournament is not active");
 		require(!alreadyPlayed(msg.sender), "You already played today");
 		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = block.timestamp;
+		playersMap[msg.sender].lastGame = uint32(block.timestamp);
 
         requestId = _requestRandomWords(_move, msg.sender);
 
@@ -347,19 +348,21 @@ contract Tournament is VRFConsumerBaseV2{
 	function _resolveGame(uint8 _move) internal {
 		if(_move == storedPlayer.move) {
             // Draw
-			updateScore(msg.sender, 2);
-			updateScore(storedPlayer.addr, 2);
-			emit Draw(msg.sender, storedPlayer.addr, timeToDate(block.timestamp));
+			updateScore(msg.sender, 1);
+			updateScore(storedPlayer.addr, 1);
+			emit Draw(msg.sender, storedPlayer.addr, timeToDate(uint32(block.timestamp)));
         } else if (((3 + _move - storedPlayer.move) % 3) == 1) {
             // msg.sender wins
-			updateScore(msg.sender, 4);
-			emit Winner(msg.sender, timeToDate(block.timestamp));
-			emit Loser(storedPlayer.addr, timeToDate(block.timestamp));
+			updateScore(msg.sender, 2);
+			updateScore(storedPlayer.addr, 0);
+			emit Winner(msg.sender, timeToDate(uint32(block.timestamp)));
+			emit Loser(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
         } else {
 			// storedPlayer wins
-			updateScore(storedPlayer.addr, 4);
-			emit Winner(storedPlayer.addr, timeToDate(block.timestamp));
-			emit Loser(msg.sender, timeToDate(block.timestamp));
+			updateScore(storedPlayer.addr, 2);
+			updateScore(msg.sender, 0);
+			emit Winner(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
+			emit Loser(msg.sender, timeToDate(uint32(block.timestamp)));
         }
 		// Reset the stored player
         storedPlayer.addr = address(0);
@@ -376,29 +379,37 @@ contract Tournament is VRFConsumerBaseV2{
         if(game.playerMove == game.vrfMove){
             //draw
 			updateScore(game.player, 1);
-			emit Draw(game.player, address(0), timeToDate(block.timestamp));
+			emit Draw(game.player, address(0), timeToDate(uint32(block.timestamp)));
             game.winner = address(0);
         } else if (((3 + game.playerMove - game.vrfMove) % 3) == 1) {
         // } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
             // player wins 
 			updateScore(game.player, 2);
-			emit Winner(game.player, timeToDate(block.timestamp));
+			emit Winner(game.player, timeToDate(uint32(block.timestamp)));
         	game.winner = game.player;
         } else {
             //player loses
-    		emit Loser(game.player, timeToDate(block.timestamp));
+			updateScore(game.player, 0);
+    		emit Loser(game.player, timeToDate(uint32(block.timestamp)));
             game.winner = address(i_vrfCoordinator);
         }
     }
 
 	/**
 	 * Function that updates the player score by adding the points
+	 * @param _player is the address of the player
+	 * @param _points 0 = lost, 1 = draw, 2 = won
 	 */
 	// @note MUST CALL AFTER RESOLVING GAME
 	function updateScore(address _player, uint8 _points) internal {
-		if(_points == 0) { return; }
+		if(_points == 0) {
+			playersMap[_player].streak = 0;
+			return;
+		} else if(_points == 2) {
+			playersMap[_player].streak += 1;
+		}
 		// We first remove the player from it's current rank
-		uint score = playersMap[_player].score;
+		uint16 score = playersMap[_player].score;
 		for(uint i=0; i<scoreToPlayers[score].length; i++) {
 			if(scoreToPlayers[score][i] == _player) {
 				scoreToPlayers[score][i] = scoreToPlayers[score][scoreToPlayers[score].length - 1];
@@ -410,7 +421,7 @@ contract Tournament is VRFConsumerBaseV2{
 			if(scoreToPlayers[score].length == 0) { nbRanks -= 1; } // No more players at this rank
 		}
 		// Now we can update the score and push the user to its new rank
-		playersMap[_player].score += _points;
+		playersMap[_player].score += _points**playersMap[_player].streak;
 		if(topScore < playersMap[_player].score) {
 			topScore = playersMap[_player].score;
 		}
@@ -422,7 +433,7 @@ contract Tournament is VRFConsumerBaseV2{
 	/// Getter Funcs ///
 	////////////////////
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rdepositAmount, uint256 rStartTime, uint256 rEndTime, uint256 rPlayers) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rdepositAmount, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers) {
 
 		rName = name;
 		contractAddress = address(this);
@@ -431,7 +442,7 @@ contract Tournament is VRFConsumerBaseV2{
 		rdepositAmount = depositAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
-		rPlayers = players.length;
+		rPlayers = getNumberOfPlayers();
 	}
 
 	function getGame(uint256 _requestId) public view returns (uint8 playerMove, address gamePlayer, bool fulfilled, bool exists, uint256[] memory randomWords, uint256 vrfMove, address winner) {
@@ -473,32 +484,33 @@ contract Tournament is VRFConsumerBaseV2{
 	/**
 	 * Function that returns the player's rank and how many players share this rank
 	 */
-	function getRank(address _player) public view returns (uint256 rank, uint256 split) {
+	function getRank(address _player) public view returns (uint16 rank, uint16 split) {
 		if(!isPlayer(_player)) return (0, 0);
-		uint256 cumulativePlayers;
-		for(uint i=topScore; i>=playersMap[_player].score; i--) {
+		uint16 cumulativePlayers;
+		for(uint16 i=topScore; i>=playersMap[_player].score; i--) {
 			if(scoreToPlayers[i].length > 0) {
-				cumulativePlayers += scoreToPlayers[i].length;
+				cumulativePlayers += uint16(scoreToPlayers[i].length);
 				rank += 1;
 			}
 			if(i == 0) { // If the player did not score, he won't be in in the mapping
 				rank += 1;
-				split = players.length - cumulativePlayers;
+				split = uint16(players.length) - cumulativePlayers;
 				return (rank, split);
 			}
 		}
-		split = scoreToPlayers[playersMap[_player].score].length;
+		split = uint16(scoreToPlayers[playersMap[_player].score].length);
 	}
 
 	/**
 	 * Function that returns the player's prize share (50% shared for 1st rank, 25% shared for 2nd rank, etc)
+	 * 1 ether = 100%
 	 */
-	function getPrizeShare(address _player) public view returns (uint256) {
+	function getPrizeShare(address _player) public view returns (uint64) {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
 		if(split == 0) return 0; // Not a player = no share
 		uint8 multiplier = (nbRanks == rank) ? 2 : 1; // We double the allocation for the last rank so that sum of shares is 100%
-		return (multiplier * 1 ether / (2 ** rank)) / split;
+		return uint64((multiplier * 1 ether / (2 ** rank)) / split);
 	}
 
 	/**
@@ -542,19 +554,19 @@ contract Tournament is VRFConsumerBaseV2{
 		return getPoolPrize() * fees / (1 ether - fees);
 	}
 
-	function timeToDate(uint256 _time) internal pure returns (uint256) {
-		return _time / (60 * 60 * 24);
+	function timeToDate(uint32 _time) internal pure returns (uint16) {
+		return uint16(_time / (60 * 60 * 24));
 	}
 
 	function isEnded() public view returns (bool) {
-		return timeToDate(block.timestamp) >= timeToDate(endTime);
+		return timeToDate(uint32(block.timestamp)) >= timeToDate(endTime);
 	}
 
 	/**
 	 * Function that returns true if the tournament is not yet started
 	 */
 	function isFuture() public view returns (bool) {
-		return timeToDate(block.timestamp) < timeToDate(startTime);
+		return timeToDate(uint32(block.timestamp)) < timeToDate(startTime);
 	}
 
 	/**
@@ -577,12 +589,12 @@ contract Tournament is VRFConsumerBaseV2{
 	 */
 	//@note compaired to midnight - use to reset live per day
 	function alreadyPlayed(address _player) public view returns (bool) {
-		uint256 today = timeToDate(block.timestamp);
-		uint256 lastGame = timeToDate(playersMap[_player].lastGame);
+		uint32 today = timeToDate(uint32(block.timestamp));
+		uint32 lastGame = timeToDate(playersMap[_player].lastGame);
 		return today == lastGame;
 	}
 
-	function pointsOfPlayer(address _player) public view returns (uint256) {
+	function pointsOfPlayer(address _player) public view returns (uint16) {
 		return playersMap[_player].score;
 	}
 
@@ -594,20 +606,20 @@ contract Tournament is VRFConsumerBaseV2{
 		return isEnded();
 	}
 
-	function getNumberOfPlayers() public view returns (uint256) {
-		return players.length;
+	function getNumberOfPlayers() public view returns (uint16) {
+		return uint16(players.length);
 	}
 
 	function getPlayers() public view returns (address[] memory) {
 		return players;
 	}
 
-	function getPlayersAtScore(uint256 _score) public view returns (address[] memory) {
+	function getPlayersAtScore(uint16 _score) public view returns (address[] memory) {
 		if(_score == 0) return new address[](0); // We don't return the list of players without any point
 		return scoreToPlayers[_score];
 	}
 
-	function getPlayer(address _player) public view returns (uint256 rank, uint256 score, uint256 lastGame) {
+	function getPlayer(address _player) public view returns (uint16 rank, uint16 score, uint32 lastGame) {
 		(rank, ) = getRank(_player);
 		score = playersMap[_player].score;
 		lastGame = playersMap[_player].lastGame;
