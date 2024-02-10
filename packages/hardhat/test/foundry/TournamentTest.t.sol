@@ -6,6 +6,8 @@ import {console2} from "../../lib/forge-std/src/console2.sol";
 import {Tournament} from "../../contracts/Tournament.sol"; // 
 import {Vyper_contract} from "../../contracts/Vyper_contract.sol"; // Mock Yearn LP
 import {UniswapV2Pair} from "../../contracts/UniswapV2Pair.sol"; // Mock Uniswap LP
+import {USDT} from "../../contracts/USDT.sol"; // Mock USDT
+import {WETH} from "../../contracts/WETH.sol"; // Mock WETH
 import {VRFCoordinatorV2Mock} from "@chainlink/contracts/src/v0.8/mocks/VRFCoordinatorV2Mock.sol";// Mock VRF Coordinator
 
 /**
@@ -23,6 +25,8 @@ contract TournamentTest is Test {
 
     Tournament public tournamentU;
     Tournament public tournamentY;
+    USDT public mockUSDT;
+    WETH public mockWETH;
     UniswapV2Pair public mockUniLP;
     Vyper_contract public mockYLP;
     VRFCoordinatorV2Mock public mockVRF;
@@ -102,7 +106,9 @@ contract TournamentTest is Test {
         vm.startPrank(owner);
 
         // Deploy Mock Contracts
-        mockUniLP = new UniswapV2Pair();
+        mockUSDT = new USDT();
+        mockWETH = new WETH();
+        mockUniLP = new UniswapV2Pair(address(mockWETH), address(mockUSDT));
         mockYLP = new Vyper_contract();
 
         // Transfer LP tokens to players
@@ -1730,6 +1736,10 @@ contract TournamentTest is Test {
         assertEq(rank, 1);
         assertEq(score, 2);
         assertEq(lastGame, block.timestamp);
+    }
+
+    function test_getFancySymbol() public {
+        assertEq(tournamentU.getFancySymbol(), "UNI-V2 (WETH-USDT)");
     }
 
 }

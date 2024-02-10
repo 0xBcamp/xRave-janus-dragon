@@ -438,7 +438,7 @@ contract Tournament is VRFConsumerBaseV2{
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
-		rLPTokenSymbol = getLPSymbol();
+		rLPTokenSymbol = getFancySymbol();
 		rdepositAmount = depositAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
@@ -555,7 +555,7 @@ contract Tournament is VRFConsumerBaseV2{
 	}
 
 	function timeToDate(uint32 _time) internal pure returns (uint16) {
-		return uint16(_time / (60 * 60 * 24));
+		return uint16(_time / 1 days);
 	}
 
 	function isEnded() public view returns (bool) {
@@ -633,4 +633,19 @@ contract Tournament is VRFConsumerBaseV2{
 		return IERC20Metadata(poolIncentivized).symbol();
 	}
 
+	function getFancySymbol() public view returns (string memory) {
+		if(protocol == Protocol.Uniswap) {
+			address token0 = UniswapInterface(address(poolIncentivized)).token0();
+			address token1 = UniswapInterface(address(poolIncentivized)).token1();
+			string memory symbol0 = IERC20Metadata(token0).symbol();
+			string memory symbol1 = IERC20Metadata(token1).symbol();
+			string memory res = string.concat("UNI-V2 (",symbol0);
+			res = string.concat(res, "-");
+			res = string.concat(res, symbol1);
+			res = string.concat(res, ")");
+			return res;
+		} else {
+			return getLPSymbol();
+		}
+	}
 }

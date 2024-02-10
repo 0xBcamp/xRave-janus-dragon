@@ -61,7 +61,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     args: [spender, BigInt(amount)],
   });
 
-  const approveToken = async () => {
+  const handleApprove = async () => {
     try {
       await writeTx(approve, { blockConfirmations: 1 });
     } catch (e) {
@@ -75,7 +75,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     functionName: "stakeLPToken",
   });
 
-  const depositToken = async () => {
+  const handleDeposit = async () => {
     try {
       await writeTx(deposit, { blockConfirmations: 1 });
     } catch (e) {
@@ -109,12 +109,36 @@ export const Enter = ({ tournament }: { tournament: string }) => {
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
             <div className="flex justify-center rounded-md shadow-sm space-x-4 mt-5" role="group">
-              <button className="btn btn-secondary" disabled={approved} onClick={() => approveToken()}>
+              <button className="btn btn-secondary" disabled={approved} onClick={() => handleApprove()}>
                 Approve {LPTokenSymbol}
               </button>
-              <button className="btn btn-secondary" disabled={!approved} onClick={() => depositToken()}>
+              <button className="btn btn-secondary" disabled={!approved} onClick={() => handleDeposit()}>
                 Deposit {formatUnits(BigInt(amount) || 0n, decimals || 18).toString()} {LPTokenSymbol}
               </button>
+            </div>
+            <div>
+              To enter the tournament, you need to stake the required amount of LP token for its entire duration.
+              <br />
+              The value accrued by the LP token from deposit to wtihdrawal is used to increase the prize pool.
+              <br />
+              At the end of the tournament, you&apos;ll be able to withdraw the same value you deposited + game earnings
+              based on rank.
+              <br />
+              <br />
+              Simple exemple: <br />
+              You deposit 1 LP token worth 1 ETH.
+              <br />
+              During the tournament, the LP token increase in value and by the end of the tournament, 1 LP is now worth
+              1.1 ETH.
+              <br />
+              You get back 0.91 LP = 1 ETH plus your game earnings.
+              <br />
+              The remaining 0.09 LP are pooled together into the pool prize.
+              <br />
+              <br />
+              Protocol fee on deposit/withdrawal: 0%
+              <br />
+              Protocol fee on prize: 10%
             </div>
           </div>
         </div>
