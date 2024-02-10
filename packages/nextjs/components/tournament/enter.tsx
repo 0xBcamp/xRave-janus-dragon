@@ -1,7 +1,7 @@
 import { useState } from "react";
+import Link from "next/link";
 import { formatUnits } from "viem";
-import { useAccount, useContractRead, useContractWrite } from "wagmi";
-import { erc20ABI, useContractEvent } from "wagmi";
+import { erc20ABI, useAccount, useContractEvent, useContractRead, useContractWrite } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 
@@ -23,14 +23,16 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   let decimals = 18;
   let LPTokenSymbol = "";
   let protocol = 0;
+  let tokens: string[] = [];
 
   if (tournamentData != undefined) {
     spender = tournamentData[1];
     LPaddr = tournamentData[2];
     LPTokenSymbol = tournamentData[3];
-    amount = Number(tournamentData[5]);
-    decimals = Number(tournamentData[6]);
+    amount = Number(tournamentData[7]);
+    decimals = Number(tournamentData[8]);
     protocol = Number(tournamentData[4]);
+    tokens = [tournamentData[5], tournamentData[6]];
   }
 
   const { data: balance } = useContractRead({
@@ -108,6 +110,12 @@ export const Enter = ({ tournament }: { tournament: string }) => {
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
+            <br />
+            {protocol == 0 ? (
+              <Link href={`https://app.uniswap.org/add/${tokens[0]}/${tokens[1]}`}>Obtain more LP</Link>
+            ) : (
+              <Link href={`https://yearn.fi/vaults/10/${LPaddr}`}>Obtain more LP</Link>
+            )}
             <div className="flex justify-center rounded-md shadow-sm space-x-4 mt-5" role="group">
               <button className="btn btn-secondary" disabled={approved} onClick={() => handleApprove()}>
                 Approve {LPTokenSymbol}

@@ -437,19 +437,33 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/// Getter Funcs ///
 	////////////////////
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint8 rProtocol, uint256 rdepositAmount, uint8 rDecimals, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers, uint256 rPoolPrize) {
-
+	function getTournament() public view returns (
+		string memory rName,
+		address contractAddress,
+		address rPoolIncentivized,
+		string memory rLPTokenSymbol,
+		uint8 rProtocol,
+		address token0,
+		address token1,
+		uint256 rdepositAmount,
+		uint8 rDecimals,
+		uint32 rStartTime,
+		uint32 rEndTime,
+		uint16 rPlayers,
+		uint256 poolPrize
+	) {
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
 		rLPTokenSymbol = getFancySymbol();
 		rProtocol = uint8(protocol);
+		(token0, token1) = getUnderlyingAssets();
 		rdepositAmount = depositAmount;
 		rDecimals = getLPDecimals();
 		rStartTime = startTime;
 		rEndTime = endTime;
 		rPlayers = getNumberOfPlayers();
-		rPoolPrize = getExpectedPoolPrize();
+		poolPrize = getExpectedPoolPrize();
 	}
 
 	function getGame(uint256 _requestId) public view returns (uint8 playerMove, address gamePlayer, bool fulfilled, bool exists, uint256[] memory randomWords, uint256 vrfMove, address winner) {
@@ -720,6 +734,21 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function getLPSymbol() public view returns (string memory symbol) {
 		symbol = IERC20Metadata(poolIncentivized).symbol();
+	}
+
+	/**
+	 * @notice Returns the addresses of the underlying assets
+	 * @return token0 (address) for yearn or Uniswap
+	 * @return token1 (address) for Uniswap
+	 */
+	function getUnderlyingAssets() public view returns (address token0, address token1) {
+		if(protocol == Protocol.Uniswap) {
+			token0 = UniswapInterface(address(poolIncentivized)).token0();
+			token1 = UniswapInterface(address(poolIncentivized)).token1();
+		} else {
+			token0 = YearnInterface(address(poolIncentivized)).token();
+			token1 = address(0);
+		}
 	}
 
 	/**

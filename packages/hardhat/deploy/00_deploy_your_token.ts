@@ -51,7 +51,7 @@ const deployMocksAndTokens: DeployFunction = async function (hre: HardhatRuntime
 
   await deploy("Vyper_contract", {
     from: deployer,
-    args: [],
+    args: [USDT.target],
     log: true,
     autoMine: true,
   });
