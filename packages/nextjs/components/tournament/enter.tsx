@@ -21,12 +21,14 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   let LPaddr = "";
   let amount = 0;
   let LPTokenSymbol = "";
+  let protocol = 0;
 
   if (tournamentData != undefined) {
     spender = tournamentData[1];
     LPaddr = tournamentData[2];
     LPTokenSymbol = tournamentData[3];
     amount = Number(tournamentData[4]);
+    protocol = Number(tournamentData[5]);
   }
 
   const { data: balance } = useContractRead({
@@ -104,7 +106,9 @@ export const Enter = ({ tournament }: { tournament: string }) => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">Enter the tournament</span>
-            <span className="block text-4xl font-bold">by staking your LP tokens</span>
+            <span className="block text-4xl font-bold">
+              by staking your {protocol == 0 ? "Uniswap" : "Yearn"} LP tokens
+            </span>
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}

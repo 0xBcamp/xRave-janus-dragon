@@ -437,16 +437,18 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/// Getter Funcs ///
 	////////////////////
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint256 rdepositAmount, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint8 rProtocol, uint256 rdepositAmount, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers, uint256 rPoolPrize) {
 
 		rName = name;
 		contractAddress = address(this);
 		rPoolIncentivized = address(poolIncentivized);
 		rLPTokenSymbol = getFancySymbol();
+		rProtocol = uint8(protocol);
 		rdepositAmount = depositAmount;
 		rStartTime = startTime;
 		rEndTime = endTime;
 		rPlayers = getNumberOfPlayers();
+		rPoolPrize = getExpectedPoolPrize();
 	}
 
 	function getGame(uint256 _requestId) public view returns (uint8 playerMove, address gamePlayer, bool fulfilled, bool exists, uint256[] memory randomWords, uint256 vrfMove, address winner) {
@@ -564,11 +566,12 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/**
 	 * @notice Returns if the expected pool prize at the end of the tournament
 	 * @dev Current pool prize is cross multiplied by the duration of the tournament and divided by the elapsed time
-	 * @return amount The expected pool prize amount
+	 * @return (uint256) The expected pool prize amount
 	 */
-	function getExpectedPoolPrize() public view returns (uint256 amount) {
+	function getExpectedPoolPrize() public view returns (uint256) {
 		if(isFuture()) return 0;
-		amount = getPoolPrize() * (endTime - startTime) / (block.timestamp - startTime);
+		if(isEnded()) return getPoolPrize();
+		return getPoolPrize() * (endTime - startTime) / (block.timestamp - startTime);
 	}
 
 	/**
