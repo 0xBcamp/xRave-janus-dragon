@@ -21,11 +21,11 @@ export const Item = ({ tournament, player, score }: { tournament: string; player
   }
 
   let trophyColor = "h-4 w-4 mr-1";
-  if (playerRank[0] == 1n) {
+  if (playerRank[0] == 1) {
     trophyColor += " text-yellow-400";
-  } else if (playerRank[0] == 2n) {
+  } else if (playerRank[0] == 2) {
     trophyColor += " text-gray-300";
-  } else if (playerRank[0] == 3n) {
+  } else if (playerRank[0] == 3) {
     trophyColor += " text-yellow-700";
   } else {
     trophyColor += " text-gray-600";

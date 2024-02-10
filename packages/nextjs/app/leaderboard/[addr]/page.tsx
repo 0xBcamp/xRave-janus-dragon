@@ -39,7 +39,7 @@ const Leaderboard: NextPage = () => {
     );
   }
 
-  if (topScore == 0n) {
+  if (topScore == 0) {
     return (
       <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
         <p>No player got points at the moment</p>

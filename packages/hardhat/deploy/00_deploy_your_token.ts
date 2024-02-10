@@ -25,10 +25,26 @@ const deployMocksAndTokens: DeployFunction = async function (hre: HardhatRuntime
   }
 
   // Example token deployment, adjust as necessary
-  //await deploy("LPToken1", {
-  await deploy("UniswapV2Pair", {
+  await deploy("USDT", {
     from: deployer,
     args: [],
+    log: true,
+    autoMine: true,
+  });
+
+  await deploy("WETH", {
+    from: deployer,
+    args: [],
+    log: true,
+    autoMine: true,
+  });
+
+  const USDT = await hre.ethers.getContract("USDT", deployer);
+  const WETH = await hre.ethers.getContract("WETH", deployer);
+
+  await deploy("UniswapV2Pair", {
+    from: deployer,
+    args: [USDT.target, WETH.target],
     log: true,
     autoMine: true,
   });

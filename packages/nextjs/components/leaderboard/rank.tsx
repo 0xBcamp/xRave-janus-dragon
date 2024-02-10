@@ -8,7 +8,7 @@ export const Rank = ({ tournament, score }: { tournament: string; score: number 
     abi: DeployedContracts[31337].Tournament.abi,
     address: tournament,
     functionName: "getPlayersAtScore",
-    args: [BigInt(score)],
+    args: [score],
   });
 
   console.log(players);
