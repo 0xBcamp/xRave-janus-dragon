@@ -20,13 +20,17 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   let spender = "";
   let LPaddr = "";
   let amount = 0;
+  let decimals = 18;
   let LPTokenSymbol = "";
+  let protocol = 0;
 
   if (tournamentData != undefined) {
     spender = tournamentData[1];
     LPaddr = tournamentData[2];
     LPTokenSymbol = tournamentData[3];
-    amount = Number(tournamentData[4]);
+    amount = Number(tournamentData[5]);
+    decimals = Number(tournamentData[6]);
+    protocol = Number(tournamentData[4]);
   }
 
   const { data: balance } = useContractRead({
@@ -47,12 +51,6 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   if (allowance != undefined && Number(allowance) >= amount && !approved) {
     setApproved(true);
   }
-
-  const { data: decimals } = useContractRead({
-    abi: erc20ABI,
-    address: LPaddr,
-    functionName: "decimals",
-  });
 
   const { writeAsync: approve } = useContractWrite({
     abi: erc20ABI,
@@ -104,7 +102,9 @@ export const Enter = ({ tournament }: { tournament: string }) => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">Enter the tournament</span>
-            <span className="block text-4xl font-bold">by staking your LP tokens</span>
+            <span className="block text-4xl font-bold">
+              by staking your {protocol == 0 ? "Uniswap" : "Yearn"} LP tokens
+            </span>
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
