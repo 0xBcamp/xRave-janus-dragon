@@ -57,6 +57,7 @@ contract TournamentFactory {
 	 * @param _LPTokenAmount (uint256) - amount of the ERC-20 LP token to stake in order to participate
 	 * @param _startTime (uint256) - block timestamp at which the tournament starts
 	 * @param _endTime (uint256) - block timestamp at which the tournament ends
+	 * @return instance (address) - address of the new tournament
 	 */
 	function createTournament(
 		string memory _name, 
@@ -64,8 +65,8 @@ contract TournamentFactory {
 		uint256 _LPTokenAmount, 
 		uint32 _startTime, 
 		uint32 _endTime
-	) public {
-		address instance = Clones.clone(implementationContract);
+	) public returns(address instance) {
+		instance = Clones.clone(implementationContract);
 		Tournament(instance).initialize(
 			owner, 
 			_name, 
@@ -97,7 +98,7 @@ contract TournamentFactory {
 	 * @notice Returns the chainlink config
 	 * @dev For use by the proxies when requesting a word to VRF
 	 */
-	function getVrfConfig() external view returns (uint64, bytes32, uint32) {
+	function getVrfConfig() public view returns (uint64, bytes32, uint32) {
 		return (subscriptionId, gasLane, callbackGasLimit);
 	}
 

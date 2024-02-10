@@ -3,7 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test, stdStorage, StdStorage} from "../../lib/forge-std/src/Test.sol";
 import {console2} from "../../lib/forge-std/src/console2.sol";
-import {Tournament} from "../../contracts/Tournament.sol"; // 
+import {Tournament} from "../../contracts/Tournament.sol";
+import {TournamentFactory} from "../../contracts/TournamentFactory.sol";
 import {Vyper_contract} from "../../contracts/Vyper_contract.sol"; // Mock Yearn LP
 import {UniswapV2Pair} from "../../contracts/UniswapV2Pair.sol"; // Mock Uniswap LP
 import {USDT} from "../../contracts/USDT.sol"; // Mock USDT
@@ -26,9 +27,16 @@ contract TournamentExposed is Tournament {
     }
 }
 
+// contract TournamentFactory {
+//     function getVrfConfig() external view returns (uint64, bytes32, uint32) {
+// 		return (uint64(1), bytes32("0x123456789"), uint32(1000000));
+// 	}
+// }
+
 contract TournamentTest is Test {
     using stdStorage for StdStorage;
 
+    TournamentFactory public factory;
     TournamentExposed public tournamentU;
     TournamentExposed public tournamentY;
     USDT public mockUSDT;
@@ -132,9 +140,11 @@ contract TournamentTest is Test {
         //from mock vrf 
         //constructor(uint96 _baseFee, uint96 _gasPriceLink) 
         mockVRF = new VRFCoordinatorV2Mock(10, 1);
+        factory = new TournamentFactory(owner, address(mockVRF));
+        factory.setChainlinkConfig(gasLane, callbackGasLimit);
 
         // create subscription ID
-        subId = mockVRF.createSubscription();
+        (subId,,) = factory.getVrfConfig();
         // fund subscription
         mockVRF.fundSubscription(subId, 1000000000000000000);
 
@@ -143,7 +153,7 @@ contract TournamentTest is Test {
         tournamentY = new TournamentExposed();
         tournamentY.initialize(
             owner, name, address(mockYLP), LPTokenAmount, 
-            startTime, endTime, address(this), address(mockVRF)
+            startTime, endTime, address(factory), address(mockVRF)
         );
 
         name = "Uniswap Tournament";
@@ -151,13 +161,13 @@ contract TournamentTest is Test {
         tournamentU = new TournamentExposed();
         tournamentU.initialize(
             owner, name, address(mockUniLP), LPTokenAmount, 
-            startTime, endTime, address(this), address(mockVRF)
+            startTime, endTime, address(factory), address(mockVRF)
         );
 
-        // add toournament as consumer of VRF
-        mockVRF.addConsumer(subId, address(tournamentY));
-
         vm.stopPrank();
+        vm.prank(address(factory));
+        // add tournament as consumer of VRF
+        mockVRF.addConsumer(subId, address(tournamentY));
 
     }
 
@@ -1608,7 +1618,7 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
         vm.stopPrank();
 
-        vm.warp(startTime + 7 days);
+        vm.warp(startTime + 7 days - 1); // 1s is added in the function
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(2000 ether, 2000 ether);
 
