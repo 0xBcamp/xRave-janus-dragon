@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x52c9dE743a250a4D8E1194E11e447bb45324436f",
+      address: "0x737b8F095E3c575a6Ae5FE1711AdB8F271E20269",
       abi: [
         {
           inputs: [
@@ -166,25 +166,6 @@ const deployedContracts = {
               type: "address",
             },
           ],
-          name: "LPTokenAmountOfPlayer",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_player",
-              type: "address",
-            },
-          ],
           name: "alreadyPlayed",
           outputs: [
             {
@@ -285,7 +266,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -298,21 +279,8 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "string",
-              name: "",
+              name: "symbol",
               type: "string",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getFees",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -373,7 +341,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint8",
-              name: "",
+              name: "decimals",
               type: "uint8",
             },
           ],
@@ -386,7 +354,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "string",
-              name: "",
+              name: "symbol",
               type: "string",
             },
           ],
@@ -399,7 +367,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint16",
-              name: "",
+              name: "number",
               type: "uint16",
             },
           ],
@@ -441,7 +409,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "arr",
               type: "address[]",
             },
           ],
@@ -460,7 +428,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "arr",
               type: "address[]",
             },
           ],
@@ -473,7 +441,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -486,7 +454,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "pPS",
               type: "uint256",
             },
           ],
@@ -505,7 +473,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -524,7 +492,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint64",
-              name: "",
+              name: "share",
               type: "uint64",
             },
           ],
@@ -561,7 +529,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -680,7 +648,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "active",
               type: "bool",
             },
           ],
@@ -693,7 +661,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "ended",
               type: "bool",
             },
           ],
@@ -706,7 +674,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "future",
               type: "bool",
             },
           ],
@@ -725,7 +693,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "isP",
               type: "bool",
             },
           ],
@@ -969,7 +937,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "allowed",
               type: "bool",
             },
           ],
@@ -1015,8 +983,27 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "allowed",
               type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "withdrawAmountFromDeposit",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -1035,7 +1022,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x53DaB165b879542E9aDFC41c6474A9d797B9b042",
+      address: "0xAd3E631c01798f9aAE4692dabF791a62c226C5D4",
       abi: [
         {
           inputs: [
@@ -1310,7 +1297,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x4D1338Fa46ca6060F1472b70599cc635Ad275EDa",
+      address: "0x64386BC53c213F23C6960d3e080139A0f9Ef1733",
       abi: [
         {
           inputs: [],
@@ -1603,7 +1590,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x53E4DAFF2073f848DC3F7a8D7CC95b3607212A73",
+      address: "0x295129609d6876f5ECC62052Ba6bc082139A982c",
       abi: [
         {
           inputs: [
@@ -1987,7 +1974,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x1f9c84B161b2c7FFB540BC5354543108cCE37df1",
+      address: "0x6cD036fDBD89BaA51c8722Eec0B56CeEd301cC68",
       abi: [
         {
           inputs: [
@@ -2770,7 +2757,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x1E2e9190Cea3A97b5Aa85d9757117F499D31C47d",
+      address: "0xB92257D74B8815EC711071889cB506C8d66A6a06",
       abi: [
         {
           inputs: [],
@@ -3089,7 +3076,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x87E8f332f34984728Da4c0A008a495A5Ec4E09a2",
+      address: "0x4A65b9d13908487A1654be48e6aa9Bc701735910",
       abi: [
         {
           inputs: [],

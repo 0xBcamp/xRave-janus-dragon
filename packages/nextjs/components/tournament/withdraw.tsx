@@ -26,10 +26,10 @@ export const Withdraw = () => {
     functionName: "getLPDecimals",
   });
 
-  const { data: LPTokenAmountOfPlayer } = useContractRead({
+  const { data: withdrawAmountFromDeposit } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
-    functionName: "LPTokenAmountOfPlayer",
+    functionName: "withdrawAmountFromDeposit",
     args: [connectedAddress],
   });
 
@@ -65,7 +65,7 @@ export const Withdraw = () => {
     },
   });
 
-  if (Number(LPTokenAmountOfPlayer) == 0) {
+  if (Number(withdrawAmountFromDeposit) == 0) {
     return (
       <div className="flex items-center flex-col flex-grow pt-10">
         <div className="px-5">
@@ -102,14 +102,14 @@ export const Withdraw = () => {
             <span className="block text-4xl font-bold">and get your rewards</span>
           </h1>
           <p className="text-center text-lg">
-            {Number(formatUnits(LPTokenAmountOfPlayer || 0n, Number(LPTokenDecimals.data) || 18)).toFixed(2)}{" "}
+            {Number(formatUnits(withdrawAmountFromDeposit || 0n, Number(LPTokenDecimals.data) || 18)).toFixed(2)}{" "}
             {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data}
             can be withdrawn from your deposit and you earned{" "}
             {Number(formatUnits(prizeAmount || 0n, Number(LPTokenDecimals.data) || 18)).toFixed(2)}{" "}
             {LPTokenSymbol.isLoading ? "..." : LPTokenSymbol.data}.
             <button
               className="btn btn-secondary"
-              disabled={(LPTokenAmountOfPlayer || 0n) + (prizeAmount || 0n) == 0n}
+              disabled={(withdrawAmountFromDeposit || 0n) + (prizeAmount || 0n) == 0n}
               onClick={() => handleWithdraw()}
             >
               Unstake and receive earned rewards
