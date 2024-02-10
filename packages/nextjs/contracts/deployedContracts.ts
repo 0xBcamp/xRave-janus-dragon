@@ -7,64 +7,8 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0xE0a1556ef66873d965A2F4caD06F051646BE6707",
+      address: "0x737b8F095E3c575a6Ae5FE1711AdB8F271E20269",
       abi: [
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-            {
-              internalType: "string",
-              name: "_name",
-              type: "string",
-            },
-            {
-              internalType: "address",
-              name: "_poolIncentivized",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_depositAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint32",
-              name: "_startTime",
-              type: "uint32",
-            },
-            {
-              internalType: "uint32",
-              name: "_endTime",
-              type: "uint32",
-            },
-            {
-              internalType: "uint64",
-              name: "_subscriptionId",
-              type: "uint64",
-            },
-            {
-              internalType: "bytes32",
-              name: "_gasLane",
-              type: "bytes32",
-            },
-            {
-              internalType: "uint32",
-              name: "_callbackGasLimit",
-              type: "uint32",
-            },
-            {
-              internalType: "address",
-              name: "_vrfCoordinatorV2",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
         {
           inputs: [
             {
@@ -104,6 +48,19 @@ const deployedContracts = {
             },
           ],
           name: "Draw",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "version",
+              type: "uint8",
+            },
+          ],
+          name: "Initialized",
           type: "event",
         },
         {
@@ -200,25 +157,6 @@ const deployedContracts = {
           ],
           name: "Winner",
           type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_player",
-              type: "address",
-            },
-          ],
-          name: "LPTokenAmountOfPlayer",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
         },
         {
           inputs: [
@@ -328,7 +266,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -341,21 +279,8 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "string",
-              name: "",
+              name: "symbol",
               type: "string",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getFees",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -416,7 +341,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint8",
-              name: "",
+              name: "decimals",
               type: "uint8",
             },
           ],
@@ -429,7 +354,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "string",
-              name: "",
+              name: "symbol",
               type: "string",
             },
           ],
@@ -442,7 +367,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint16",
-              name: "",
+              name: "number",
               type: "uint16",
             },
           ],
@@ -484,7 +409,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "arr",
               type: "address[]",
             },
           ],
@@ -503,7 +428,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "arr",
               type: "address[]",
             },
           ],
@@ -516,7 +441,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -529,7 +454,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "pPS",
               type: "uint256",
             },
           ],
@@ -548,7 +473,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -567,7 +492,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint64",
-              name: "",
+              name: "share",
               type: "uint64",
             },
           ],
@@ -604,7 +529,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -660,12 +585,70 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "_name",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "_poolIncentivized",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_depositAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint32",
+              name: "_startTime",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "_endTime",
+              type: "uint32",
+            },
+            {
+              internalType: "uint64",
+              name: "_subscriptionId",
+              type: "uint64",
+            },
+            {
+              internalType: "bytes32",
+              name: "_gasLane",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "address",
+              name: "_vrfCoordinatorV2",
+              type: "address",
+            },
+          ],
+          name: "initialize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "isActive",
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "active",
               type: "bool",
             },
           ],
@@ -678,7 +661,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "ended",
               type: "bool",
             },
           ],
@@ -691,7 +674,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "future",
               type: "bool",
             },
           ],
@@ -710,7 +693,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "isP",
               type: "bool",
             },
           ],
@@ -954,7 +937,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "allowed",
               type: "bool",
             },
           ],
@@ -1000,8 +983,27 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "",
+              name: "allowed",
               type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_player",
+              type: "address",
+            },
+          ],
+          name: "withdrawAmountFromDeposit",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -1016,11 +1018,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        rawFulfillRandomWords: "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
+        rawFulfillRandomWords: "contracts/VRFConsumerBaseV2Upgradeable.sol",
       },
     },
     TournamentFactory: {
-      address: "0x5BFaaA02cAb795d576276a19CB1c2D2D2d652717",
+      address: "0xAd3E631c01798f9aAE4692dabF791a62c226C5D4",
       abi: [
         {
           inputs: [
@@ -1152,13 +1154,7 @@ const deployedContracts = {
             },
           ],
           name: "createTournament",
-          outputs: [
-            {
-              internalType: "contract Tournament",
-              name: "newTournament",
-              type: "address",
-            },
-          ],
+          outputs: [],
           stateMutability: "nonpayable",
           type: "function",
         },
@@ -1253,6 +1249,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "implementationContract",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "address",
@@ -1288,7 +1297,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x0b5dcAf621a877dAcF3C540c1e5208C8a3eb7B23",
+      address: "0x64386BC53c213F23C6960d3e080139A0f9Ef1733",
       abi: [
         {
           inputs: [],
@@ -1581,7 +1590,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0xA3E5DfE71aE3e6DeC4D98fa28821dF355d7244B3",
+      address: "0x295129609d6876f5ECC62052Ba6bc082139A982c",
       abi: [
         {
           inputs: [
@@ -1965,7 +1974,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x81F82957608f74441E085851cA5Cc091b23d17A2",
+      address: "0x6cD036fDBD89BaA51c8722Eec0B56CeEd301cC68",
       abi: [
         {
           inputs: [
@@ -2748,7 +2757,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x69F94e46cbC82Ab02781ac4FaFc3580d21f1a888",
+      address: "0xB92257D74B8815EC711071889cB506C8d66A6a06",
       abi: [
         {
           inputs: [],
@@ -3067,7 +3076,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x9a8164cA007ff0899140719E9aEC9a9C889CbF1E",
+      address: "0x4A65b9d13908487A1654be48e6aa9Bc701735910",
       abi: [
         {
           inputs: [],

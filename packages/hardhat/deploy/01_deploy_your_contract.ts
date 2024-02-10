@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { Contract, randomBytes } from "ethers";
+import { Contract } from "ethers";
 
 /**
  * Deploys a contract named "YourContract" using the deployer account and
@@ -24,26 +24,27 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const UniswapV2Pair = await hre.ethers.getContract<Contract>("UniswapV2Pair", deployer);
   const Vyper_contract = await hre.ethers.getContract<Contract>("Vyper_contract", deployer); // yearn
 
+  // await deploy("VRFConsumerBaseV2Upgradeable", {
+  //   from: deployer,
+  //   // Contract constructor arguments
+  //   args: [],
+  //   log: true,
+  //   // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
+  //   // automatically mining the contract deployment transaction. There is no effect on live networks.
+  //   autoMine: true,
+  // });
+
   await deploy("Tournament", {
     from: deployer,
     // Contract constructor arguments
-    args: [
-      deployer,
-      "Tournament",
-      "0x0000000000000000000000000000000000000000",
-      1,
-      0,
-      Math.round(Date.now() / 1000 + 60 * 60 * 24 * 15),
-      0,
-      randomBytes(32),
-      0,
-      "0x0000000000000000000000000000000000000000",
-    ],
+    args: [],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
     autoMine: true,
   });
+
+  // const implementation = await hre.ethers.getContract<Contract>("Tournament", deployer);
 
   await deploy("TournamentFactory", {
     from: deployer,

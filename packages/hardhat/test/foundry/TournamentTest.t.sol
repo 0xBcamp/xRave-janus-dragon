@@ -134,7 +134,8 @@ contract TournamentTest is Test {
 
         string memory name = "Yearn Tournament";
         // Deploy Tournament contract
-        tournamentY = new Tournament(
+        tournamentY = new Tournament();
+        tournamentY.initialize(
             owner, name, address(mockYLP), LPTokenAmount, 
             startTime, endTime, subId, gasLane, 
             callbackGasLimit, address(mockVRF)
@@ -142,7 +143,8 @@ contract TournamentTest is Test {
 
         name = "Uniswap Tournament";
         // Deploy Tournament contract
-        tournamentU = new Tournament(
+        tournamentU = new Tournament();
+        tournamentU.initialize(
             owner, name, address(mockUniLP), LPTokenAmount, 
             startTime, endTime, subId, gasLane, 
             callbackGasLimit, address(mockVRF)
@@ -500,16 +502,16 @@ contract TournamentTest is Test {
         assertEq(tournamentU.getPricePerShare(), uint(_fuzz0) * uint(_fuzz1) / 1000 ether);
     }
 
-    function test_LPTokenAmountOfPlayer_notValuated() public {
+    function test_withdrawAmountFromDeposit_notValuated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
 
-        assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount);
-        assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount);
+        assertEq(tournamentY.withdrawAmountFromDeposit(player1), LPTokenAmount);
+        assertEq(tournamentU.withdrawAmountFromDeposit(player1), LPTokenAmount);
     }
 
-    function test_LPTokenAmountOfPlayer_valuated() public {
+    function test_withdrawAmountFromDeposit_valuated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
@@ -518,16 +520,16 @@ contract TournamentTest is Test {
         mockUniLP.setReserves(1500 ether, 2000 ether);
         mockUniLP.setTotalSupply(2000 ether);
 
-        assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
-        assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount * 10 / 15);
+        assertEq(tournamentY.withdrawAmountFromDeposit(player1), LPTokenAmount * 10 / 15);
+        assertEq(tournamentU.withdrawAmountFromDeposit(player1), LPTokenAmount * 10 / 15);
 
         mockUniLP.setReserves(2000 ether, 1000 ether);
         mockUniLP.setTotalSupply(1000 ether);
 
-        assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount / 2);
+        assertEq(tournamentU.withdrawAmountFromDeposit(player1), LPTokenAmount / 2);
     }
 
-    function test_LPTokenAmountOfPlayer_devaluated() public {
+    function test_withdrawAmountFromDeposit_devaluated() public {
         vm.warp(duringTime);
 
         stakeForTest(player1);
@@ -535,12 +537,12 @@ contract TournamentTest is Test {
         mockYLP.setPricePerShare(50000);
         mockUniLP.setReserves(500 ether, 500 ether);
 
-        assertEq(tournamentY.LPTokenAmountOfPlayer(player1), LPTokenAmount);
-        assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount);
+        assertEq(tournamentY.withdrawAmountFromDeposit(player1), LPTokenAmount);
+        assertEq(tournamentU.withdrawAmountFromDeposit(player1), LPTokenAmount);
 
         mockUniLP.setTotalSupply(2000 ether);
 
-        assertEq(tournamentU.LPTokenAmountOfPlayer(player1), LPTokenAmount);
+        assertEq(tournamentU.withdrawAmountFromDeposit(player1), LPTokenAmount);
     }
 
     function test_unstakeLPToken_before() public {
