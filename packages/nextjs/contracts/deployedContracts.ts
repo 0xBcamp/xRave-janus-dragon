@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0xACB5b53F9F193b99bcd8EF8544ddF4c398DE24a3",
+      address: "0xABc84968376556B5e5B3C3bda750D091a06De536",
       abi: [
         {
           inputs: [
@@ -621,6 +621,11 @@ const deployedContracts = {
               name: "_factory",
               type: "address",
             },
+            {
+              internalType: "address",
+              name: "_vrfCoordinator",
+              type: "address",
+            },
           ],
           name: "initialize",
           outputs: [],
@@ -1007,7 +1012,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x39826E09f8efb9df4C56Aeb9eEC0D2B8164d3B36",
+      address: "0xFf8FA9381caf61cB3368a6ec0b3F5C788028D0Cd",
       abi: [
         {
           inputs: [
@@ -1160,7 +1165,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "activeTournaments",
               type: "address[]",
             },
           ],
@@ -1173,7 +1178,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "futureTournaments",
               type: "address[]",
             },
           ],
@@ -1186,7 +1191,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "pastTournaments",
               type: "address[]",
             },
           ],
@@ -1237,7 +1242,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "address[]",
-              name: "",
+              name: "playersTournaments",
               type: "address[]",
             },
           ],
@@ -1262,19 +1267,6 @@ const deployedContracts = {
               internalType: "uint32",
               name: "",
               type: "uint32",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getVrfCoordinator",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
             },
           ],
           stateMutability: "view",
@@ -1360,7 +1352,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0xeF66010868Ff77119171628B7eFa0F6179779375",
+      address: "0x2098cb47B17082Ab6969FB2661f2759A9BF357c4",
       abi: [
         {
           inputs: [],
@@ -1653,7 +1645,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x103416cfCD0D0a32b904Ab4fb69dF6E5B5aaDf2b",
+      address: "0x2B07F89c9F574a890F5B8b7FddAfbBaE40f6Fde2",
       abi: [
         {
           inputs: [
@@ -2037,7 +2029,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x70e754531418461eF2366b72cd396337d2AD6D5d",
+      address: "0x43c5DF0c482c88Cef8005389F64c362eE720A5bC",
       abi: [
         {
           inputs: [
@@ -2820,7 +2812,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x1F585372F116E1055AF2bED81a808DDf9638dCCD",
+      address: "0xCaC60200c1Cb424f2C1e438c7Ee1B98d487f0254",
       abi: [
         {
           inputs: [],
@@ -3139,7 +3131,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0xd544d7A5EF50c510f3E90863828EAba7E392907A",
+      address: "0xF01f4567586c3A707EBEC87651320b2dd9F4A287",
       abi: [
         {
           inputs: [],

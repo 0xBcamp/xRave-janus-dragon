@@ -24,7 +24,6 @@ interface UniswapInterface {
 
 interface Factory {
 	function getVrfConfig() external view returns (uint64, bytes32, uint32);
-	function getVrfCoordinator() external view returns (address);
 }
 
 contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
@@ -149,7 +148,8 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		uint256 _depositAmount, 
 		uint32 _startTime, 
 		uint32 _endTime, 
-		address _factory
+		address _factory,
+		address _vrfCoordinator
 		) public initializer {
 			require(_startTime < _endTime, "Start time must be before end time");
 			// Defaults to current block timestamp
@@ -172,9 +172,8 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 			endTime = _endTime;
 			factory = _factory;
 			// VRF
-			address _vrfCoordinatorV2 = Factory(factory).getVrfCoordinator();
-			__VRFConsumerBaseV2Upgradeable_init(_vrfCoordinatorV2);
-			vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
+			__VRFConsumerBaseV2Upgradeable_init(_vrfCoordinator);
+			vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
 		}
 
 	/////////////////////////////
