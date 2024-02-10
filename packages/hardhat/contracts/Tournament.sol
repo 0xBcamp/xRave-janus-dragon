@@ -22,6 +22,11 @@ interface UniswapInterface {
 	function token1() external view returns (address); // Underlying asset
 }
 
+interface Factory {
+	function getVrfConfig() external view returns (uint64, bytes32, uint32);
+	function getVrfCoordinator() external view returns (address);
+}
+
 contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 
 	//////////////
@@ -40,6 +45,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	uint256 public depositAmount; // Exact Amount of LP to be deposited by the players
 	uint32 public startTime;
 	uint32 public endTime;
+	address private factory;
 	enum Protocol {
 		Uniswap,
 		Yearn
@@ -90,13 +96,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
     uint256[] public requestIds;
     uint256 public lastRequestId;
 
-    VRFCoordinatorV2Interface private i_vrfCoordinator;
-    uint64 private i_subscriptionId;
-    bytes32 private i_gasLane;
-    uint32 private gasLimit;
-    uint8 private constant REQUEST_CONFIRMATIONS = 3;
-    uint8 private constant NUM_WORDS = 1;
-    
+    VRFCoordinatorV2Interface private vrfCoordinator;    
     /// VRF END ///
 
 	//////////////
@@ -148,12 +148,8 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		address _poolIncentivized, 
 		uint256 _depositAmount, 
 		uint32 _startTime, 
-		uint32 _endTime,
-		//VRF
-		uint64 _subscriptionId, 
-		bytes32 _gasLane, 
-		uint32 _callbackGasLimit, 
-		address _vrfCoordinatorV2
+		uint32 _endTime, 
+		address _factory
 		) public initializer {
 			require(_startTime < _endTime, "Start time must be before end time");
 			// Defaults to current block timestamp
@@ -174,12 +170,11 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 				}
 			}
 			endTime = _endTime;
-			//VRF
-	        __VRFConsumerBaseV2Upgradeable_init(_vrfCoordinatorV2);
-			i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
-            i_subscriptionId = _subscriptionId;
-            i_gasLane = _gasLane;
-            gasLimit = _callbackGasLimit;
+			factory = _factory;
+			// VRF
+			address _vrfCoordinatorV2 = Factory(factory).getVrfCoordinator();
+			__VRFConsumerBaseV2Upgradeable_init(_vrfCoordinatorV2);
+			vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
 		}
 
 	/////////////////////////////
@@ -296,28 +291,30 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
     function _requestRandomWords(uint8 _playerMove, address _player) internal returns (uint256 requestId) {
 
-            // Will revert if subscription is not set and funded.
-            //@todo can I just call this in the play function??
-            requestId = i_vrfCoordinator.requestRandomWords(
-                i_gasLane,
-                i_subscriptionId,
-                REQUEST_CONFIRMATIONS,
-                gasLimit,
-                NUM_WORDS
-            );
+		(uint64 _subscriptionId, bytes32 _gasLane, uint32 _callbackGasLimit) = Factory(factory).getVrfConfig();
 
-            contractGameRequestId[requestId] = ContractGame(
-                _playerMove,
-                _player,
-                false,
-                true,
-                new uint256[](0),
-                3, // Placeholder value indicating unfulfilled request
-                address(0)
-            );
+		// Will revert if subscription is not set and funded.
+		//@todo can I just call this in the play function??
+		requestId = vrfCoordinator.requestRandomWords(
+			_gasLane,
+			_subscriptionId,
+			3, // Number of confirmations
+			_callbackGasLimit,
+			1 // Number of words
+		);
 
-            requestIds.push(requestId);
-            lastRequestId = requestId;
+		contractGameRequestId[requestId] = ContractGame(
+			_playerMove,
+			_player,
+			false,
+			true,
+			new uint256[](0),
+			3, // Placeholder value indicating unfulfilled request
+			address(0)
+		);
+
+		requestIds.push(requestId);
+		lastRequestId = requestId;
     }
 
 	/**
@@ -399,7 +396,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
             //player loses
 			updateScore(game.player, 0);
     		emit Loser(game.player, timeToDate(uint32(block.timestamp)));
-            game.winner = address(i_vrfCoordinator);
+            game.winner = address(vrfCoordinator);
         }
     }
 

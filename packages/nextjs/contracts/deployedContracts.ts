@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x737b8F095E3c575a6Ae5FE1711AdB8F271E20269",
+      address: "0xACB5b53F9F193b99bcd8EF8544ddF4c398DE24a3",
       abi: [
         {
           inputs: [
@@ -617,23 +617,8 @@ const deployedContracts = {
               type: "uint32",
             },
             {
-              internalType: "uint64",
-              name: "_subscriptionId",
-              type: "uint64",
-            },
-            {
-              internalType: "bytes32",
-              name: "_gasLane",
-              type: "bytes32",
-            },
-            {
-              internalType: "uint32",
-              name: "_callbackGasLimit",
-              type: "uint32",
-            },
-            {
               internalType: "address",
-              name: "_vrfCoordinatorV2",
+              name: "_factory",
               type: "address",
             },
           ],
@@ -1022,13 +1007,18 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0xAd3E631c01798f9aAE4692dabF791a62c226C5D4",
+      address: "0x39826E09f8efb9df4C56Aeb9eEC0D2B8164d3B36",
       abi: [
         {
           inputs: [
             {
               internalType: "address",
               name: "_owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_vrfCoordinatorV2",
               type: "address",
             },
           ],
@@ -1106,6 +1096,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "callbackGasLimit",
+          outputs: [
+            {
+              internalType: "uint32",
+              name: "",
+              type: "uint32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "string",
@@ -1132,30 +1135,23 @@ const deployedContracts = {
               name: "_endTime",
               type: "uint32",
             },
-            {
-              internalType: "uint64",
-              name: "_subscriptionId",
-              type: "uint64",
-            },
-            {
-              internalType: "bytes32",
-              name: "_gasLane",
-              type: "bytes32",
-            },
-            {
-              internalType: "uint32",
-              name: "_callbackGasLimit",
-              type: "uint32",
-            },
-            {
-              internalType: "address",
-              name: "_vrfCoordinatorV2",
-              type: "address",
-            },
           ],
           name: "createTournament",
           outputs: [],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "gasLane",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -1250,6 +1246,42 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "getVrfConfig",
+          outputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "",
+              type: "uint32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getVrfCoordinator",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "implementationContract",
           outputs: [
             {
@@ -1293,11 +1325,42 @@ const deployedContracts = {
           stateMutability: "view",
           type: "function",
         },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "_gasLane",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+          ],
+          name: "setChainlinkConfig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "subscriptionId",
+          outputs: [
+            {
+              internalType: "uint64",
+              name: "",
+              type: "uint64",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
       ],
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x64386BC53c213F23C6960d3e080139A0f9Ef1733",
+      address: "0xeF66010868Ff77119171628B7eFa0F6179779375",
       abi: [
         {
           inputs: [],
@@ -1590,7 +1653,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x295129609d6876f5ECC62052Ba6bc082139A982c",
+      address: "0x103416cfCD0D0a32b904Ab4fb69dF6E5B5aaDf2b",
       abi: [
         {
           inputs: [
@@ -1974,7 +2037,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x6cD036fDBD89BaA51c8722Eec0B56CeEd301cC68",
+      address: "0x70e754531418461eF2366b72cd396337d2AD6D5d",
       abi: [
         {
           inputs: [
@@ -2757,7 +2820,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0xB92257D74B8815EC711071889cB506C8d66A6a06",
+      address: "0x1F585372F116E1055AF2bED81a808DDf9638dCCD",
       abi: [
         {
           inputs: [],
@@ -3076,7 +3139,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x4A65b9d13908487A1654be48e6aa9Bc701735910",
+      address: "0xd544d7A5EF50c510f3E90863828EAba7E392907A",
       abi: [
         {
           inputs: [],

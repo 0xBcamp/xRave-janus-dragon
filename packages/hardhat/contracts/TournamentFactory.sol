@@ -8,6 +8,8 @@ import "./Tournament.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
+import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+
 contract TournamentFactory {
 	// State Variables
 	address[] public TournamentArray; // Store deployed contracts
@@ -17,9 +19,18 @@ contract TournamentFactory {
 
 	address public implementationContract;
 
-	constructor (address _owner) {
+    VRFCoordinatorV2Interface private vrfCoordinator;
+    uint64 public subscriptionId;
+    bytes32 public gasLane;
+    uint32 public callbackGasLimit = 1000000;
+
+	constructor (address _owner, address _vrfCoordinatorV2) {
 		owner = _owner;
 		implementationContract = address(new Tournament());
+
+		vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
+        subscriptionId = vrfCoordinator.createSubscription();
+
 	}
 	//// VRF deployment to Avax. @todo make structs for each chain? Pass in struct to createTournament() for vrf constructor args.
 	// uint64 subscriptionId = 1341;
@@ -54,11 +65,7 @@ contract TournamentFactory {
 		address _poolIncentivized, 
 		uint256 _LPTokenAmount, 
 		uint32 _startTime, 
-		uint32 _endTime, 
-		uint64 _subscriptionId, 
-		bytes32 _gasLane, 
-		uint32 _callbackGasLimit, 
-		address _vrfCoordinatorV2
+		uint32 _endTime
 	) public {
 		address instance = Clones.clone(implementationContract);
 		Tournament(instance).initialize(
@@ -68,24 +75,38 @@ contract TournamentFactory {
 			_LPTokenAmount, 
 			_startTime, 
 			_endTime, 
-			_subscriptionId, 
-			_gasLane, 
-			_callbackGasLimit, 
-			_vrfCoordinatorV2
+			address(this)
 		);
 		TournamentArray.push(instance);
 		TournamentMap[instance] = Tournament(instance);
+		vrfCoordinator.addConsumer(subscriptionId, instance);
 		emit TournamentCreated(instance);
 	}
 
+	/**
+	 * @notice Allows the owner to change the chainlink config
+	 * @dev Gas lanes for each chain can be found here https://docs.chain.link/vrf/v2/subscription/supported-networks
+	 * @param _gasLane (bytes32) - gas lane
+	 * @param _callbackGasLimit (uint32) - callback gas limit
+	 */
+	function setChainlinkConfig(bytes32 _gasLane, uint32 _callbackGasLimit) external isOwner {
+		gasLane = _gasLane;
+		callbackGasLimit = _callbackGasLimit;
+	}
 
+	function getVrfConfig() external view returns (uint64, bytes32, uint32) {
+		return (subscriptionId, gasLane, callbackGasLimit);
+	}
+
+	function getVrfCoordinator() external view returns (address) {
+		return address(vrfCoordinator);
+	}
 	/**
 	 * Function that returns an array of all the tournament contracts
 	 */
 	function getAllTournaments() public view returns (address[] memory list) {
 		list = TournamentArray;
 	}
-
 
 	/**
 	 * Function that returns an array of all the active tournament contracts
