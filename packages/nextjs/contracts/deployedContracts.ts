@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x267fB71b280FB34B278CedE84180a9A9037C941b",
+      address: "0x17f4B55A352Be71CC03856765Ad04147119Aa09B",
       abi: [
         {
           inputs: [
@@ -571,6 +571,11 @@ const deployedContracts = {
               type: "uint256",
             },
             {
+              internalType: "uint8",
+              name: "rDecimals",
+              type: "uint8",
+            },
+            {
               internalType: "uint32",
               name: "rStartTime",
               type: "uint32",
@@ -1022,7 +1027,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x7E27bCbe2F0eDdA3E0AA12492950a6B8703b00FB",
+      address: "0x08677Af0A7F54fE2a190bb1F75DE682fe596317e",
       abi: [
         {
           inputs: [
@@ -1362,7 +1367,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0xD8fE7c45330c8b12cA0D4728D75557b9e7BeB24F",
+      address: "0x897945A56464616a525C9e5F11a8D400a72a8f3A",
       abi: [
         {
           inputs: [],
@@ -1655,7 +1660,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x3Aa338c8d5E6cefE95831cD0322b558677abA0f1",
+      address: "0x1E53bea57Dd5dDa7bFf1a1180a2f64a5c9e222f5",
       abi: [
         {
           inputs: [
@@ -2039,7 +2044,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x29e95B6bbCd23fbF66e9d8ee2029564A734560De",
+      address: "0x95D7fF1684a8F2e202097F28Dc2e56F773A55D02",
       abi: [
         {
           inputs: [
@@ -2822,7 +2827,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x6858dF5365ffCbe31b5FE68D9E6ebB81321F7F86",
+      address: "0x27f7785b17c6B4d034094a1B16Bc928bD697f386",
       abi: [
         {
           inputs: [],
@@ -3141,7 +3146,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x3358F984e9B3CBBe976eEFE9B6fb92a214162932",
+      address: "0x633a7eB9b8912b22f3616013F3153de687F96074",
       abi: [
         {
           inputs: [],

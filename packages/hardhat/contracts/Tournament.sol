@@ -437,7 +437,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/// Getter Funcs ///
 	////////////////////
 
-	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint8 rProtocol, uint256 rdepositAmount, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers, uint256 rPoolPrize) {
+	function getTournament() public view returns (string memory rName, address contractAddress, address rPoolIncentivized, string memory rLPTokenSymbol, uint8 rProtocol, uint256 rdepositAmount, uint8 rDecimals, uint32 rStartTime, uint32 rEndTime, uint16 rPlayers, uint256 rPoolPrize) {
 
 		rName = name;
 		contractAddress = address(this);
@@ -445,6 +445,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		rLPTokenSymbol = getFancySymbol();
 		rProtocol = uint8(protocol);
 		rdepositAmount = depositAmount;
+		rDecimals = getLPDecimals();
 		rStartTime = startTime;
 		rEndTime = endTime;
 		rPlayers = getNumberOfPlayers();
@@ -571,7 +572,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	function getExpectedPoolPrize() public view returns (uint256) {
 		if(isFuture()) return 0;
 		if(isEnded()) return getPoolPrize();
-		return getPoolPrize() * (endTime - startTime) / (block.timestamp - startTime);
+		return getPoolPrize() * (endTime - startTime) / (1 + block.timestamp - startTime); // Add 1 to avoid division by 0
 	}
 
 	/**

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatUnits } from "viem";
 // import { formatUnits } from "viem";
 import { useContractRead } from "wagmi";
 import { ClockIcon, CurrencyDollarIcon, GiftIcon, TrophyIcon, UserCircleIcon } from "@heroicons/react/24/outline";
@@ -15,7 +16,7 @@ export const Item = ({ tournament, player }: { tournament: string; player: boole
     return <div>Loading...</div>;
   }
 
-  const [name, , , LPTokenSymbol, , , startTime, endTime, players, prize] = tournamentData;
+  const [name, , , LPTokenSymbol, , , decimals, startTime, endTime, players, prize] = tournamentData;
 
   console.log(tournamentData);
 
@@ -43,7 +44,7 @@ export const Item = ({ tournament, player }: { tournament: string; player: boole
         </div>
         <div className="flex items-center">
           <GiftIcon className="h-4 w-4 mr-1" />
-          {Number(prize).toFixed(2)}
+          {Number(formatUnits(prize, decimals)).toFixed(2)}
         </div>
         <div className="flex items-center">
           <TrophyIcon className="h-4 w-4 mr-1" />
@@ -76,7 +77,7 @@ export const Item = ({ tournament, player }: { tournament: string; player: boole
         </div>
         <div className="flex items-center">
           <GiftIcon className="h-4 w-4 mr-1" />
-          {Number(prize).toFixed(2)}
+          {Number(formatUnits(prize, decimals)).toFixed(2)}
         </div>
         <div className="flex items-center"></div>
         <div className="flex items-center">
@@ -105,7 +106,7 @@ export const Item = ({ tournament, player }: { tournament: string; player: boole
       </div>
       <div className="flex items-center">
         <GiftIcon className="h-4 w-4 mr-1" />
-        {Number(prize).toFixed(2)}
+        {Number(formatUnits(prize, decimals)).toFixed(2)}
       </div>
       <div className="flex items-center">
         <TrophyIcon className="h-4 w-4 mr-1" />
