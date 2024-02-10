@@ -652,19 +652,19 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/**
 	 * @notice Returns if staking is allowed
 	 * @dev Players can stake anytime until 1 day before the end of the game. If they were able to stake at last minute, they could get a share of the pool prize without any contribution.
-	 * @return allowed
+	 * @return (bool)
 	 */
-	function stakingAllowed() public view returns (bool allowed) {
-		allowed = timeToDate(uint32(block.timestamp)) >= timeToDate(endTime - 1 days);
+	function stakingAllowed() public view returns (bool) {
+		return timeToDate(uint32(block.timestamp)) < timeToDate(endTime - 1 days);
 	}
 
 	/**
 	 * @notice Returns if unstaking is allowed
 	 * @dev Players can stake anytime after the end of the game
-	 * @return allowed
+	 * @return (bool))
 	 */
-	function unstakingAllowed() public view returns (bool allowed) {
-		allowed = isEnded();
+	function unstakingAllowed() public view returns (bool) {
+		return isEnded();
 	}
 
 	/**
