@@ -134,7 +134,8 @@ contract TournamentTest is Test {
 
         string memory name = "Yearn Tournament";
         // Deploy Tournament contract
-        tournamentY = new Tournament(
+        tournamentY = new Tournament();
+        tournamentY.initialize(
             owner, name, address(mockYLP), LPTokenAmount, 
             startTime, endTime, subId, gasLane, 
             callbackGasLimit, address(mockVRF)
@@ -142,7 +143,8 @@ contract TournamentTest is Test {
 
         name = "Uniswap Tournament";
         // Deploy Tournament contract
-        tournamentU = new Tournament(
+        tournamentU = new Tournament();
+        tournamentU.initialize(
             owner, name, address(mockUniLP), LPTokenAmount, 
             startTime, endTime, subId, gasLane, 
             callbackGasLimit, address(mockVRF)
