@@ -6,6 +6,7 @@ import "./Tournament.sol";
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TournamentFactory {
 	// State Variables
@@ -14,6 +15,12 @@ contract TournamentFactory {
 	mapping(address => address) public TournamentPartner;
 	address public owner;
 
+	address public implementationContract;
+
+	constructor (address _owner) {
+		owner = _owner;
+		implementationContract = address(new Tournament());
+	}
 	//// VRF deployment to Avax. @todo make structs for each chain? Pass in struct to createTournament() for vrf constructor args.
 	// uint64 subscriptionId = 1341;
 	// bytes32 gasLane = 0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61;
@@ -24,12 +31,6 @@ contract TournamentFactory {
 	event TournamentCreated(
 		address tournament
 	);
-
-	// Constructor: Called once on contract deployment
-	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
-	constructor(address _owner) {
-		owner = _owner;
-	}
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
 	// Check the withdraw() function
@@ -47,8 +48,6 @@ contract TournamentFactory {
 	 * @param _LPTokenAmount (uint256) - amount of the ERC-20 LP token to stake in order to participate
 	 * @param _startTime (uint256) - block timestamp at which the tournament starts
 	 * @param _endTime (uint256) - block timestamp at which the tournament ends
-	 *
-	 * @return newTournament (Tournament) - instance of the new tournament
 	 */
 	function createTournament(
 		string memory _name, 
@@ -60,8 +59,9 @@ contract TournamentFactory {
 		bytes32 _gasLane, 
 		uint32 _callbackGasLimit, 
 		address _vrfCoordinatorV2
-	) public returns (Tournament newTournament) {
-		newTournament = new Tournament(
+	) public {
+		address instance = Clones.clone(implementationContract);
+		Tournament(instance).initialize(
 			owner, 
 			_name, 
 			_poolIncentivized, 
@@ -73,9 +73,9 @@ contract TournamentFactory {
 			_callbackGasLimit, 
 			_vrfCoordinatorV2
 		);
-		TournamentArray.push(address(newTournament));
-		TournamentMap[address(newTournament)] = newTournament;
-		emit TournamentCreated(address(newTournament));
+		TournamentArray.push(instance);
+		TournamentMap[instance] = Tournament(instance);
+		emit TournamentCreated(instance);
 	}
 
 

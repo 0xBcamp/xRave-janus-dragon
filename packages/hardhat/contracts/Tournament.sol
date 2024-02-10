@@ -4,9 +4,11 @@ pragma solidity >=0.8.0 <0.9.0;
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
+import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+//import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
+import "./VRFConsumerBaseV2Upgradeable.sol";
 
 interface YearnInterface {
 	function pricePerShare() external view returns (uint256);
@@ -20,7 +22,7 @@ interface UniswapInterface {
 	function token1() external view returns (address); // Underlying asset
 }
 
-contract Tournament is VRFConsumerBaseV2{
+contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 
 	//////////////
 	/// ERRORS ///
@@ -30,7 +32,7 @@ contract Tournament is VRFConsumerBaseV2{
 	/// State Variables ///
 	///////////////////////
 
-	address public immutable owner;
+	address public owner;
 	
 	//TOURNAMENT INFO
 	// @todo could probably put all tournament info in a struct
@@ -89,9 +91,9 @@ contract Tournament is VRFConsumerBaseV2{
     uint256[] public requestIds;
     uint256 public lastRequestId;
 
-    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
-    uint64 private immutable i_subscriptionId;
-    bytes32 private immutable i_gasLane;
+    VRFCoordinatorV2Interface private i_vrfCoordinator;
+    uint64 private i_subscriptionId;
+    bytes32 private i_gasLane;
     uint32 private gasLimit;
     uint8 private constant REQUEST_CONFIRMATIONS = 3;
     uint8 private constant NUM_WORDS = 1;
@@ -143,7 +145,7 @@ contract Tournament is VRFConsumerBaseV2{
 
 	// Constructor: Called once on contract deployment
 	// Check packages/hardhat/deploy/00_deploy_your_contract.ts
-	constructor(
+	function initialize(
 		address _owner, 
 		string memory _name, 
 		address _poolIncentivized, 
@@ -155,7 +157,7 @@ contract Tournament is VRFConsumerBaseV2{
 		bytes32 _gasLane, 
 		uint32 _callbackGasLimit, 
 		address _vrfCoordinatorV2
-		)  VRFConsumerBaseV2(_vrfCoordinatorV2) {
+		) public initializer {
 			require(_startTime < _endTime, "Start time must be before end time");
 			// Defaults to current block timestamp
 			startTime = _startTime == 0 ? uint32(block.timestamp) : _startTime;
@@ -176,6 +178,7 @@ contract Tournament is VRFConsumerBaseV2{
 			}
 			endTime = _endTime;
 			//VRF
+	        __VRFConsumerBaseV2Upgradeable_init(_vrfCoordinatorV2);
 			i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
             i_subscriptionId = _subscriptionId;
             i_gasLane = _gasLane;
@@ -555,7 +558,7 @@ contract Tournament is VRFConsumerBaseV2{
 	}
 
 	function timeToDate(uint32 _time) internal pure returns (uint16) {
-		return uint16(_time / 1 days);
+		return uint16(_time / (60 * 60 * 24));
 	}
 
 	function isEnded() public view returns (bool) {

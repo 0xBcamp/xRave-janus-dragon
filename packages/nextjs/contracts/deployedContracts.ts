@@ -7,64 +7,8 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0xE0a1556ef66873d965A2F4caD06F051646BE6707",
+      address: "0x52c9dE743a250a4D8E1194E11e447bb45324436f",
       abi: [
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-            {
-              internalType: "string",
-              name: "_name",
-              type: "string",
-            },
-            {
-              internalType: "address",
-              name: "_poolIncentivized",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_depositAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint32",
-              name: "_startTime",
-              type: "uint32",
-            },
-            {
-              internalType: "uint32",
-              name: "_endTime",
-              type: "uint32",
-            },
-            {
-              internalType: "uint64",
-              name: "_subscriptionId",
-              type: "uint64",
-            },
-            {
-              internalType: "bytes32",
-              name: "_gasLane",
-              type: "bytes32",
-            },
-            {
-              internalType: "uint32",
-              name: "_callbackGasLimit",
-              type: "uint32",
-            },
-            {
-              internalType: "address",
-              name: "_vrfCoordinatorV2",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
         {
           inputs: [
             {
@@ -104,6 +48,19 @@ const deployedContracts = {
             },
           ],
           name: "Draw",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "version",
+              type: "uint8",
+            },
+          ],
+          name: "Initialized",
           type: "event",
         },
         {
@@ -660,6 +617,64 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "_name",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "_poolIncentivized",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_depositAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint32",
+              name: "_startTime",
+              type: "uint32",
+            },
+            {
+              internalType: "uint32",
+              name: "_endTime",
+              type: "uint32",
+            },
+            {
+              internalType: "uint64",
+              name: "_subscriptionId",
+              type: "uint64",
+            },
+            {
+              internalType: "bytes32",
+              name: "_gasLane",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint32",
+              name: "_callbackGasLimit",
+              type: "uint32",
+            },
+            {
+              internalType: "address",
+              name: "_vrfCoordinatorV2",
+              type: "address",
+            },
+          ],
+          name: "initialize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "isActive",
           outputs: [
@@ -1016,11 +1031,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        rawFulfillRandomWords: "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
+        rawFulfillRandomWords: "contracts/VRFConsumerBaseV2Upgradeable.sol",
       },
     },
     TournamentFactory: {
-      address: "0x5BFaaA02cAb795d576276a19CB1c2D2D2d652717",
+      address: "0x53DaB165b879542E9aDFC41c6474A9d797B9b042",
       abi: [
         {
           inputs: [
@@ -1152,13 +1167,7 @@ const deployedContracts = {
             },
           ],
           name: "createTournament",
-          outputs: [
-            {
-              internalType: "contract Tournament",
-              name: "newTournament",
-              type: "address",
-            },
-          ],
+          outputs: [],
           stateMutability: "nonpayable",
           type: "function",
         },
@@ -1253,6 +1262,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "implementationContract",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "address",
@@ -1288,7 +1310,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x0b5dcAf621a877dAcF3C540c1e5208C8a3eb7B23",
+      address: "0x4D1338Fa46ca6060F1472b70599cc635Ad275EDa",
       abi: [
         {
           inputs: [],
@@ -1581,7 +1603,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0xA3E5DfE71aE3e6DeC4D98fa28821dF355d7244B3",
+      address: "0x53E4DAFF2073f848DC3F7a8D7CC95b3607212A73",
       abi: [
         {
           inputs: [
@@ -1965,7 +1987,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x81F82957608f74441E085851cA5Cc091b23d17A2",
+      address: "0x1f9c84B161b2c7FFB540BC5354543108cCE37df1",
       abi: [
         {
           inputs: [
@@ -2748,7 +2770,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x69F94e46cbC82Ab02781ac4FaFc3580d21f1a888",
+      address: "0x1E2e9190Cea3A97b5Aa85d9757117F499D31C47d",
       abi: [
         {
           inputs: [],
@@ -3067,7 +3089,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x9a8164cA007ff0899140719E9aEC9a9C889CbF1E",
+      address: "0x87E8f332f34984728Da4c0A008a495A5Ec4E09a2",
       abi: [
         {
           inputs: [],
