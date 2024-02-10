@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x17f4B55A352Be71CC03856765Ad04147119Aa09B",
+      address: "0x5aA185fbEFc205072FaecC6B9D564383e761f8C2",
       abi: [
         {
           inputs: [
@@ -566,6 +566,16 @@ const deployedContracts = {
               type: "uint8",
             },
             {
+              internalType: "address",
+              name: "token0",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "token1",
+              type: "address",
+            },
+            {
               internalType: "uint256",
               name: "rdepositAmount",
               type: "uint256",
@@ -592,8 +602,26 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "rPoolPrize",
+              name: "poolPrize",
               type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getUnderlyingAssets",
+          outputs: [
+            {
+              internalType: "address",
+              name: "token0",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "token1",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -942,7 +970,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "allowed",
+              name: "",
               type: "bool",
             },
           ],
@@ -988,7 +1016,7 @@ const deployedContracts = {
           outputs: [
             {
               internalType: "bool",
-              name: "allowed",
+              name: "",
               type: "bool",
             },
           ],
@@ -1027,7 +1055,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0x08677Af0A7F54fE2a190bb1F75DE682fe596317e",
+      address: "0x63275D081C4A77AE69f76c4952F9747a5559a519",
       abi: [
         {
           inputs: [
@@ -1157,7 +1185,13 @@ const deployedContracts = {
             },
           ],
           name: "createTournament",
-          outputs: [],
+          outputs: [
+            {
+              internalType: "address",
+              name: "instance",
+              type: "address",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "function",
         },
@@ -1367,7 +1401,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x897945A56464616a525C9e5F11a8D400a72a8f3A",
+      address: "0x886a2A3ABF5B79AA5dFF1C73016BD07CFc817e04",
       abi: [
         {
           inputs: [],
@@ -1660,7 +1694,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x1E53bea57Dd5dDa7bFf1a1180a2f64a5c9e222f5",
+      address: "0x5E0399B4C3c4C31036DcA08d53c0c5b5c29C113e",
       abi: [
         {
           inputs: [
@@ -2044,7 +2078,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0x95D7fF1684a8F2e202097F28Dc2e56F773A55D02",
+      address: "0xA4f9885550548c6a45b9D18C57B114c06f3c39B8",
       abi: [
         {
           inputs: [
@@ -2827,10 +2861,16 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x27f7785b17c6B4d034094a1B16Bc928bD697f386",
+      address: "0x512a0E8bAeb6Ac3D52A11780c92517627005b0b1",
       abi: [
         {
-          inputs: [],
+          inputs: [
+            {
+              internalType: "address",
+              name: "_token",
+              type: "address",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "constructor",
         },
@@ -3066,6 +3106,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "token",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "totalSupply",
           outputs: [
             {
@@ -3146,7 +3199,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0x633a7eB9b8912b22f3616013F3153de687F96074",
+      address: "0x449C286Ab90639fd9F6604F4f15Ec86bce2b8A61",
       abi: [
         {
           inputs: [],

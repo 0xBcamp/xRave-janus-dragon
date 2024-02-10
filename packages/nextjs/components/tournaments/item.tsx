@@ -16,7 +16,7 @@ export const Item = ({ tournament, player }: { tournament: string; player: boole
     return <div>Loading...</div>;
   }
 
-  const [name, , , LPTokenSymbol, , , decimals, startTime, endTime, players, prize] = tournamentData;
+  const [name, , , LPTokenSymbol, , , , , decimals, startTime, endTime, players, prize] = tournamentData;
 
   console.log(tournamentData);
 

@@ -123,7 +123,7 @@ contract TournamentTest is Test {
         mockUSDT = new USDT();
         mockWETH = new WETH();
         mockUniLP = new UniswapV2Pair(address(mockWETH), address(mockUSDT));
-        mockYLP = new Vyper_contract();
+        mockYLP = new Vyper_contract(address(mockUSDT));
 
         // Transfer LP tokens to players
         mockYLP.transfer(player1, 10e18);
@@ -282,6 +282,8 @@ contract TournamentTest is Test {
             address rPoolIncentivized,
             string memory rLPTokenSymbol,
             uint8 rProtocol,
+            address token0,
+            address token1,
             uint256 rdepositAmount,
             uint8 rDecimals,
             uint256 rStartTime,
