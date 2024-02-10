@@ -3,7 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test, stdStorage, StdStorage} from "../../lib/forge-std/src/Test.sol";
 import {console2} from "../../lib/forge-std/src/console2.sol";
-import {Tournament} from "../../contracts/Tournament.sol"; // 
+import {Tournament} from "../../contracts/Tournament.sol";
+import {TournamentFactory} from "../../contracts/TournamentFactory.sol";
 import {Vyper_contract} from "../../contracts/Vyper_contract.sol"; // Mock Yearn LP
 import {UniswapV2Pair} from "../../contracts/UniswapV2Pair.sol"; // Mock Uniswap LP
 import {USDT} from "../../contracts/USDT.sol"; // Mock USDT
@@ -20,11 +21,24 @@ import {VRFCoordinatorV2Mock} from "@chainlink/contracts/src/v0.8/mocks/VRFCoord
     function mockCall(address, bytes calldata, bytes calldata) external;
  */
 
+contract TournamentExposed is Tournament {
+    function _getFees() public view returns (uint) {
+        return getFees();
+    }
+}
+
+// contract TournamentFactory {
+//     function getVrfConfig() external view returns (uint64, bytes32, uint32) {
+// 		return (uint64(1), bytes32("0x123456789"), uint32(1000000));
+// 	}
+// }
+
 contract TournamentTest is Test {
     using stdStorage for StdStorage;
 
-    Tournament public tournamentU;
-    Tournament public tournamentY;
+    TournamentFactory public factory;
+    TournamentExposed public tournamentU;
+    TournamentExposed public tournamentY;
     USDT public mockUSDT;
     WETH public mockWETH;
     UniswapV2Pair public mockUniLP;
@@ -126,34 +140,34 @@ contract TournamentTest is Test {
         //from mock vrf 
         //constructor(uint96 _baseFee, uint96 _gasPriceLink) 
         mockVRF = new VRFCoordinatorV2Mock(10, 1);
+        factory = new TournamentFactory(owner, address(mockVRF));
+        factory.setChainlinkConfig(gasLane, callbackGasLimit);
 
         // create subscription ID
-        subId = mockVRF.createSubscription();
+        (subId,,) = factory.getVrfConfig();
         // fund subscription
         mockVRF.fundSubscription(subId, 1000000000000000000);
 
         string memory name = "Yearn Tournament";
         // Deploy Tournament contract
-        tournamentY = new Tournament();
+        tournamentY = new TournamentExposed();
         tournamentY.initialize(
             owner, name, address(mockYLP), LPTokenAmount, 
-            startTime, endTime, subId, gasLane, 
-            callbackGasLimit, address(mockVRF)
+            startTime, endTime, address(factory), address(mockVRF)
         );
 
         name = "Uniswap Tournament";
         // Deploy Tournament contract
-        tournamentU = new Tournament();
+        tournamentU = new TournamentExposed();
         tournamentU.initialize(
             owner, name, address(mockUniLP), LPTokenAmount, 
-            startTime, endTime, subId, gasLane, 
-            callbackGasLimit, address(mockVRF)
+            startTime, endTime, address(factory), address(mockVRF)
         );
 
-        // add toournament as consumer of VRF
-        mockVRF.addConsumer(subId, address(tournamentY));
-
         vm.stopPrank();
+        vm.prank(address(factory));
+        // add tournament as consumer of VRF
+        mockVRF.addConsumer(subId, address(tournamentY));
 
     }
 
@@ -267,10 +281,13 @@ contract TournamentTest is Test {
             address contractAddress,
             address rPoolIncentivized,
             string memory rLPTokenSymbol,
+            uint8 rProtocol,
             uint256 rdepositAmount,
+            uint8 rDecimals,
             uint256 rStartTime,
             uint256 rEndTime,
-            uint256 rPlayers
+            uint256 rPlayers,
+            uint256 rPoolPrize
         ) = tournamentY.getTournament();
         assertEq(keccak256(abi.encodePacked(rName)), keccak256(abi.encodePacked("Yearn Tournament")));
         assertEq(contractAddress, address(tournamentY));
@@ -790,8 +807,8 @@ contract TournamentTest is Test {
         tournamentU.unstakeLPToken();
         vm.stopPrank();
 
-        assertApproxEqAbs(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY + tournamentY.getFees(), 1);
-        assertApproxEqAbs(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU + tournamentU.getFees(), 1);
+        assertApproxEqAbs(mockYLP.balanceOf(address(tournamentY)), initContractBalanceY + tournamentY._getFees(), 1);
+        assertApproxEqAbs(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU + tournamentU._getFees(), 1);
     }
 
     function test_unstakeLPToken_twice() public {
@@ -1601,7 +1618,7 @@ contract TournamentTest is Test {
         tournamentU.playAgainstPlayer(2);
         vm.stopPrank();
 
-        vm.warp(startTime + 7 days);
+        vm.warp(startTime + 7 days - 1); // 1s is added in the function
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(2000 ether, 2000 ether);
 
@@ -1629,7 +1646,7 @@ contract TournamentTest is Test {
         tournamentY.playAgainstPlayer(2);
         vm.stopPrank();
 
-        assertEq(tournamentY.getFees(), 0);
+        assertEq(tournamentY._getFees(), 0);
     }
 
     function test_getFees_valuation() public {
@@ -1644,7 +1661,7 @@ contract TournamentTest is Test {
         uint contractBalance = mockYLP.balanceOf(address(tournamentY));
         uint fees = tournamentY.fees();
 
-        assertEq(tournamentY.getFees(), contractBalance * fees / 2 ether);
+        assertEq(tournamentY._getFees(), contractBalance * fees / 2 ether);
     }
 
     function test_getFees_devaluation() public {
@@ -1657,7 +1674,7 @@ contract TournamentTest is Test {
 
         mockYLP.setPricePerShare(50000); // Value of LP drops
 
-        assertEq(tournamentY.getFees(), 0);
+        assertEq(tournamentY._getFees(), 0);
     }
 
     function test_withdrawFees_notOwner() public {
