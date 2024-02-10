@@ -350,26 +350,26 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/**
 	 * @notice Resolves the game against another player
 	 * @dev Will resolve the game against another player. If against VRF, _stored will be VRF
-	 * @param _senderMove The move the player made
 	 * @param _senderAddr The address of the player
+	 * @param _senderMove The move the player made
+	 * @param _storedAddr The address of the stored player. Will be 0x0 for VRF
 	 * @param _storedMove The move the stored player made
-	 * @param _storedAddr The address of the stored player
 	 */
 	function resolveGame(address _senderAddr, uint8 _senderMove, address _storedAddr, uint8 _storedMove) internal {
 		if(_senderMove == _storedMove) {
             // Draw
 			updateScore(_senderAddr, 1);
-			if(_storedAddr != address(0)) updateScore(_storedAddr, 1);
+			updateScore(_storedAddr, 1);
 			emit Draw(_senderAddr, _storedAddr, timeToDate(uint32(block.timestamp)));
         } else if (((3 + _senderMove - _storedMove) % 3) == 1) {
-            // msg.sender wins
+            // sender wins
 			updateScore(_senderAddr, 2);
-			if(_storedAddr != address(0)) updateScore(_storedAddr, 0);
+			updateScore(_storedAddr, 0);
 			emit Winner(_senderAddr, timeToDate(uint32(block.timestamp)));
 			emit Loser(_storedAddr, timeToDate(uint32(block.timestamp)));
         } else {
 			// storedPlayer wins
-			if(_storedAddr != address(0)) updateScore(_storedAddr, 2);
+			updateScore(_storedAddr, 2);
 			updateScore(_senderAddr, 0);
 			emit Winner(_storedAddr, timeToDate(uint32(block.timestamp)));
 			emit Loser(_senderAddr, timeToDate(uint32(block.timestamp)));
@@ -379,10 +379,11 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/**
 	 * @notice Updates the player score by adding points
 	 * @dev Should be called in any case. Also updates player's rank and streak
-	 * @param _player is the address of the player
+	 * @param _player is the address of the player. VRF will be 0x0
 	 * @param _points 0 = lost, 1 = draw, 2 = won
 	 */
 	function updateScore(address _player, uint8 _points) internal {
+		if(_player == address(0)) return; // We don't update VRF score
 		if(_points == 0) {
 			playersMap[_player].streak = 0;
 			return;
