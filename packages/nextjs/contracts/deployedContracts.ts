@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0x53AAfBd184086d72fA233AE83e1a7B1339B5415C",
+      address: "0xCD75Ddf910A204d36Fc2f86e776f9d7B97A34817",
       abi: [
         {
           inputs: [
@@ -157,40 +157,6 @@ const deployedContracts = {
           ],
           name: "Winner",
           type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_player",
-              type: "address",
-            },
-            {
-              internalType: "uint32",
-              name: "_lastGame",
-              type: "uint32",
-            },
-          ],
-          name: "_hashMoves",
-          outputs: [
-            {
-              internalType: "bytes32",
-              name: "hash0",
-              type: "bytes32",
-            },
-            {
-              internalType: "bytes32",
-              name: "hash1",
-              type: "bytes32",
-            },
-            {
-              internalType: "bytes32",
-              name: "hash2",
-              type: "bytes32",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
         },
         {
           inputs: [
@@ -1111,7 +1077,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0xcb65A63B74F009A1C724AC221601d7DDD90f67C2",
+      address: "0xEe170eFF1BCeA1f7a46F46634fa40d590AAa5200",
       abi: [
         {
           inputs: [
@@ -1457,7 +1423,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x3153eDfaBE7608A97d0Cb02929917FE90cE2CB87",
+      address: "0x07bf260a44CEADfad215cc8e20c5b0398D25b1FA",
       abi: [
         {
           inputs: [],
@@ -1750,7 +1716,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x13D5bd265A9FC5454e81bC05a5643fa4809A584b",
+      address: "0x94A44de106112A761B69dFBEB1ac6cfdD1B80304",
       abi: [
         {
           inputs: [
@@ -2134,7 +2100,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0xbDF04aB3C4283B1531B8Cf812Ef21D4FEd9BE445",
+      address: "0xFe44FF05D7C06E792D6eF4762B2441e82Bc602a5",
       abi: [
         {
           inputs: [
@@ -2917,7 +2883,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x0B7108B29ad73097cF7E549D542915348d885e5f",
+      address: "0x47330D2fe6F75899597C14d615003Ef561B01B14",
       abi: [
         {
           inputs: [
@@ -3255,7 +3221,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0xEbFE59025761DB00993d75C33C58271aABA88E4E",
+      address: "0xDb2f554A333D189ed59eA36020a83F7d6De14328",
       abi: [
         {
           inputs: [],

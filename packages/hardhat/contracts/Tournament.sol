@@ -246,7 +246,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	/**
 	 * @notice Generate the hashes corresponding to the player moves
 	 */
-	function _hashMoves(address _player, uint32 _lastGame) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+	function _hashMoves(address _player, uint32 _lastGame) internal view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
 		hash0 = keccak256(abi.encodePacked(
 			_player,
 			address(this),
