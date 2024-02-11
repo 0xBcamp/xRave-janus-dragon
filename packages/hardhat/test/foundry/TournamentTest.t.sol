@@ -1058,6 +1058,28 @@ contract TournamentTest is Test {
         vm.stopPrank();
     }
 
+    function test_PlayAgainstPlayerSign_firstPlayer() public {
+
+       // address signer = vm.addr(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);
+        address player = address(0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2);
+        vm.prank(owner);
+        mockYLP.transfer(player, 10e18);
+
+        vm.warp(duringTime);
+        stakeForTest(player);
+        vm.startPrank(player);
+
+        vm.expectEmit();
+        emit MoveSaved(player, 0);
+        tournamentY.playAgainstPlayerSign(
+            28,
+            0xae276421a9fa445aeb96d547f598e39b81dc1b53296fd538747b388252d414a1,
+            0x0e59be6511ef375a09601eb5080191130ea6378e793f5698709204f861eb1056
+        );
+
+        vm.stopPrank();
+    }
+
     function test_PlayAgainstPlayer_RockRock() public {
         assertEq(tournamentY.pointsOfPlayer(player1), 0);
         assertEq(tournamentY.pointsOfPlayer(player2), 0);

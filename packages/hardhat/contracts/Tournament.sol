@@ -5,6 +5,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {ECDSAUpgradeable} from "@openzeppelin/contracts-upgradeable-4.7.3/utils/cryptography/ECDSAUpgradeable.sol";
 
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 //import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
@@ -27,6 +28,7 @@ interface Factory {
 }
 
 contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
+    using ECDSAUpgradeable for bytes32;
 
 	//////////////
 	/// ERRORS ///
@@ -69,8 +71,9 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		uint depositPricePerShare; // price per share at deposit
 	}
 	struct StoredPlayer {
-		uint8 move;
 		address addr;
+		bytes32 hash;
+		uint32 lastGame;
 	}
 	StoredPlayer private storedPlayer;
 
@@ -233,26 +236,75 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	///////////////////////////
 
 	/**
-	 * @notice Submit a move for play against another player
-	 * @param _move is the player's move
+	 * @notice Generate the hashes corresponding to the player moves
+	 * @param _player is the player address
 	 */
-	function playAgainstPlayer(uint8 _move) public {
-		require(_move <= 2, "Invalid move");
+	function hashMoves(address _player) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+		return _hashMoves(_player, playersMap[_player].lastGame);
+	}
+
+	/**
+	 * @notice Generate the hashes corresponding to the player moves
+	 */
+	function _hashMoves(address _player, uint32 _lastGame) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+		hash0 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(0),
+			_lastGame
+		));
+
+		hash1 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(1),
+			_lastGame
+		));
+
+		hash2 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(2),
+			_lastGame
+		));
+	}
+
+	/**
+	 * @notice Find the player move from its hash
+	 */
+	function recoverMove(address _player, bytes32 _hash, uint32 _lastGame) internal view returns(uint8) {
+
+		(bytes32 hash0, bytes32 hash1, bytes32 hash2) = _hashMoves(_player, _lastGame);
+		if(_hash == hash0) return 0;
+		if(_hash == hash1) return 1;
+		if(_hash == hash2) return 2;
+		revert("Invalid move");
+	}
+
+	/**
+	 * @notice Submit a move for play against another player
+	 */
+	function playAgainstPlayer(bytes32 _hash) public {
 		require(isActive(), "Tournament is not active");
 		require(!alreadyPlayed(msg.sender), "You already played today");
 		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = uint32(block.timestamp);
 
         if(storedPlayer.addr != address(0)) {
 			// A player is already waiting to be matched
-            resolveGame(msg.sender, _move, storedPlayer.addr, storedPlayer.move);
+			uint8 senderMove = recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame);
+			uint8 storedMove = recoverMove(storedPlayer.addr, storedPlayer.hash, storedPlayer.lastGame);
+
+            resolveGame(msg.sender, senderMove, storedPlayer.addr, storedMove);
 			storedPlayer.addr = address(0);
         } else {
 			// No player is waiting to be matched, we store the move and wait for a player to join
-            storedPlayer.move = _move;
+			recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame); // We check that the move is valid before saving it
+
+			storedPlayer.hash = _hash;
             storedPlayer.addr = msg.sender;
         }
-        
+
+		playersMap[msg.sender].lastGame = uint32(block.timestamp);        
         emit MoveSaved(msg.sender, 0);
 	}
 
@@ -340,12 +392,6 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	//////////////////////////////
 	/// RESOLVE GAME FUNCTIONS ///
 	//////////////////////////////
-
-	/**
-	 * Function that allows the bot to sumbit a batch of signed moves for resolution
-	 */
-	function resolveBatch() public {
-	}
 
 	/**
 	 * @notice Resolves the game against another player
