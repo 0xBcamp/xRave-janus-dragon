@@ -1826,10 +1826,9 @@ contract TournamentTest is Test {
         tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
-        (uint rank, uint score, uint lastGame) = tournamentY.getPlayer(player1);
+        (uint rank, uint score) = tournamentY.getPlayer(player1);
         assertEq(rank, 1);
         assertEq(score, 2);
-        assertEq(lastGame, block.timestamp);
     }
 
     function test_getFancySymbol() public {
