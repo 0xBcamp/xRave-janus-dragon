@@ -738,12 +738,10 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @param _player The address of the player
 	 * @return rank of the player
 	 * @return score of the player
-	 * @return lastGame Last time the player played
 	 */
-	function getPlayer(address _player) public view returns (uint16 rank, uint16 score, uint32 lastGame) {
+	function getPlayer(address _player) public view returns (uint16 rank, uint16 score) {
 		(rank, ) = getRank(_player);
 		score = playersMap[_player].score;
-		lastGame = playersMap[_player].lastGame;
 	}
 
 	/**
