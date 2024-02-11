@@ -5,6 +5,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {ECDSAUpgradeable} from "@openzeppelin/contracts-upgradeable-4.7.3/utils/cryptography/ECDSAUpgradeable.sol";
 
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 //import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
@@ -27,6 +28,7 @@ interface Factory {
 }
 
 contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
+    using ECDSAUpgradeable for bytes32;
 
 	//////////////
 	/// ERRORS ///
@@ -69,8 +71,9 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		uint depositPricePerShare; // price per share at deposit
 	}
 	struct StoredPlayer {
-		uint8 move;
 		address addr;
+		bytes32 hash;
+		uint32 lastGame;
 	}
 	StoredPlayer private storedPlayer;
 
@@ -208,11 +211,10 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		amount += getPrizeAmount(msg.sender);
 		realizedPoolPrize += extraPoolPrize;
 		unclaimedPoolPrize -= getPrizeShare(msg.sender);
-		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 
 		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
 
-		// emit: keyword used to trigger an event
+		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
 		emit Unstaked(msg.sender, amount);
 	}
 
@@ -234,25 +236,77 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	///////////////////////////
 
 	/**
-	 * @notice Submit a move for play against another player
-	 * @param _move is the player's move
+	 * @notice Generate the hashes corresponding to the player moves
+	 * @param _player is the player address
 	 */
-	function playAgainstPlayer(uint8 _move) public {
-		require(_move <= 2, "Invalid move");
+	function hashMoves(address _player) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+		if(!isActive() || alreadyPlayed(_player) || !isPlayer(_player)) return (0, 0, 0);
+		return _hashMoves(_player, playersMap[_player].lastGame);
+	}
+
+	/**
+	 * @notice Generate the hashes corresponding to the player moves
+	 */
+	function _hashMoves(address _player, uint32 _lastGame) internal view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+		hash0 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(0),
+			_lastGame
+		));
+
+		hash1 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(1),
+			_lastGame
+		));
+
+		hash2 = keccak256(abi.encodePacked(
+			_player,
+			address(this),
+			uint(2),
+			_lastGame
+		));
+	}
+
+	/**
+	 * @notice Find the player move from its hash
+	 */
+	function recoverMove(address _player, bytes32 _hash, uint32 _lastGame) internal view returns(uint8) {
+
+		(bytes32 hash0, bytes32 hash1, bytes32 hash2) = _hashMoves(_player, _lastGame);
+		if(_hash == hash0) return 0;
+		if(_hash == hash1) return 1;
+		if(_hash == hash2) return 2;
+		revert("Invalid move");
+	}
+
+	/**
+	 * @notice Submit a move for play against another player
+	 */
+	function playAgainstPlayer(bytes32 _hash) public {
 		require(isActive(), "Tournament is not active");
 		require(!alreadyPlayed(msg.sender), "You already played today");
 		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = uint32(block.timestamp);
 
         if(storedPlayer.addr != address(0)) {
 			// A player is already waiting to be matched
-            resolveGame(_move);
+			uint8 senderMove = recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame);
+			uint8 storedMove = recoverMove(storedPlayer.addr, storedPlayer.hash, storedPlayer.lastGame);
+
+            resolveGame(msg.sender, senderMove, storedPlayer.addr, storedMove);
+			storedPlayer.addr = address(0);
         } else {
 			// No player is waiting to be matched, we store the move and wait for a player to join
-            storedPlayer.move = _move;
+			recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame); // We check that the move is valid before saving it
+
             storedPlayer.addr = msg.sender;
+			storedPlayer.hash = _hash;
+			storedPlayer.lastGame = playersMap[msg.sender].lastGame;
         }
-        
+
+		playersMap[msg.sender].lastGame = uint32(block.timestamp);        
         emit MoveSaved(msg.sender, 0);
 	}
 
@@ -334,7 +388,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
         game.randomWords = randomWords;
         game.vrfMove = vrfMove;
 
-        resolveVrfGame(requestId);
+        resolveGame(game.player, game.playerMove, address(0), vrfMove);
     }
 
 	//////////////////////////////
@@ -342,70 +396,42 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	//////////////////////////////
 
 	/**
-	 * Function that allows the bot to sumbit a batch of signed moves for resolution
-	 */
-	function resolveBatch() public {
-	}
-
-	/**
 	 * @notice Resolves the game against another player
-	 * @param _move The move the player made
+	 * @dev Will resolve the game against another player. If against VRF, _stored will be VRF
+	 * @param _senderAddr The address of the player
+	 * @param _senderMove The move the player made
+	 * @param _storedAddr The address of the stored player. Will be 0x0 for VRF
+	 * @param _storedMove The move the stored player made
 	 */
-	function resolveGame(uint8 _move) internal {
-		if(_move == storedPlayer.move) {
+	function resolveGame(address _senderAddr, uint8 _senderMove, address _storedAddr, uint8 _storedMove) internal {
+		if(_senderMove == _storedMove) {
             // Draw
-			updateScore(msg.sender, 1);
-			updateScore(storedPlayer.addr, 1);
-			emit Draw(msg.sender, storedPlayer.addr, timeToDate(uint32(block.timestamp)));
-        } else if (((3 + _move - storedPlayer.move) % 3) == 1) {
-            // msg.sender wins
-			updateScore(msg.sender, 2);
-			updateScore(storedPlayer.addr, 0);
-			emit Winner(msg.sender, timeToDate(uint32(block.timestamp)));
-			emit Loser(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
+			updateScore(_senderAddr, 1);
+			updateScore(_storedAddr, 1);
+			emit Draw(_senderAddr, _storedAddr, timeToDate(uint32(block.timestamp)));
+        } else if (((3 + _senderMove - _storedMove) % 3) == 1) {
+            // sender wins
+			updateScore(_senderAddr, 2);
+			updateScore(_storedAddr, 0);
+			emit Winner(_senderAddr, timeToDate(uint32(block.timestamp)));
+			emit Loser(_storedAddr, timeToDate(uint32(block.timestamp)));
         } else {
 			// storedPlayer wins
-			updateScore(storedPlayer.addr, 2);
-			updateScore(msg.sender, 0);
-			emit Winner(storedPlayer.addr, timeToDate(uint32(block.timestamp)));
-			emit Loser(msg.sender, timeToDate(uint32(block.timestamp)));
-        }
-		// Reset the stored player
-        storedPlayer.addr = address(0);
-    }
-
-	/**
-	 * @notice Resolves the game against the contract (VRF)
-	 * @param requestId is the requestId generated by chainlink and used to grab the game struct
-	 */
-    function resolveVrfGame(uint256 requestId) internal {
-        ContractGame storage game = contractGameRequestId[requestId]; 
-        if(game.playerMove == game.vrfMove){
-            //draw
-			updateScore(game.player, 1);
-			emit Draw(game.player, address(0), timeToDate(uint32(block.timestamp)));
-            game.winner = address(0);
-        } else if (((3 + game.playerMove - game.vrfMove) % 3) == 1) {
-        // } else if ((game.playerMove + 1) % 3 == game.vrfMove) {
-            // player wins 
-			updateScore(game.player, 2);
-			emit Winner(game.player, timeToDate(uint32(block.timestamp)));
-        	game.winner = game.player;
-        } else {
-            //player loses
-			updateScore(game.player, 0);
-    		emit Loser(game.player, timeToDate(uint32(block.timestamp)));
-            game.winner = address(vrfCoordinator);
+			updateScore(_storedAddr, 2);
+			updateScore(_senderAddr, 0);
+			emit Winner(_storedAddr, timeToDate(uint32(block.timestamp)));
+			emit Loser(_senderAddr, timeToDate(uint32(block.timestamp)));
         }
     }
 
 	/**
 	 * @notice Updates the player score by adding points
 	 * @dev Should be called in any case. Also updates player's rank and streak
-	 * @param _player is the address of the player
+	 * @param _player is the address of the player. VRF will be 0x0
 	 * @param _points 0 = lost, 1 = draw, 2 = won
 	 */
 	function updateScore(address _player, uint8 _points) internal {
+		if(_player == address(0)) return; // We don't update VRF score
 		if(_points == 0) {
 			playersMap[_player].streak = 0;
 			return;

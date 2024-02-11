@@ -11,6 +11,10 @@ export const Play = () => {
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
   const [move, setMove] = useState(3);
+  const [hash0, setHash0] = useState<`0x${string}`>("0x");
+  const [hash1, setHash1] = useState<`0x${string}`>("0x");
+  const [hash2, setHash2] = useState<`0x${string}`>("0x");
+  const [hash, setHash] = useState<`0x${string}`>("0x");
   const [result, setResult] = useState("none");
   const [VRFrequest, setVRFrequest] = useState(0);
 
@@ -20,6 +24,20 @@ export const Play = () => {
     functionName: "alreadyPlayed",
     args: [connectedAddress],
   });
+
+  const { data: hashMoves } = useContractRead({
+    abi: DeployedContracts[31337].Tournament.abi,
+    address: params.addr,
+    functionName: "hashMoves",
+    args: [connectedAddress],
+  });
+  if (hash0 == "0x" && hashMoves != undefined) {
+    const [h0, h1, h2] = hashMoves;
+    console.log(h0, h1, h2);
+    setHash0(h0);
+    setHash1(h1);
+    setHash2(h2);
+  }
 
   const { data: isActive } = useContractRead({
     abi: DeployedContracts[31337].Tournament.abi,
@@ -40,7 +58,7 @@ export const Play = () => {
     args: [move],
   });
 
-  const playAgainstContract = async () => {
+  const handlePlayAgainstContract = async () => {
     setResult("sent");
     try {
       await writeTx(playContract, { blockConfirmations: 1 });
@@ -53,16 +71,21 @@ export const Play = () => {
     abi: DeployedContracts[31337].Tournament.abi,
     address: params.addr,
     functionName: "playAgainstPlayer",
-    args: [move],
+    args: [hash],
   });
 
-  const playAgainstHuman = async () => {
+  const handlePlayAgainstHuman = async () => {
     setResult("sent");
     try {
       await writeTx(playHuman, { blockConfirmations: 1 });
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
+  };
+
+  const handleMove = (m: number) => {
+    setMove(m);
+    m == 0 ? setHash(hash0) : m == 1 ? setHash(hash1) : setHash(hash2);
   };
 
   useContractEvent({
@@ -109,8 +132,6 @@ export const Play = () => {
       }
     },
   });
-
-  // const { signMessage } = useSignMessage({ message: move });
 
   return (
     <>
@@ -177,21 +198,21 @@ export const Play = () => {
           ) : (
             <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
               <div className="flex justify-center rounded-md shadow-sm space-x-4" role="group">
-                <button className="btn btn-secondary" disabled={move == 0} onClick={() => setMove(0)}>
+                <button className="btn btn-secondary" disabled={move == 0} onClick={() => handleMove(0)}>
                   Rock
                 </button>
-                <button className="btn btn-secondary" disabled={move == 1} onClick={() => setMove(1)}>
+                <button className="btn btn-secondary" disabled={move == 1} onClick={() => handleMove(1)}>
                   Paper
                 </button>
-                <button className="btn btn-secondary" disabled={move == 2} onClick={() => setMove(2)}>
+                <button className="btn btn-secondary" disabled={move == 2} onClick={() => handleMove(2)}>
                   Scissors
                 </button>
               </div>
               <div className="flex justify-center rounded-md shadow-sm space-x-4" role="group">
-                <button className="btn btn-secondary" disabled={move > 2} onClick={() => playAgainstContract()}>
+                <button className="btn btn-secondary" disabled={move > 2} onClick={() => handlePlayAgainstContract()}>
                   Instant play against the contract
                 </button>
-                <button className="btn btn-secondary" disabled={move > 2} onClick={() => playAgainstHuman()}>
+                <button className="btn btn-secondary" disabled={move > 2} onClick={() => handlePlayAgainstHuman()}>
                   Be matched against a human player
                 </button>
               </div>
