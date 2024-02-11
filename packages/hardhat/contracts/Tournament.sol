@@ -240,6 +240,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @param _player is the player address
 	 */
 	function hashMoves(address _player) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
+		if(!isActive() || alreadyPlayed(_player) || !isPlayer(_player)) return (0, 0, 0);
 		return _hashMoves(_player, playersMap[_player].lastGame);
 	}
 
@@ -300,8 +301,9 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 			// No player is waiting to be matched, we store the move and wait for a player to join
 			recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame); // We check that the move is valid before saving it
 
-			storedPlayer.hash = _hash;
             storedPlayer.addr = msg.sender;
+			storedPlayer.hash = _hash;
+			storedPlayer.lastGame = playersMap[msg.sender].lastGame;
         }
 
 		playersMap[msg.sender].lastGame = uint32(block.timestamp);        

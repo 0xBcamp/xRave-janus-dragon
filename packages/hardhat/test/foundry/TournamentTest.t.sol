@@ -77,11 +77,18 @@ contract TournamentTest is Test {
     function stakePlayStakeForTest(uint8 _move, address _playerA, address _playerB) public {
         stakeForTest(_playerA);
         vm.startPrank(_playerA);
-        tournamentU.playAgainstPlayer(_move);
-        tournamentY.playAgainstPlayer(_move);
+        bytes32 move = getMoveHash(tournamentU, _playerA, _move);
+        tournamentU.playAgainstPlayer(move);
+        move = getMoveHash(tournamentY, _playerA, _move);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
         
         stakeForTest(_playerB);
+    }
+
+    function getMoveHash(Tournament _tournament, address _player, uint8 _move) public view returns (bytes32) {
+        (bytes32 h0, bytes32 h1, bytes32 h2) = _tournament.hashMoves(_player);
+        return _move == 0 ? h0 : _move == 1 ? h1 : h2;
     }
 
     function newAddress(uint _fuzz) public returns(address player) {
@@ -693,8 +700,9 @@ contract TournamentTest is Test {
     function test_unstakeLPToken_after_played_devaluated() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.prank(player2);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         uint initPlayerBalanceY = mockYLP.balanceOf(player1);
         uint initPlayer2BalanceY = mockYLP.balanceOf(player2);
@@ -736,10 +744,12 @@ contract TournamentTest is Test {
     function test_unstakeLPToken_after_played_valuated() public {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.prank(player2);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
         vm.prank(player2);
-        tournamentU.playAgainstPlayer(2);
+        tournamentU.playAgainstPlayer(move);
 
         uint initPlayerBalanceY = mockYLP.balanceOf(player1);
         uint initPlayer2BalanceY = mockYLP.balanceOf(player2);
@@ -787,10 +797,12 @@ contract TournamentTest is Test {
 
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.prank(player2);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
         vm.prank(player2);
-        tournamentU.playAgainstPlayer(2);
+        tournamentU.playAgainstPlayer(move);
 
         mockYLP.setPricePerShare(200000);
         mockUniLP.setReserves(2000 ether, 1000 ether);
@@ -995,7 +1007,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         vm.expectRevert("Invalid move");
-        tournamentY.playAgainstPlayer(3);
+        tournamentY.playAgainstPlayer(bytes32('0xdeadbeef'));
         vm.stopPrank();
     }
 
@@ -1005,8 +1017,9 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
+        bytes32 move = getMoveHash(tournamentY, player1, 1);
         vm.expectRevert("Tournament is not active");
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
 
@@ -1017,8 +1030,9 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         vm.warp(afterTime);
+        bytes32 move = getMoveHash(tournamentY, player1, 1);
         vm.expectRevert("Tournament is not active");
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
 
@@ -1027,8 +1041,9 @@ contract TournamentTest is Test {
         vm.warp(duringTime);
         vm.startPrank(player1);
 
-        vm.expectRevert("You must deposit before playing");        
-        tournamentY.playAgainstPlayer(1);
+        bytes32 move = getMoveHash(tournamentY, player1, 1);
+        vm.expectRevert("You must deposit before playing");
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
     }
@@ -1037,11 +1052,13 @@ contract TournamentTest is Test {
 
         vm.warp(duringTime);
         stakeForTest(player1);
+        bytes32 move = getMoveHash(tournamentY, player1, 1);
         vm.startPrank(player1);
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
+        move = getMoveHash(tournamentY, player1, 1);
         vm.expectRevert("You already played today");
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
 
@@ -1051,31 +1068,10 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
+        bytes32 move = getMoveHash(tournamentY, player1, 1);
         vm.expectEmit();
         emit MoveSaved(player1, 0);
-        tournamentY.playAgainstPlayer(1);
-
-        vm.stopPrank();
-    }
-
-    function test_PlayAgainstPlayerSign_firstPlayer() public {
-
-       // address signer = vm.addr(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);
-        address player = address(0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2);
-        vm.prank(owner);
-        mockYLP.transfer(player, 10e18);
-
-        vm.warp(duringTime);
-        stakeForTest(player);
-        vm.startPrank(player);
-
-        vm.expectEmit();
-        emit MoveSaved(player, 0);
-        tournamentY.playAgainstPlayerSign(
-            28,
-            0xae276421a9fa445aeb96d547f598e39b81dc1b53296fd538747b388252d414a1,
-            0x0e59be6511ef375a09601eb5080191130ea6378e793f5698709204f861eb1056
-        );
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
     }
@@ -1088,9 +1084,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 0);
         vm.expectEmit();
         emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1106,9 +1103,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 1);
         vm.expectEmit();
         emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1124,9 +1122,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.expectEmit();
         emit Draw(player2, player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1146,10 +1145,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 1);
         vm.expectEmit();
         emit Winner(player2, block.timestamp / (60 * 60 * 24));
         emit Loser(player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1165,10 +1165,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.expectEmit();
         emit Winner(player1, block.timestamp / (60 * 60 * 24));
         emit Loser(player2, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1184,10 +1185,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 0);
         vm.expectEmit();
         emit Winner(player1, block.timestamp / (60 * 60 * 24));
         emit Loser(player2, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1203,10 +1205,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(1, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.expectEmit();
         emit Winner(player2, block.timestamp / (60 * 60 * 24));
         emit Loser(player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1222,10 +1225,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 0);
         vm.expectEmit();
         emit Winner(player2, block.timestamp / (60 * 60 * 24));
         emit Loser(player1, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1241,10 +1245,11 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(2, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 1);
         vm.expectEmit();
         emit Winner(player1, block.timestamp / (60 * 60 * 24));
         emit Loser(player2, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1262,19 +1267,21 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.expectEmit();
         emit Winner(player1, block.timestamp / (60 * 60 * 24));
         emit Loser(player2, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
         vm.startPrank(player4);
 
+        move = getMoveHash(tournamentY, player4, 1);
         vm.expectEmit();
         emit Draw(player4, player3, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1295,19 +1302,21 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
         vm.startPrank(player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.expectEmit();
         emit Winner(player1, block.timestamp / (60 * 60 * 24));
         emit Loser(player2, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
         vm.startPrank(player4);
 
+        move = getMoveHash(tournamentY, player4, 1);
         vm.expectEmit();
         emit Draw(player4, player3, block.timestamp / (60 * 60 * 24));
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
 
@@ -1319,14 +1328,18 @@ contract TournamentTest is Test {
 
         skip(1 days);
 
+        move = getMoveHash(tournamentY, player1, 1);
         vm.prank(player1);
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentY, player3, 2);
         vm.prank(player3);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentY, player2, 0);
         vm.prank(player2);
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentY, player4, 0);
         vm.prank(player4);
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
         assertEq(tournamentY.pointsOfPlayer(player1), 2);
         assertEq(tournamentY.pointsOfPlayer(player2), 1);
@@ -1349,8 +1362,9 @@ contract TournamentTest is Test {
     function test_alreadyPlayed_playedToday() public {
         vm.warp(duringTime);
         stakeForTest(player1);
+        bytes32 move = getMoveHash(tournamentY, player1, 0);
         vm.prank(player1);
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
         assertEq(tournamentY.alreadyPlayed(player1), true);
     }
@@ -1358,10 +1372,11 @@ contract TournamentTest is Test {
     function test_alreadyPlayed_playedYesterday() public {
         vm.warp(duringTime);
         stakeForTest(player1);
+        bytes32 move = getMoveHash(tournamentY, player1, 0);
         vm.prank(player1);
-        tournamentY.playAgainstPlayer(0);
+        tournamentY.playAgainstPlayer(move);
 
-        vm.warp(startTime + 3 days);
+        skip(1 days);
         assertEq(tournamentY.alreadyPlayed(player1), false);
     }
 
@@ -1369,14 +1384,16 @@ contract TournamentTest is Test {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
 
+        move = getMoveHash(tournamentY, player4, 1);
         vm.startPrank(player4);
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         (uint256 rank1, uint256 split1) = tournamentY.getRank(player1);
@@ -1397,14 +1414,16 @@ contract TournamentTest is Test {
         vm.warp(duringTime);
         stakePlayStakeForTest(0, player1, player2);
 
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
 
+        move = getMoveHash(tournamentY, player4, 1);
         vm.startPrank(player4);
-        tournamentY.playAgainstPlayer(1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         (uint rank, uint split) = tournamentY.getRank(player5);
@@ -1425,15 +1444,19 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
 
         vm.startPrank(player4);
-        tournamentY.playAgainstPlayer(1);
-        tournamentU.playAgainstPlayer(1);
+        move = getMoveHash(tournamentY, player4, 1);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player4, 1);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
         
         assertEq(tournamentY.getPrizeShare(player1), 0.5 ether);
@@ -1458,8 +1481,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         assertEq(tournamentY.getPoolPrize(), 0);
@@ -1471,8 +1496,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubled
@@ -1490,8 +1517,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
 
         vm.warp(afterTime);
         tournamentY.unstakeLPToken();
@@ -1507,8 +1536,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(2000 ether, 1000 ether);
@@ -1531,8 +1562,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(2000 ether, 1000 ether);
@@ -1556,8 +1589,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         assertEq(tournamentY.getPrizeAmount(player1), 0);
@@ -1571,8 +1606,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         mockYLP.setPricePerShare(50000); // Value of LP drops
@@ -1589,8 +1626,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubles
@@ -1607,8 +1646,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         vm.warp(startTime + 7 days);
@@ -1622,8 +1663,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         vm.warp(startTime + 7 days);
@@ -1638,8 +1681,10 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
-        tournamentU.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
+        move = getMoveHash(tournamentU, player2, 2);
+        tournamentU.playAgainstPlayer(move);
         vm.stopPrank();
 
         vm.warp(startTime + 7 days - 1); // 1s is added in the function
@@ -1667,7 +1712,8 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         assertEq(tournamentY._getFees(), 0);
@@ -1678,7 +1724,8 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         mockYLP.setPricePerShare(200000); // Value of LP doubled
@@ -1693,7 +1740,8 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         mockYLP.setPricePerShare(50000); // Value of LP drops
@@ -1753,13 +1801,15 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         stakePlayStakeForTest(1, player3, player4);
 
         vm.startPrank(player4);
-        tournamentY.playAgainstPlayer(1);
+        move = getMoveHash(tournamentY, player4, 1);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
         
         assertEq(keccak256(abi.encodePacked(tournamentY.getPlayersAtScore(2))), keccak256(abi.encodePacked([address(player1)])));
@@ -1772,7 +1822,8 @@ contract TournamentTest is Test {
         stakePlayStakeForTest(0, player1, player2);
 
         vm.startPrank(player2);
-        tournamentY.playAgainstPlayer(2);
+        bytes32 move = getMoveHash(tournamentY, player2, 2);
+        tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
 
         (uint rank, uint score, uint lastGame) = tournamentY.getPlayer(player1);

@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Tournament: {
-      address: "0xCD75Ddf910A204d36Fc2f86e776f9d7B97A34817",
+      address: "0x488b54Cf1b3F65Fa0cf76889ccb78afD2a054f4E",
       abi: [
         {
           inputs: [
@@ -1077,7 +1077,7 @@ const deployedContracts = {
       },
     },
     TournamentFactory: {
-      address: "0xEe170eFF1BCeA1f7a46F46634fa40d590AAa5200",
+      address: "0x31C89d6188b169aDCC7f6002d9cBAB605B67fd6d",
       abi: [
         {
           inputs: [
@@ -1423,7 +1423,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     USDT: {
-      address: "0x07bf260a44CEADfad215cc8e20c5b0398D25b1FA",
+      address: "0xF97f395dAb1F8f5936d51770F277c42a86DC1B99",
       abi: [
         {
           inputs: [],
@@ -1716,7 +1716,7 @@ const deployedContracts = {
       },
     },
     UniswapV2Pair: {
-      address: "0x94A44de106112A761B69dFBEB1ac6cfdD1B80304",
+      address: "0x0f3519FF027eD7e934F2b1Fc0cd8fe3bc44c7310",
       abi: [
         {
           inputs: [
@@ -2100,7 +2100,7 @@ const deployedContracts = {
       },
     },
     VRFCoordinatorV2Mock: {
-      address: "0xFe44FF05D7C06E792D6eF4762B2441e82Bc602a5",
+      address: "0xe3314d15fc547d36b0E28530d7dAA4190Caa204F",
       abi: [
         {
           inputs: [
@@ -2883,7 +2883,7 @@ const deployedContracts = {
       },
     },
     Vyper_contract: {
-      address: "0x47330D2fe6F75899597C14d615003Ef561B01B14",
+      address: "0x7188450134eFbda4591D303dA02BE644Bb4B63Fb",
       abi: [
         {
           inputs: [
@@ -3221,7 +3221,7 @@ const deployedContracts = {
       },
     },
     WETH: {
-      address: "0xDb2f554A333D189ed59eA36020a83F7d6De14328",
+      address: "0x0fC6E11087EaAC6c564856aBfA901CDAd69eF5a9",
       abi: [
         {
           inputs: [],
