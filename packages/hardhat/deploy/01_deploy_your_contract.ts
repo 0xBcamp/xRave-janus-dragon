@@ -23,7 +23,7 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const { deploy } = hre.deployments;
   const UniswapV2Pair = await hre.ethers.getContract<Contract>("UniswapV2Pair", deployer);
   const Vyper_contract = await hre.ethers.getContract<Contract>("Vyper_contract", deployer); // yearn
-  const vrf = await hre.ethers.getContract<Contract>("VRFCoordinatorV2Mock", deployer);
+  // const vrf = await hre.ethers.getContract<Contract>("VRFCoordinatorV2Mock", deployer);
 
   // await deploy("VRFConsumerBaseV2Upgradeable", {
   //   from: deployer,
@@ -51,7 +51,7 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   await deploy("TournamentFactory", {
     from: deployer,
     // Contract constructor arguments
-    args: [frontBurner, vrf.target],
+    args: [frontBurner, "0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D"],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.

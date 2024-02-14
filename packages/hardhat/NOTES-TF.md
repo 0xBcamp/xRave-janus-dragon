@@ -30,3 +30,7 @@ This logic is a compact way to determine the outcome of a rock-paper-scissors ga
 ## 1/30
 Yearn Notes:
     Once a user's liquidity is withdrawn from the yVault, their yVault Token will be burned. yVault Tokens are ERC20, meaning they can be transferred and traded as any other common Ethereum token.
+
+## 2/24 Deployed contracts to goerli
+tournament - 0x18a03553a264E7Ee66B288E1A44DF15011C43C6a
+factory - 0x11B95a450d0869fC27dd530A06671062413FA66b
