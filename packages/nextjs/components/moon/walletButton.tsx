@@ -17,8 +17,9 @@ export const WalletButton = () => {
       if (moonWallet != "") {
         return;
       }
-      const message = await listAccounts();
+      const message: any = await listAccounts();
       console.log(message);
+      setMoonWallet(message.data.keys[0]);
     } catch (error) {
       console.error(error);
       //setAnswer(error.error.message);
@@ -54,7 +55,7 @@ export const WalletButton = () => {
     </Link>
   ) : (
     <button className="btn btn-secondary" onClick={handleDisconnect}>
-      {moonWallet}
+      {moonWallet.slice(0, 4) + "..." + moonWallet.slice(-4)}
     </button>
   );
 };
