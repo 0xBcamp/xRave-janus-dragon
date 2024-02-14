@@ -9,10 +9,11 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   const writeTx = useTransactor();
   // const { address } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
+  const chainId = 5;
   const [approved, setApproved] = useState(false);
 
   const { data: tournamentData } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
   });
@@ -70,7 +71,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   };
 
   const { writeAsync: deposit } = useContractWrite({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: spender,
     functionName: "stakeLPToken",
   });

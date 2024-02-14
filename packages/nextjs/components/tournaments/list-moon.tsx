@@ -6,15 +6,16 @@ import { ethers } from "ethers";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
-export const List = () => {
+export const ListMoon = () => {
   const [loaded, setLoaded] = useState(false);
   const [activeTournaments, setActiveTournaments] = useState([] as string[]);
   const [futureTournaments, setFutureTournaments] = useState([] as string[]);
   const [pastTournaments, setPastTournaments] = useState([] as string[]);
   const [playerTournaments, setPlayerTournaments] = useState([] as string[]);
+  const chainId = 5;
 
   const provider = new MoonProvider({
-    chainId: 31337,
+    chainId: chainId,
     MoonSDKConfig: {
       Storage: {
         key: MOON_SESSION_KEY,
@@ -27,8 +28,8 @@ export const List = () => {
   });
 
   const tournamentFactory = new ethers.Contract(
-    DeployedContracts[31337].Tournament.address,
-    DeployedContracts[31337].Tournament.abi,
+    DeployedContracts[chainId].Tournament.address,
+    DeployedContracts[chainId].Tournament.abi,
     provider,
   );
 

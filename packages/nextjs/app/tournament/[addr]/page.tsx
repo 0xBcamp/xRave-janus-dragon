@@ -15,6 +15,7 @@ const Tournament: NextPage = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
+  const chainId = 5;
 
   const [isPlayer, setIsPlayer] = useState(false);
 
@@ -25,13 +26,13 @@ const Tournament: NextPage = () => {
   });
 
   const unstakingAllowed = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "unstakingAllowed",
   });
 
   const isPlayerRead = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "isPlayer",
     args: [connectedAddress],
@@ -42,7 +43,7 @@ const Tournament: NextPage = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Staked",
     listener: log => {
       if (log[0].args.player == connectedAddress) {

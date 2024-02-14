@@ -9,39 +9,40 @@ export const Withdraw = () => {
   const writeTx = useTransactor();
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
+  const chainId = 5;
 
   const [withdrawn, setWithdrawn] = useState(false);
 
   const params = useParams<{ addr: string }>();
 
   const LPTokenSymbol = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "getFancySymbol",
   });
 
   const LPTokenDecimals = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "getLPDecimals",
   });
 
   const { data: withdrawAmountFromDeposit } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "withdrawAmountFromDeposit",
     args: [connectedAddress],
   });
 
   const { data: prizeAmount } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "getPrizeAmount",
     args: [connectedAddress],
   });
 
   const { writeAsync: withdraw } = useContractWrite({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "unstakeLPToken",
   });
@@ -56,7 +57,7 @@ export const Withdraw = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Unstaked",
     listener: log => {
       if (log[0].args.player == connectedAddress && (log[0].args.amount || 0n) > 0n) {

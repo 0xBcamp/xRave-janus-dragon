@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useMoonSDK } from "../../hooks/moon";
 import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export const WalletButton = () => {
   const { moon, initialize, connect, disconnect, listAccounts } = useMoonSDK();
@@ -47,15 +48,16 @@ export const WalletButton = () => {
     return () => {
       disconnect();
     };
-  }, [initialize, connect, disconnect, getAccount]);
+  }, [initialize, connect, disconnect]);
 
   return !moonWallet ? (
     <Link href="/moon">
-      <button className="btn btn-secondary py-0">Use Moon</button>
+      <button className="btn btn-primary btn-sm">Use Moon</button>
     </Link>
   ) : (
-    <button className="btn btn-secondary" onClick={handleDisconnect}>
+    <button className="btn btn-primary btn-sm" onClick={handleDisconnect}>
       {moonWallet.slice(0, 4) + "..." + moonWallet.slice(-4)}
+      <XMarkIcon className="h-4 w-4" />
     </button>
   );
 };

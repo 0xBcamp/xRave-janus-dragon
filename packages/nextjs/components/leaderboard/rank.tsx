@@ -4,8 +4,10 @@ import { useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 
 export const Rank = ({ tournament, score }: { tournament: string; score: number }) => {
+  const chainId = 5;
+
   const { data: players, isLoading } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: tournament,
     functionName: "getPlayersAtScore",
     args: [score],

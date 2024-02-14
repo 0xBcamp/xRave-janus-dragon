@@ -10,6 +10,7 @@ export const Play = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
+  const chainId = 5;
   const [move, setMove] = useState(3);
   const [hash0, setHash0] = useState<`0x${string}`>("0x");
   const [hash1, setHash1] = useState<`0x${string}`>("0x");
@@ -19,14 +20,14 @@ export const Play = () => {
   const [VRFrequest, setVRFrequest] = useState(0);
 
   const { data: alreadyPlayed } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "alreadyPlayed",
     args: [connectedAddress],
   });
 
   const { data: hashMoves } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "hashMoves",
     args: [connectedAddress],
@@ -40,19 +41,19 @@ export const Play = () => {
   }
 
   const { data: isActive } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "isActive",
   });
 
   const { data: name } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "name",
   });
 
   const { writeAsync: playContract } = useContractWrite({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "playAgainstContract",
     args: [move],
@@ -68,7 +69,7 @@ export const Play = () => {
   };
 
   const { writeAsync: playHuman } = useContractWrite({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "playAgainstPlayer",
     args: [hash],
@@ -90,7 +91,7 @@ export const Play = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "MoveSaved",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
@@ -102,7 +103,7 @@ export const Play = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Winner",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
@@ -113,7 +114,7 @@ export const Play = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Loser",
     listener: log => {
       if (log[0].args.player == connectedAddress) {
@@ -124,7 +125,7 @@ export const Play = () => {
 
   useContractEvent({
     address: params.addr,
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Draw",
     listener: log => {
       if (log[0].args.player == connectedAddress || log[0].args.opponent == connectedAddress) {
