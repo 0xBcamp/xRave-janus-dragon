@@ -14,6 +14,7 @@ interface MoonSDKHook {
   listAccounts: () => Promise<AccountResponse | undefined>;
   signMessage: (msg: string) => Promise<string | undefined>;
   updateToken: (token: string) => Promise<void>;
+  updateRefreshToken: (token: string) => Promise<void>;
   // signTransaction: (transaction: TransactionResponse) => Promise<Transaction>;
   // Add other methods as needed
 }
@@ -32,7 +33,7 @@ export function useMoonSDK(): MoonSDKHook {
       },
     });
     setMoon(moonInstance);
-    moonInstance.login();
+    moonInstance.connect();
   };
 
   const connect = async () => {
@@ -68,6 +69,11 @@ export function useMoonSDK(): MoonSDKHook {
       return moon.updateToken(token);
     }
   };
+  const updateRefreshToken = async (token: string) => {
+    if (moon) {
+      return moon.updateRefreshToken(token);
+    }
+  };
 
   // const signTransaction = async (transaction: TransactionResponse) => {
   // 	if (moon) {
@@ -91,6 +97,7 @@ export function useMoonSDK(): MoonSDKHook {
     listAccounts,
     signMessage,
     updateToken,
+    updateRefreshToken,
     // Add other methods as needed
   };
 }

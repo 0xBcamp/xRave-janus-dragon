@@ -26,6 +26,8 @@ export const Signin = () => {
       console.log(message);
       moon.updateToken(token);
       moon.updateRefreshToken(refreshToken);
+      moon.MoonAccount.setEmail(email);
+      moon.MoonAccount.setExpiry(message.data.expiry);
       connect();
     } catch (error: any) {
       console.error(error);
@@ -36,6 +38,7 @@ export const Signin = () => {
   // Use useEffect to initialize Moon SDK on component mount
   useEffect(() => {
     initialize();
+    connect();
 
     // Cleanup Moon SDK on component unmount
     return () => {

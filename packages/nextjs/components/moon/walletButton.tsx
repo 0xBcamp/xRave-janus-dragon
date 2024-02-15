@@ -23,7 +23,6 @@ export const WalletButton = () => {
       setMoonWallet(message.data.keys[0]);
     } catch (error) {
       console.error(error);
-      //setAnswer(error.error.message);
     }
   };
 
@@ -48,7 +47,7 @@ export const WalletButton = () => {
     return () => {
       disconnect();
     };
-  }, [initialize, connect, disconnect]);
+  }, []);
 
   return !moonWallet ? (
     <Link href="/moon">

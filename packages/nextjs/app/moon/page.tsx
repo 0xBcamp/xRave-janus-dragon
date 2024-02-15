@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
 import { CreateAccountInput } from "@moonup/moon-api";
 import type { NextPage } from "next";
-import { Signin, Signup } from "~~/components/moon";
+import { Sign } from "~~/components/moon";
 
 const Moon: NextPage = () => {
-  const { moon, initialize, connect, disconnect, listAccounts } = useMoonSDK();
+  const { moon, disconnect, listAccounts } = useMoonSDK();
   const { moonWallet, setMoonWallet } = useMoonWalletContext();
 
   const handleCreate = async () => {
@@ -78,17 +77,6 @@ const Moon: NextPage = () => {
     }
   };
 
-  // Use useEffect to initialize Moon SDK on component mount
-  useEffect(() => {
-    initialize();
-    connect();
-
-    // Cleanup Moon SDK on component unmount
-    return () => {
-      disconnect();
-    };
-  }, []);
-
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
@@ -98,8 +86,7 @@ const Moon: NextPage = () => {
             <p>Authenticated Address: {moonWallet}</p>
           </h1>
           <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <Signup />
-            <Signin />
+            <Sign />
             <button className="btn btn-secondary" onClick={handleList}>
               List accounts
             </button>

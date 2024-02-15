@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
+import { useMoonEthers } from "../../hooks/ethers";
 import { Item } from "./item";
-import { MoonProvider } from "@moonup/ethers";
-import { AUTH, MOON_SESSION_KEY, Storage } from "@moonup/moon-types";
 import { ethers } from "ethers";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import DeployedContracts from "~~/contracts/deployedContracts";
@@ -14,27 +13,20 @@ export const ListMoon = () => {
   const [playerTournaments, setPlayerTournaments] = useState([] as string[]);
   const chainId = 5;
 
-  const provider = new MoonProvider({
-    chainId: chainId,
-    MoonSDKConfig: {
-      Storage: {
-        key: MOON_SESSION_KEY,
-        type: Storage.SESSION,
-      },
-      Auth: {
-        AuthType: AUTH.JWT,
-      },
-    },
-  });
+  const { moonProvider } = useMoonEthers();
 
   const tournamentFactory = new ethers.Contract(
     DeployedContracts[chainId].Tournament.address,
     DeployedContracts[chainId].Tournament.abi,
-    provider,
+    moonProvider || undefined,
   );
 
   useEffect(() => {
     const getTournaments = async () => {
+      if (moonProvider) {
+        const blockNumber = await moonProvider.getBlockNumber();
+        console.log(`Latest block number: ${blockNumber}`);
+      }
       setActiveTournaments(await tournamentFactory.getAllActiveTournaments());
       setFutureTournaments(await tournamentFactory.getAllFutureTournaments());
       setPastTournaments(await tournamentFactory.getAllPastTournaments());
