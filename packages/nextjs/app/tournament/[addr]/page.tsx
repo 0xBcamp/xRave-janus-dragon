@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import type { NextPage } from "next";
 import { useAccount, useContractRead } from "wagmi";
 import { useContractEvent } from "wagmi";
+import { useMoonWalletContext } from "~~/components/ScaffoldEthAppWithProviders";
 import { Enter } from "~~/components/tournament/enter";
 import { Play } from "~~/components/tournament/play";
 import { Withdraw } from "~~/components/tournament/withdraw";
@@ -14,6 +15,8 @@ import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 const Tournament: NextPage = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
+  const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const params = useParams<{ addr: string }>();
   const chainId = 5;
 
@@ -35,7 +38,7 @@ const Tournament: NextPage = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "isPlayer",
-    args: [connectedAddress],
+    args: [account],
   });
   if (isPlayerRead.data && !isPlayer) {
     setIsPlayer(true);
@@ -46,13 +49,13 @@ const Tournament: NextPage = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Staked",
     listener: log => {
-      if (log[0].args.player == connectedAddress) {
+      if (log[0].args.player == account) {
         setIsPlayer(true);
       }
     },
   });
 
-  if (!connectedAddress) {
+  if (!account) {
     return (
       <>
         <p>Please connect your wallet to see the tournament</p>
