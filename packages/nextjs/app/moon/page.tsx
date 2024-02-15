@@ -1,13 +1,11 @@
 "use client";
 
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
-import { useMoonSDK } from "../../hooks/moon";
 import type { NextPage } from "next";
 import { Sign } from "~~/components/moon";
 
 const Moon: NextPage = () => {
-  const { disconnect } = useMoonSDK();
-  const { moonWallet, setMoonWallet } = useMoonWalletContext();
+  const { moonWallet } = useMoonWalletContext();
 
   // const handleCreate = async () => {
   //   try {
@@ -65,17 +63,6 @@ const Moon: NextPage = () => {
   //   }
   // };
 
-  const handleDisconnect = async () => {
-    try {
-      // Disconnect from Moon
-      await disconnect();
-      setMoonWallet("");
-      console.log("Disconnected from Moon");
-    } catch (error) {
-      console.error("Error during disconnection:", error);
-    }
-  };
-
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
@@ -95,9 +82,6 @@ const Moon: NextPage = () => {
             <button className="btn btn-secondary" onClick={handleSign}>
               Sign
   </button>*/}
-            <button className="btn btn-secondary" onClick={handleDisconnect}>
-              Logout
-            </button>
           </div>
         </div>
       </div>
