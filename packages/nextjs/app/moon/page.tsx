@@ -2,69 +2,68 @@
 
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
-import { CreateAccountInput } from "@moonup/moon-api";
 import type { NextPage } from "next";
 import { Sign } from "~~/components/moon";
 
 const Moon: NextPage = () => {
-  const { moon, disconnect, listAccounts } = useMoonSDK();
+  const { disconnect } = useMoonSDK();
   const { moonWallet, setMoonWallet } = useMoonWalletContext();
 
-  const handleCreate = async () => {
-    try {
-      // Check if Moon SDK is properly initialized and user is authenticated
-      if (!moon) {
-        console.error("User not authenticated");
-        return;
-      }
+  // const handleCreate = async () => {
+  //   try {
+  //     // Check if Moon SDK is properly initialized and user is authenticated
+  //     if (!moon) {
+  //       console.error("User not authenticated");
+  //       return;
+  //     }
 
-      const data: CreateAccountInput = {};
-      const message = await moon.getAccountsSDK().createAccount(data);
-      //setMoonWallet(message.data.data.address);
-      console.log(message);
-    } catch (error) {
-      console.error(error);
-      //setAnswer(error.error.message);
-    }
-  };
+  //     const data: CreateAccountInput = {};
+  //     const message = await moon.getAccountsSDK().createAccount(data);
+  //     //setMoonWallet(message.data.data.address);
+  //     console.log(message);
+  //   } catch (error) {
+  //     console.error(error);
+  //     //setAnswer(error.error.message);
+  //   }
+  // };
 
-  const handleList = async () => {
-    try {
-      // Check if Moon SDK is properly initialized and user is authenticated
-      if (!moon) {
-        console.error("User not authenticated");
-        return;
-      }
+  // const handleList = async () => {
+  //   try {
+  //     // Check if Moon SDK is properly initialized and user is authenticated
+  //     if (!moon) {
+  //       console.error("User not authenticated");
+  //       return;
+  //     }
 
-      const message = await listAccounts();
-      console.log(message);
-      if (message) {
-        const res: any = message;
-        setMoonWallet(res.data.keys[0]);
-      }
-    } catch (error) {
-      console.error(error);
-      //setAnswer(error.error.message);
-    }
-  };
+  //     const message = await listAccounts();
+  //     console.log(message);
+  //     if (message) {
+  //       const res: any = message;
+  //       setMoonWallet(res.data.keys[0]);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     //setAnswer(error.error.message);
+  //   }
+  // };
 
-  const handleSign = async () => {
-    try {
-      // Check if Moon SDK is properly initialized and user is authenticated
-      if (!moon) {
-        console.error("User not authenticated");
-        return;
-      }
+  // const handleSign = async () => {
+  //   try {
+  //     // Check if Moon SDK is properly initialized and user is authenticated
+  //     if (!moon) {
+  //       console.error("User not authenticated");
+  //       return;
+  //     }
 
-      const message = await moon
-        .getAccountsSDK()
-        .signMessage(moonWallet, { data: "68656c6c6f20776f726c64000000000000000000000000000000000000000000" });
-      console.log(message);
-    } catch (error) {
-      console.error(error);
-      //setAnswer(error.error.message);
-    }
-  };
+  //     const message = await moon
+  //       .getAccountsSDK()
+  //       .signMessage(moonWallet, { data: "68656c6c6f20776f726c64000000000000000000000000000000000000000000" });
+  //     console.log(message);
+  //   } catch (error) {
+  //     console.error(error);
+  //     //setAnswer(error.error.message);
+  //   }
+  // };
 
   const handleDisconnect = async () => {
     try {
@@ -87,7 +86,7 @@ const Moon: NextPage = () => {
           </h1>
           <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
             <Sign />
-            <button className="btn btn-secondary" onClick={handleList}>
+            {/*<button className="btn btn-secondary" onClick={handleList}>
               List accounts
             </button>
             <button className="btn btn-secondary" onClick={handleCreate}>
@@ -95,7 +94,7 @@ const Moon: NextPage = () => {
             </button>
             <button className="btn btn-secondary" onClick={handleSign}>
               Sign
-            </button>
+  </button>*/}
             <button className="btn btn-secondary" onClick={handleDisconnect}>
               Logout
             </button>
