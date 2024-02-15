@@ -1,9 +1,13 @@
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { Item } from "./item";
 import { useAccount } from "wagmi";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 export const List = () => {
+  const { moonWallet } = useMoonWalletContext();
+  const account = useAccount()?.address || moonWallet;
+
   const { data: activeTournaments, isLoading: isActiveTournamentsLoading } = useScaffoldContractRead({
     contractName: "TournamentFactory",
     functionName: "getAllActiveTournaments",
@@ -22,7 +26,7 @@ export const List = () => {
   const { data: playerTournaments, isLoading: isPlayerTournamentsLoading } = useScaffoldContractRead({
     contractName: "TournamentFactory",
     functionName: "getTournamentsByPlayer",
-    args: [useAccount()?.address],
+    args: [account],
   });
 
   if (

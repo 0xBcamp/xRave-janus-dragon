@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMoonEthers } from "../../hooks/ethers";
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { Item } from "./item";
 import { ethers } from "ethers";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
@@ -12,17 +13,18 @@ export const ListMoon = () => {
   const [pastTournaments, setPastTournaments] = useState([] as string[]);
   const [playerTournaments, setPlayerTournaments] = useState([] as string[]);
   const chainId = 5;
+  const { moonWallet } = useMoonWalletContext();
 
   const { moonProvider } = useMoonEthers();
 
-  const tournamentFactory = new ethers.Contract(
-    DeployedContracts[chainId].Tournament.address,
-    DeployedContracts[chainId].Tournament.abi,
-    moonProvider || undefined,
-  );
-
   useEffect(() => {
     const getTournaments = async () => {
+      const signer = new ethers.VoidSigner(moonWallet, moonProvider || undefined);
+      const tournamentFactory = new ethers.Contract(
+        DeployedContracts[chainId].Tournament.address,
+        DeployedContracts[chainId].Tournament.abi,
+        signer,
+      );
       if (moonProvider) {
         const blockNumber = await moonProvider.getBlockNumber();
         console.log(`Latest block number: ${blockNumber}`);
