@@ -7,7 +7,9 @@ import { useAccount, useContractRead } from "wagmi";
 import { useContractEvent } from "wagmi";
 import { useMoonWalletContext } from "~~/components/ScaffoldEthAppWithProviders";
 import { Enter } from "~~/components/tournament/enter";
+import { EnterMoon } from "~~/components/tournament/enter-moon";
 import { Play } from "~~/components/tournament/play";
+import { PlayMoon } from "~~/components/tournament/play-moon";
 import { Withdraw } from "~~/components/tournament/withdraw";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
@@ -79,10 +81,26 @@ const Tournament: NextPage = () => {
     );
   }
 
-  if (isPlayer) {
+  if (isPlayer && connectedAddress) {
     return (
       <>
         <Play />
+      </>
+    );
+  }
+
+  if (isPlayer && moonWallet) {
+    return (
+      <>
+        <PlayMoon />
+      </>
+    );
+  }
+
+  if (moonWallet) {
+    return (
+      <>
+        <EnterMoon tournament={params.addr} key={params.addr} />
       </>
     );
   }
