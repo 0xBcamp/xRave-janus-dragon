@@ -3,6 +3,7 @@ import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProvide
 import { useMoonSDK } from "../../hooks/moon";
 import { CreateAccountInput } from "@moonup/moon-api";
 import { formatEther } from "viem";
+import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { InputBase } from "~~/components/scaffold-eth";
 
 export const Sign = () => {
@@ -129,6 +130,10 @@ export const Sign = () => {
     }
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(moonWallet);
+  };
+
   return (
     <div className="space-y-8 px-5 py-5 bg-base-100 rounded-3xl">
       <h2>Moon Account</h2>
@@ -154,7 +159,10 @@ export const Sign = () => {
       ) : (
         <>
           <p>
-            Your address: {moonWallet}
+            <div className="flex flex-row">
+              Your address: {moonWallet}
+              <ClipboardIcon className="w-6 h-6" onClick={handleCopy} />
+            </div>
             <br />
             Balance: {formatEther(balance)} ETH
           </p>
