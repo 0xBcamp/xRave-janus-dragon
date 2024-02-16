@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
 import { CreateAccountInput } from "@moonup/moon-api";
+import { formatEther } from "viem";
 import { InputBase } from "~~/components/scaffold-eth";
 
 export const Sign = () => {
@@ -10,6 +11,7 @@ export const Sign = () => {
   const [password, setPassword] = useState("");
   const [answer, setAnswer] = useState("");
   const { moonWallet, setMoonWallet } = useMoonWalletContext();
+  const [balance, setBalance] = useState(0n);
 
   const handleSignup = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -68,10 +70,18 @@ export const Sign = () => {
       connect();
 
       const message2 = await listAccounts();
+      let addr: any;
       console.log(message2);
       if (message2) {
-        const res: any = message2;
-        setMoonWallet(res.data.keys[0]);
+        addr = message2;
+        setMoonWallet(addr.data.keys[0]);
+      }
+
+      const message4 = await moon.getAccountsSDK().getBalance(addr.data.keys[0], { chainId: "1" });
+      console.log(message4);
+      if (message4) {
+        const res: any = message4;
+        setBalance(res.data.data.balance);
       }
     } catch (error: any) {
       console.error(error);
@@ -84,9 +94,38 @@ export const Sign = () => {
       // Disconnect from Moon
       await disconnect();
       setMoonWallet("");
+      setBalance(0n);
       console.log("Disconnected from Moon");
     } catch (error) {
       console.error("Error during disconnection:", error);
+    }
+  };
+
+  const handleTransaction = async (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    setAnswer("");
+    try {
+      // Check if Moon SDK is properly initialized and user is authenticated
+      if (!moon) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const data = {
+        to: "0x61cd1eb8434aabdd38a0abd62dc8665e958e41d1",
+        value: "10",
+        chain_id: "5",
+        nonce: "0",
+        data: "",
+        gas: "25000",
+        gasPrice: "2000000000",
+        encoding: "utf-8",
+      };
+      const message3 = await moon.getAccountsSDK().signTransaction(moonWallet, data);
+      console.log(message3);
+    } catch (error: any) {
+      console.error(error);
+      if (error) setAnswer(error.error.message);
     }
   };
 
@@ -102,19 +141,32 @@ export const Sign = () => {
           <label>
             <InputBase name="password" placeholder="Enter your password" value={password} onChange={setPassword} />
           </label>
-          <button className="btn btn-secondary" onClick={handleSignup}>
-            Sign up
-          </button>
-          <button className="btn btn-secondary" onClick={handleLogin}>
-            Login
-          </button>
+          <div className="flex justify-between mt-4">
+            <button className="btn btn-secondary" onClick={handleSignup}>
+              Sign up
+            </button>
+            <button className="btn btn-secondary" onClick={handleLogin}>
+              Login
+            </button>
+          </div>
           <div>{answer}</div>
         </form>
       ) : (
-        <button className="btn btn-secondary" onClick={handleDisconnect}>
-          Logout
-        </button>
+        <>
+          <p>
+            Your address: {moonWallet}
+            <br />
+            Balance: {formatEther(balance)} ETH
+          </p>
+          <button className="btn btn-secondary" onClick={handleDisconnect}>
+            Logout
+          </button>
+        </>
       )}
+
+      <button className="btn btn-secondary" onClick={handleTransaction}>
+        Test Tx
+      </button>
     </div>
   );
 };
