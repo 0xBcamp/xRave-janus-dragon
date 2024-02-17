@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { Contract } from "ethers";
+//import { Contract } from "ethers";
 
 /**
  * Deploys a contract named "YourContract" using the deployer account and
@@ -21,8 +21,8 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
   */
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-  const UniswapV2Pair = await hre.ethers.getContract<Contract>("UniswapV2Pair", deployer);
-  const Vyper_contract = await hre.ethers.getContract<Contract>("Vyper_contract", deployer); // yearn
+  // const UniswapV2Pair = await hre.ethers.getContract<Contract>("UniswapV2Pair", deployer);
+  // const Vyper_contract = await hre.ethers.getContract<Contract>("Vyper_contract", deployer); // yearn
   // const vrf = await hre.ethers.getContract<Contract>("VRFCoordinatorV2Mock", deployer);
 
   // await deploy("VRFConsumerBaseV2Upgradeable", {
@@ -45,13 +45,13 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
     autoMine: true,
   });
 
-  // const implementation = await hre.ethers.getContract<Contract>("Tournament", deployer);
-  const frontBurner = "0x7D64289652C768b56A9Efa7eEc7cb4133c8317e2"; //@note this is where you need to add your burnner address
+  //const implementation = await hre.ethers.getContract<Contract>("Tournament", deployer);
+  const frontBurner = "0xCd3C672770495EC50013E40AEd66DBD755BbC584"; //@note this is where you need to add your burnner address
 
   await deploy("TournamentFactory", {
     from: deployer,
     // Contract constructor arguments
-    args: [frontBurner, "0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D"],
+    args: [frontBurner, "0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed"],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
@@ -60,8 +60,8 @@ const deployContracts: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   // Get the deployed contract to interact with it after deploying.
 
-  await UniswapV2Pair.transfer(frontBurner, hre.ethers.parseEther("1000"));
-  await Vyper_contract.transfer(frontBurner, hre.ethers.parseEther("1000"));
+  // await UniswapV2Pair.transfer(frontBurner, hre.ethers.parseEther("1000"));
+  // await Vyper_contract.transfer(frontBurner, hre.ethers.parseEther("1000"));
 };
 
 export default deployContracts;

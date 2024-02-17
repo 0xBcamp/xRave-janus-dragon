@@ -2,61 +2,62 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 const deployMocksAndTokens: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployer } = await hre.getNamedAccounts();
-  const { deploy, log } = hre.deployments;
-  const chainId = await hre.getChainId();
+  // const { deployer } = await hre.getNamedAccounts();
+  // const { deploy, log } = hre.deployments;
+  // const chainId = await hre.getChainId();
+  hre;
 
-  const BASE_FEE = "250000000000000000"; // 0.25 is this the premium in LINK?
-  const GAS_PRICE_LINK = 1e9; // link per gas, is this the gas lane? // 0.000000001 LINK per gas
+  //   const BASE_FEE = "250000000000000000"; // 0.25 is this the premium in LINK?
+  //   const GAS_PRICE_LINK = 1e9; // link per gas, is this the gas lane? // 0.000000001 LINK per gas
 
-  // Deploy VRFCoordinatorV2Mock on local networks
-  if (chainId === "31337") {
-    log("Local network detected! Deploying mocks...");
+  //   // Deploy VRFCoordinatorV2Mock on local networks
+  //   if (chainId === "31337") {
+  //     log("Local network detected! Deploying mocks...");
 
-    await deploy("VRFCoordinatorV2Mock", {
-      from: deployer,
-      log: true,
-      args: [BASE_FEE, GAS_PRICE_LINK], // Add the appropriate constructor arguments if needed
-      autoMine: true,
-    });
+  //     await deploy("VRFCoordinatorV2Mock", {
+  //       from: deployer,
+  //       log: true,
+  //       args: [BASE_FEE, GAS_PRICE_LINK], // Add the appropriate constructor arguments if needed
+  //       autoMine: true,
+  //     });
 
-    log("VRFCoordinatorV2Mock Deployed!");
-    log("------------------------------------------------");
-  }
+  //     log("VRFCoordinatorV2Mock Deployed!");
+  //     log("------------------------------------------------");
+  //   }
 
-  // Example token deployment, adjust as necessary
-  await deploy("USDT", {
-    from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
+  //   // Example token deployment, adjust as necessary
+  //   await deploy("USDT", {
+  //     from: deployer,
+  //     args: [],
+  //     log: true,
+  //     autoMine: true,
+  //   });
 
-  await deploy("WETH", {
-    from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
+  //   await deploy("WETH", {
+  //     from: deployer,
+  //     args: [],
+  //     log: true,
+  //     autoMine: true,
+  //   });
 
-  const USDT = await hre.ethers.getContract("USDT", deployer);
-  const WETH = await hre.ethers.getContract("WETH", deployer);
+  //   const USDT = await hre.ethers.getContract("USDT", deployer);
+  //   const WETH = await hre.ethers.getContract("WETH", deployer);
 
-  await deploy("UniswapV2Pair", {
-    from: deployer,
-    args: [USDT.target, WETH.target],
-    log: true,
-    autoMine: true,
-  });
+  //   await deploy("UniswapV2Pair", {
+  //     from: deployer,
+  //     args: [USDT.target, WETH.target],
+  //     log: true,
+  //     autoMine: true,
+  //   });
 
-  await deploy("Vyper_contract", {
-    from: deployer,
-    args: [USDT.target],
-    log: true,
-    autoMine: true,
-  });
+  //   await deploy("Vyper_contract", {
+  //     from: deployer,
+  //     args: [USDT.target],
+  //     log: true,
+  //     autoMine: true,
+  //   });
 
-  // Additional deployment logic...
+  //   // Additional deployment logic...
 };
 
 export default deployMocksAndTokens;
