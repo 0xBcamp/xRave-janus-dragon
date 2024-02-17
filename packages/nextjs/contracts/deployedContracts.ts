@@ -5,7 +5,7 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  5: {
+  80001: {
     Tournament: {
       address: "0x18a03553a264E7Ee66B288E1A44DF15011C43C6a",
       abi: [

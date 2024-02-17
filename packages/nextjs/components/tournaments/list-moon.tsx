@@ -12,7 +12,7 @@ export const ListMoon = () => {
   const [futureTournaments, setFutureTournaments] = useState([] as string[]);
   const [pastTournaments, setPastTournaments] = useState([] as string[]);
   const [playerTournaments, setPlayerTournaments] = useState([] as string[]);
-  const chainId = 5;
+  const chainId = 80001;
   const { moonWallet } = useMoonWalletContext();
 
   const { moonProvider } = useMoonEthers();

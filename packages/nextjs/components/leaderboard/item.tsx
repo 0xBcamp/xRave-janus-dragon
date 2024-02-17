@@ -8,7 +8,7 @@ import DeployedContracts from "~~/contracts/deployedContracts";
 
 export const Item = ({ tournament, player, score }: { tournament: string; player: string; score: number }) => {
   const connectedAddress: string = useAccount()?.address ?? "";
-  const chainId = 5;
+  const chainId = 80001;
 
   const { data: playerRank, isLoading } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,

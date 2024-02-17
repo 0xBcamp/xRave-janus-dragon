@@ -9,7 +9,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   const writeTx = useTransactor();
   // const { address } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
-  const chainId = 5;
+  const chainId = 80001;
   const [approved, setApproved] = useState(false);
 
   const { data: tournamentData } = useContractRead({

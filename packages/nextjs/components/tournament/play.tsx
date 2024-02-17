@@ -10,7 +10,7 @@ export const Play = () => {
   // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const params = useParams<{ addr: string }>();
-  const chainId = 5;
+  const chainId = 80001;
   const [move, setMove] = useState(3);
   const [hash0, setHash0] = useState<`0x${string}`>("0x");
   const [hash1, setHash1] = useState<`0x${string}`>("0x");

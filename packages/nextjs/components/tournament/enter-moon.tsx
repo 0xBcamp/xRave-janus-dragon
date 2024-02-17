@@ -16,7 +16,7 @@ export const EnterMoon = ({ tournament }: { tournament: string }) => {
   const connectedAddress: string = useAccount()?.address ?? "";
   const { moonWallet } = useMoonWalletContext();
   const account = connectedAddress || moonWallet;
-  const chainId = 5;
+  const chainId = 80001;
   const [approved, setApproved] = useState(false);
   const { moon } = useMoonSDK();
 

@@ -10,7 +10,7 @@ import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 const Leaderboard: NextPage = () => {
   // const { address: connectedAddress } = useAccount();
   const params = useParams<{ addr: string }>();
-  const chainId = 5;
+  const chainId = 80001;
 
   const { data: isTournament } = useScaffoldContractRead({
     contractName: "TournamentFactory",

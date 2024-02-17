@@ -20,7 +20,7 @@ const Tournament: NextPage = () => {
   const { moonWallet } = useMoonWalletContext();
   const account = connectedAddress || moonWallet;
   const params = useParams<{ addr: string }>();
-  const chainId = 5;
+  const chainId = 80001;
 
   const [isPlayer, setIsPlayer] = useState(false);
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
-import { CreateAccountInput, Transaction } from "@moonup/moon-api";
+//import { useCall } from "~~/hooks/call";
+import { CreateAccountInput } from "@moonup/moon-api";
 import { formatEther } from "viem";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { InputBase, InputPwd } from "~~/components/scaffold-eth";
@@ -106,42 +107,7 @@ export const Sign = () => {
     event.preventDefault();
     setAnswer("");
     try {
-      // Check if Moon SDK is properly initialized and user is authenticated
-      if (!moon) {
-        console.error("User not authenticated");
-        return;
-      }
-
-      // const signedMessage = await (await alchemySigner()).signMessage("test");
-      // console.log('Signed ', signedMessage);
-
-      // Define a type guard function to check if an object conforms to the Transaction interface
-      function isTransaction(obj: any): obj is Transaction {
-        return (
-          obj && typeof obj.userop_transaction === "string" && Array.isArray(obj.transactions)
-          // Add more checks for other properties if necessary
-        );
-      }
-
-      const data = {
-        to: "0x61cd1eb8434aabdd38a0abd62dc8665e958e41d1",
-        value: "10",
-        chain_id: "80001",
-        encoding: "utf-8",
-      };
-      const rawTx = await moon.getAccountsSDK().signTransaction(moonWallet, data);
-      console.log(rawTx);
-      if (isTransaction(rawTx.data.data)) {
-        const res: Transaction = rawTx.data.data;
-        if (res.transactions) {
-          const raw = res.transactions[0].raw_transaction || "";
-          const tx = await moon.getAccountsSDK().broadcastTx(moonWallet, {
-            chainId: "80001",
-            rawTransaction: raw,
-          });
-          console.log(tx);
-        }
-      }
+      //useCall();
     } catch (error: any) {
       console.error(error);
       if (error) setAnswer(error.error.message);
