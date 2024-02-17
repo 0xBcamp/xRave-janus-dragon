@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { Toaster } from "react-hot-toast";
 import { WagmiConfig } from "wagmi";
@@ -38,8 +38,22 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+export type MoonWalletContextType = {
+  moonWallet: string;
+  setMoonWallet: (c: string) => void;
+};
+export const MoonWalletContext = createContext<MoonWalletContextType>({
+  moonWallet: "",
+  setMoonWallet: () => {
+    true;
+  },
+});
+
+export const useMoonWalletContext = () => useContext(MoonWalletContext);
+
 export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
   const { isDarkMode } = useDarkMode();
+  const [moonWallet, setMoonWallet] = useState("");
 
   return (
     <WagmiConfig config={wagmiConfig}>
@@ -49,7 +63,9 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
         avatar={BlockieAvatar}
         theme={isDarkMode ? darkTheme() : lightTheme()}
       >
-        <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        <MoonWalletContext.Provider value={{ moonWallet, setMoonWallet }}>
+          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        </MoonWalletContext.Provider>
       </RainbowKitProvider>
     </WagmiConfig>
   );

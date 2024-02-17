@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useAccount, useContractEvent, useContractRead, useContractWrite } from "wagmi";
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
+import { useAccount, useContractEvent, useContractRead } from "wagmi";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import DeployedContracts from "~~/contracts/deployedContracts";
-import { useTransactor } from "~~/hooks/scaffold-eth";
+import { useMoonSDK } from "~~/hooks/moon";
 
-export const Play = () => {
-  const writeTx = useTransactor();
-  // const { address: connectedAddress } = useAccount();
+export const PlayMoon = () => {
   const connectedAddress: string = useAccount()?.address ?? "";
+  const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const params = useParams<{ addr: string }>();
   const chainId = 80001;
   const [move, setMove] = useState(3);
@@ -18,19 +19,20 @@ export const Play = () => {
   const [hash, setHash] = useState<`0x${string}`>("0x");
   const [result, setResult] = useState("none");
   const [VRFrequest, setVRFrequest] = useState(0);
+  const { contractCall } = useMoonSDK();
 
   const { data: alreadyPlayed } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "alreadyPlayed",
-    args: [connectedAddress],
+    args: [account],
   });
 
   const { data: hashMoves } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "hashMoves",
-    args: [connectedAddress],
+    args: [account],
   });
   if (hash0 == "0x" && hashMoves != undefined) {
     const [h0, h1, h2] = hashMoves;
@@ -52,33 +54,31 @@ export const Play = () => {
     functionName: "name",
   });
 
-  const { writeAsync: playContract } = useContractWrite({
-    abi: DeployedContracts[chainId].Tournament.abi,
-    address: params.addr,
-    functionName: "playAgainstContract",
-    args: [move],
-  });
-
   const handlePlayAgainstContract = async () => {
     setResult("sent");
     try {
-      await writeTx(playContract, { blockConfirmations: 1 });
+      await contractCall(
+        moonWallet,
+        params.addr,
+        DeployedContracts[chainId].Tournament.abi as any,
+        "playAgainstContract",
+        [move],
+      );
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
   };
 
-  const { writeAsync: playHuman } = useContractWrite({
-    abi: DeployedContracts[chainId].Tournament.abi,
-    address: params.addr,
-    functionName: "playAgainstPlayer",
-    args: [hash],
-  });
-
   const handlePlayAgainstHuman = async () => {
     setResult("sent");
     try {
-      await writeTx(playHuman, { blockConfirmations: 1 });
+      await contractCall(
+        moonWallet,
+        params.addr,
+        DeployedContracts[chainId].Tournament.abi as any,
+        "playAgainstPlayer",
+        [hash],
+      );
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
@@ -94,7 +94,7 @@ export const Play = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "MoveSaved",
     listener: log => {
-      if (log[0].args.player == connectedAddress) {
+      if (log[0].args.player == account) {
         setVRFrequest(Number(log[0].args.vrf) || 0);
         if (result == "sent" || result == "none") setResult("saved");
       }
@@ -106,7 +106,7 @@ export const Play = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Winner",
     listener: log => {
-      if (log[0].args.player == connectedAddress) {
+      if (log[0].args.player == account) {
         setResult("winner");
       }
     },
@@ -117,7 +117,7 @@ export const Play = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Loser",
     listener: log => {
-      if (log[0].args.player == connectedAddress) {
+      if (log[0].args.player == account) {
         setResult("loser");
       }
     },
@@ -128,7 +128,7 @@ export const Play = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Draw",
     listener: log => {
-      if (log[0].args.player == connectedAddress || log[0].args.opponent == connectedAddress) {
+      if (log[0].args.player == account || log[0].args.opponent == account) {
         setResult("draw");
       }
     },

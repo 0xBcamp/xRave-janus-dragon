@@ -6,8 +6,10 @@ import { ClockIcon, CurrencyDollarIcon, GiftIcon, TrophyIcon, UserCircleIcon } f
 import DeployedContracts from "~~/contracts/deployedContracts";
 
 export const Item = ({ tournament, player }: { tournament: string; player: boolean }) => {
+  const chainId = 80001;
+
   const { data: tournamentData, isLoading: isLoading } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
   });

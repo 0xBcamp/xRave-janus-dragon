@@ -10,6 +10,7 @@ import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 const Leaderboard: NextPage = () => {
   // const { address: connectedAddress } = useAccount();
   const params = useParams<{ addr: string }>();
+  const chainId = 80001;
 
   const { data: isTournament } = useScaffoldContractRead({
     contractName: "TournamentFactory",
@@ -18,13 +19,13 @@ const Leaderboard: NextPage = () => {
   });
 
   const { data: topScore } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "topScore",
   });
 
   const { data: name } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "name",
   });

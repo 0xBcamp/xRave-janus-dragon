@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { formatUnits } from "viem";
-import { useAccount, useContractEvent, useContractRead, useContractWrite } from "wagmi";
+import { useAccount, useContractEvent, useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
-import { useTransactor } from "~~/hooks/scaffold-eth";
+import { useMoonSDK } from "~~/hooks/moon";
 
-export const Withdraw = () => {
-  const writeTx = useTransactor();
-  // const { address: connectedAddress } = useAccount();
+export const WithdrawMoon = () => {
   const connectedAddress: string = useAccount()?.address ?? "";
+  const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const chainId = 80001;
 
   const [withdrawn, setWithdrawn] = useState(false);
+  const { contractCall } = useMoonSDK();
 
   const params = useParams<{ addr: string }>();
 
@@ -31,25 +33,25 @@ export const Withdraw = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "withdrawAmountFromDeposit",
-    args: [connectedAddress],
+    args: [account],
   });
 
   const { data: prizeAmount } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "getPrizeAmount",
-    args: [connectedAddress],
-  });
-
-  const { writeAsync: withdraw } = useContractWrite({
-    abi: DeployedContracts[chainId].Tournament.abi,
-    address: params.addr,
-    functionName: "unstakeLPToken",
+    args: [account],
   });
 
   const handleWithdraw = async () => {
     try {
-      await writeTx(withdraw, { blockConfirmations: 1 });
+      await contractCall(
+        moonWallet,
+        params.addr,
+        DeployedContracts[chainId].Tournament.abi as any,
+        "unstakeLPToken",
+        [],
+      );
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
@@ -60,7 +62,7 @@ export const Withdraw = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Unstaked",
     listener: log => {
-      if (log[0].args.player == connectedAddress && (log[0].args.amount || 0n) > 0n) {
+      if (log[0].args.player == account && (log[0].args.amount || 0n) > 0n) {
         setWithdrawn(true);
       }
     },

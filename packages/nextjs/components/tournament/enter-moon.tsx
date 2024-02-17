@@ -1,16 +1,19 @@
 import { useState } from "react";
 import Link from "next/link";
+import { useMoonSDK } from "../../hooks/moon";
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { formatUnits } from "viem";
-import { erc20ABI, useAccount, useContractEvent, useContractRead, useContractWrite } from "wagmi";
+import { erc20ABI, useAccount, useContractEvent, useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
-import { useTransactor } from "~~/hooks/scaffold-eth";
+import { useMoonEthers } from "~~/hooks/ethers";
 
-export const Enter = ({ tournament }: { tournament: string }) => {
-  const writeTx = useTransactor();
-  // const { address } = useAccount();
+export const EnterMoon = ({ tournament }: { tournament: string }) => {
   const connectedAddress: string = useAccount()?.address ?? "";
+  const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const chainId = 80001;
   const [approved, setApproved] = useState(false);
+  const { moon, contractCall } = useMoonSDK();
 
   const { data: tournamentData } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,
@@ -40,14 +43,14 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     abi: erc20ABI,
     address: LPaddr,
     functionName: "balanceOf",
-    args: [connectedAddress],
+    args: [account],
   });
 
   const { data: allowance } = useContractRead({
     abi: erc20ABI,
     address: LPaddr,
     functionName: "allowance",
-    args: [connectedAddress, spender],
+    args: [account, spender],
   });
 
   console.log(allowance);
@@ -55,30 +58,35 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     setApproved(true);
   }
 
-  const { writeAsync: approve } = useContractWrite({
-    abi: erc20ABI,
-    address: LPaddr,
-    functionName: "approve",
-    args: [spender, BigInt(amount)],
-  });
+  const { moonProvider } = useMoonEthers();
+  const { ethereum } = window as any;
+
+  const signTransaction = async () => {
+    if (!moon) {
+      throw new Error("Moon SDK is not initialized");
+    }
+    await contractCall(moonWallet, LPaddr, erc20ABI as any, "approve", [spender, amount]);
+
+    return "";
+  };
 
   const handleApprove = async () => {
+    if (!ethereum) {
+      return;
+    }
+    if (!moonProvider) {
+      return;
+    }
     try {
-      await writeTx(approve, { blockConfirmations: 1 });
+      await signTransaction();
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
   };
 
-  const { writeAsync: deposit } = useContractWrite({
-    abi: DeployedContracts[chainId].Tournament.abi,
-    address: spender,
-    functionName: "stakeLPToken",
-  });
-
   const handleDeposit = async () => {
     try {
-      await writeTx(deposit, { blockConfirmations: 1 });
+      await contractCall(moonWallet, spender, DeployedContracts[chainId].Tournament.abi as any, "stakeLPToken", []);
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
@@ -90,7 +98,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
     eventName: "Approval",
     listener: log => {
       if (
-        log[0].args.owner == connectedAddress &&
+        log[0].args.owner == account &&
         spender == log[0].args.spender &&
         (log[0].args.value || 0n) >= BigInt(amount)
       ) {

@@ -1,40 +1,43 @@
+import { useEffect, useState } from "react";
+import { useMoonEthers } from "../../hooks/ethers";
 import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { Item } from "./item";
-import { useAccount } from "wagmi";
+import { ethers } from "ethers";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
+import DeployedContracts from "~~/contracts/deployedContracts";
 
-export const List = () => {
+export const ListMoon = () => {
+  const [loaded, setLoaded] = useState(false);
+  const [activeTournaments, setActiveTournaments] = useState([] as string[]);
+  const [futureTournaments, setFutureTournaments] = useState([] as string[]);
+  const [pastTournaments, setPastTournaments] = useState([] as string[]);
+  const [playerTournaments, setPlayerTournaments] = useState([] as string[]);
+  const chainId = 80001;
   const { moonWallet } = useMoonWalletContext();
-  const account = useAccount()?.address || moonWallet;
 
-  const { data: activeTournaments, isLoading: isActiveTournamentsLoading } = useScaffoldContractRead({
-    contractName: "TournamentFactory",
-    functionName: "getAllActiveTournaments",
-  });
+  const { moonProvider } = useMoonEthers();
 
-  const { data: futureTournaments, isLoading: isFutureTournamentsLoading } = useScaffoldContractRead({
-    contractName: "TournamentFactory",
-    functionName: "getAllFutureTournaments",
-  });
+  useEffect(() => {
+    const getTournaments = async () => {
+      const signer = new ethers.VoidSigner(moonWallet, moonProvider || undefined);
+      const tournamentFactory = new ethers.Contract(
+        DeployedContracts[chainId].Tournament.address,
+        DeployedContracts[chainId].Tournament.abi,
+        signer,
+      );
 
-  const { data: pastTournaments, isLoading: isPastTournamentsLoading } = useScaffoldContractRead({
-    contractName: "TournamentFactory",
-    functionName: "getAllPastTournaments",
-  });
+      setActiveTournaments(await tournamentFactory.getAllActiveTournaments());
+      setFutureTournaments(await tournamentFactory.getAllFutureTournaments());
+      setPastTournaments(await tournamentFactory.getAllPastTournaments());
+      setPlayerTournaments(await tournamentFactory.getAllPlayerTournaments());
+    };
+    if (!loaded) {
+      getTournaments();
+      setLoaded(true);
+    }
+  }, []);
 
-  const { data: playerTournaments, isLoading: isPlayerTournamentsLoading } = useScaffoldContractRead({
-    contractName: "TournamentFactory",
-    functionName: "getTournamentsByPlayer",
-    args: [account],
-  });
-
-  if (
-    isActiveTournamentsLoading ||
-    isFutureTournamentsLoading ||
-    isPastTournamentsLoading ||
-    isPlayerTournamentsLoading
-  ) {
+  if (!loaded) {
     return <div className="flex justify-center items-center mt-10">Loading...</div>;
   }
 
@@ -42,7 +45,7 @@ export const List = () => {
 
   return (
     <>
-      {(activeTournaments?.length || 0) + (futureTournaments?.length || 0) + (pastTournaments?.length || 0) === 0 ? (
+      {activeTournaments?.length + futureTournaments?.length + pastTournaments?.length === 0 ? (
         <div className="flex justify-center items-center mt-10">
           <div
             className="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
