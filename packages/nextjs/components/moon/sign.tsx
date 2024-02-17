@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
-import { CreateAccountInput } from "@moonup/moon-api";
+import { CreateAccountInput, Transaction } from "@moonup/moon-api";
 import { formatEther } from "viem";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
-import { InputBase } from "~~/components/scaffold-eth";
+import { InputBase, InputPwd } from "~~/components/scaffold-eth";
 
 export const Sign = () => {
   const { moon, connect, disconnect, listAccounts } = useMoonSDK();
@@ -78,7 +78,7 @@ export const Sign = () => {
         setMoonWallet(addr.data.keys[0]);
       }
 
-      const message4 = await moon.getAccountsSDK().getBalance(addr.data.keys[0], { chainId: "1" });
+      const message4 = await moon.getAccountsSDK().getBalance(addr.data.keys[0], { chainId: "80001" });
       console.log(message4);
       if (message4) {
         const res: any = message4;
@@ -112,18 +112,36 @@ export const Sign = () => {
         return;
       }
 
+      // const signedMessage = await (await alchemySigner()).signMessage("test");
+      // console.log('Signed ', signedMessage);
+
+      // Define a type guard function to check if an object conforms to the Transaction interface
+      function isTransaction(obj: any): obj is Transaction {
+        return (
+          obj && typeof obj.userop_transaction === "string" && Array.isArray(obj.transactions)
+          // Add more checks for other properties if necessary
+        );
+      }
+
       const data = {
         to: "0x61cd1eb8434aabdd38a0abd62dc8665e958e41d1",
         value: "10",
-        chain_id: "5",
-        nonce: "0",
-        data: "",
-        gas: "25000",
-        gasPrice: "2000000000",
+        chain_id: "80001",
         encoding: "utf-8",
       };
-      const message3 = await moon.getAccountsSDK().signTransaction(moonWallet, data);
-      console.log(message3);
+      const rawTx = await moon.getAccountsSDK().signTransaction(moonWallet, data);
+      console.log(rawTx);
+      if (isTransaction(rawTx.data.data)) {
+        const res: Transaction = rawTx.data.data;
+        if (res.transactions) {
+          const raw = res.transactions[0].raw_transaction || "";
+          const tx = await moon.getAccountsSDK().broadcastTx(moonWallet, {
+            chainId: "80001",
+            rawTransaction: raw,
+          });
+          console.log(tx);
+        }
+      }
     } catch (error: any) {
       console.error(error);
       if (error) setAnswer(error.error.message);
@@ -144,7 +162,7 @@ export const Sign = () => {
           </label>
           <br />
           <label>
-            <InputBase name="password" placeholder="Enter your password" value={password} onChange={setPassword} />
+            <InputPwd name="password" placeholder="Enter your password" value={password} onChange={setPassword} />
           </label>
           <div className="flex justify-between mt-4">
             <button className="btn btn-secondary" onClick={handleSignup}>
@@ -158,14 +176,14 @@ export const Sign = () => {
         </form>
       ) : (
         <>
-          <p>
+          <div>
             <div className="flex flex-row">
               Your address: {moonWallet}
               <ClipboardIcon className="w-6 h-6" onClick={handleCopy} />
             </div>
             <br />
-            Balance: {formatEther(balance)} ETH
-          </p>
+            Balance: {formatEther(balance)} MATIC
+          </div>
           <button className="btn btn-secondary" onClick={handleDisconnect}>
             Logout
           </button>

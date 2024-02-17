@@ -54,9 +54,9 @@ export const WalletButton = () => {
       <button className="btn btn-primary btn-sm">Use Moon</button>
     </Link>
   ) : (
-    <button className="btn btn-primary btn-sm" onClick={handleDisconnect}>
-      {moonWallet.slice(0, 4) + "..." + moonWallet.slice(-4)}
-      <XMarkIcon className="h-4 w-4" />
+    <button className="btn btn-primary btn-sm">
+      <Link href="/moon">{moonWallet.slice(0, 4) + "..." + moonWallet.slice(-4)}</Link>
+      <XMarkIcon className="h-4 w-4" onClick={handleDisconnect} />
     </button>
   );
 };
