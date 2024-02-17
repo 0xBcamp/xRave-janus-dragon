@@ -11,6 +11,7 @@ import { EnterMoon } from "~~/components/tournament/enter-moon";
 import { Play } from "~~/components/tournament/play";
 import { PlayMoon } from "~~/components/tournament/play-moon";
 import { Withdraw } from "~~/components/tournament/withdraw";
+import { WithdrawMoon } from "~~/components/tournament/withdraw-moon";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
@@ -73,10 +74,18 @@ const Tournament: NextPage = () => {
     );
   }
 
-  if (unstakingAllowed.data) {
+  if (unstakingAllowed.data && connectedAddress) {
     return (
       <>
         <Withdraw />
+      </>
+    );
+  }
+
+  if (unstakingAllowed.data && moonWallet) {
+    return (
+      <>
+        <WithdrawMoon />
       </>
     );
   }
