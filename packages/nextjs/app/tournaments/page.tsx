@@ -1,10 +1,11 @@
 "use client";
 
+//import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import type { NextPage } from "next";
 import { List } from "~~/components/tournaments";
 
 const Tournaments: NextPage = () => {
-  // const { address: connectedAddress } = useAccount();
+  //const { moonWallet } = useMoonWalletContext();
 
   return (
     <>
@@ -12,13 +13,14 @@ const Tournaments: NextPage = () => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">List of tournaments</span>
-            <span className="block text-4xl font-bold">active</span>
           </h1>
-          <List />
+          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
+            <List />
+          </div>
         </div>
       </div>
     </>
   );
 };
-
+//             {moonWallet ? <ListMoon /> : <List />}
 export default Tournaments;

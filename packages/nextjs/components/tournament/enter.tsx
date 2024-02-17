@@ -1,7 +1,7 @@
 import { useState } from "react";
+import Link from "next/link";
 import { formatUnits } from "viem";
-import { useAccount, useContractRead, useContractWrite } from "wagmi";
-import { useContractEvent } from "wagmi";
+import { erc20ABI, useAccount, useContractEvent, useContractRead, useContractWrite } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 
@@ -9,10 +9,11 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   const writeTx = useTransactor();
   // const { address } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
+  const chainId = 80001;
   const [approved, setApproved] = useState(false);
 
   const { data: tournamentData } = useContractRead({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: tournament,
     functionName: "getTournament",
   });
@@ -20,48 +21,48 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   let spender = "";
   let LPaddr = "";
   let amount = 0;
+  let decimals = 18;
   let LPTokenSymbol = "";
+  let protocol = 0;
+  let tokens: string[] = [];
 
   if (tournamentData != undefined) {
     spender = tournamentData[1];
     LPaddr = tournamentData[2];
-    LPTokenSymbol = tournamentData[4];
-    amount = Number(tournamentData[5]);
+    LPTokenSymbol = tournamentData[3];
+    amount = Number(tournamentData[7]);
+    decimals = Number(tournamentData[8]);
+    protocol = Number(tournamentData[4]);
+    tokens = [tournamentData[5], tournamentData[6]];
   }
 
   const { data: balance } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   const { data: allowance } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "allowance",
     args: [connectedAddress, spender],
   });
 
   console.log(allowance);
-  if (allowance != undefined && allowance >= BigInt(amount) && !approved) {
+  if (allowance != undefined && Number(allowance) >= amount && !approved) {
     setApproved(true);
   }
 
-  const { data: decimals } = useContractRead({
-    abi: DeployedContracts[31337].LPToken1.abi,
-    address: LPaddr,
-    functionName: "decimals",
-  });
-
   const { writeAsync: approve } = useContractWrite({
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: erc20ABI,
     address: LPaddr,
     functionName: "approve",
     args: [spender, BigInt(amount)],
   });
 
-  const approveToken = async () => {
+  const handleApprove = async () => {
     try {
       await writeTx(approve, { blockConfirmations: 1 });
     } catch (e) {
@@ -70,12 +71,12 @@ export const Enter = ({ tournament }: { tournament: string }) => {
   };
 
   const { writeAsync: deposit } = useContractWrite({
-    abi: DeployedContracts[31337].Tournament.abi,
+    abi: DeployedContracts[chainId].Tournament.abi,
     address: spender,
     functionName: "stakeLPToken",
   });
 
-  const depositToken = async () => {
+  const handleDeposit = async () => {
     try {
       await writeTx(deposit, { blockConfirmations: 1 });
     } catch (e) {
@@ -85,7 +86,7 @@ export const Enter = ({ tournament }: { tournament: string }) => {
 
   useContractEvent({
     address: LPaddr,
-    abi: DeployedContracts[31337].LPToken1.abi,
+    abi: erc20ABI,
     eventName: "Approval",
     listener: log => {
       if (
@@ -104,17 +105,49 @@ export const Enter = ({ tournament }: { tournament: string }) => {
         <div className="px-5">
           <h1 className="text-center mb-8">
             <span className="block text-2xl mb-2">Enter the tournament</span>
-            <span className="block text-4xl font-bold">by staking your LP tokens</span>
+            <span className="block text-4xl font-bold">
+              by staking your {protocol == 0 ? "Uniswap" : "Yearn"} LP tokens
+            </span>
           </h1>
           <div>
             You hold {formatUnits(balance || 0n, decimals || 18) || "-?-"} {LPTokenSymbol}
-            <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button className="btn btn-secondary" disabled={approved} onClick={() => approveToken()}>
+            <br />
+            {protocol == 0 ? (
+              <Link href={`https://app.uniswap.org/add/${tokens[0]}/${tokens[1]}`}>Obtain more LP</Link>
+            ) : (
+              <Link href={`https://yearn.fi/vaults/10/${LPaddr}`}>Obtain more LP</Link>
+            )}
+            <div className="flex justify-center rounded-md shadow-sm space-x-4 mt-5" role="group">
+              <button className="btn btn-secondary" disabled={approved} onClick={() => handleApprove()}>
                 Approve {LPTokenSymbol}
               </button>
-              <button className="btn btn-secondary" disabled={!approved} onClick={() => depositToken()}>
+              <button className="btn btn-secondary" disabled={!approved} onClick={() => handleDeposit()}>
                 Deposit {formatUnits(BigInt(amount) || 0n, decimals || 18).toString()} {LPTokenSymbol}
               </button>
+            </div>
+            <div>
+              To enter the tournament, you need to stake the required amount of LP token for its entire duration.
+              <br />
+              The value accrued by the LP token from deposit to wtihdrawal is used to increase the prize pool.
+              <br />
+              At the end of the tournament, you&apos;ll be able to withdraw the same value you deposited + game earnings
+              based on rank.
+              <br />
+              <br />
+              Simple exemple: <br />
+              You deposit 1 LP token worth 1 ETH.
+              <br />
+              During the tournament, the LP token increase in value and by the end of the tournament, 1 LP is now worth
+              1.1 ETH.
+              <br />
+              You get back 0.91 LP = 1 ETH plus your game earnings.
+              <br />
+              The remaining 0.09 LP are pooled together into the pool prize.
+              <br />
+              <br />
+              Protocol fee on deposit/withdrawal: 0%
+              <br />
+              Protocol fee on prize: 10%
             </div>
           </div>
         </div>

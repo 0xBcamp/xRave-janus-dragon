@@ -9,6 +9,8 @@ import "solidity-coverage";
 import "@nomicfoundation/hardhat-verify";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
+//foundry
+require("@nomicfoundation/hardhat-foundry");
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
@@ -28,9 +30,11 @@ const config: HardhatUserConfig = {
         // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
         runs: 200,
       },
+      viaIR: true,
     },
   },
-  defaultNetwork: "localhost",
+  defaultNetwork: "polygonMumbai",
+  //  defaultNetwork: "localhost",
   namedAccounts: {
     deployer: {
       // By default, it will take the first Hardhat account as the deployer

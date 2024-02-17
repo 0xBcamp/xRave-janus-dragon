@@ -14,4 +14,8 @@ artifacts
 artifacts-zk
 cache-zk
 
+#Foundry files
+out
+cache_forge
+
 deployments/localhost

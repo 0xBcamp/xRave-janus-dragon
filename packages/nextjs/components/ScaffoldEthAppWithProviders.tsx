@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { Toaster } from "react-hot-toast";
 import { WagmiConfig } from "wagmi";
@@ -14,6 +14,8 @@ import { useGlobalState } from "~~/services/store/store";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { appChains } from "~~/services/web3/wagmiConnectors";
 
+//import { rainbowkitUseMoonConnector } from "@moonup/moon-rainbowkit";
+//import { AUTH, MOON_SESSION_KEY, Storage } from "@moonup/moon-types";
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   const price = useNativeCurrencyPrice();
   const setNativeCurrencyPrice = useGlobalState(state => state.setNativeCurrencyPrice);
@@ -36,8 +38,22 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+export type MoonWalletContextType = {
+  moonWallet: string;
+  setMoonWallet: (c: string) => void;
+};
+export const MoonWalletContext = createContext<MoonWalletContextType>({
+  moonWallet: "",
+  setMoonWallet: () => {
+    true;
+  },
+});
+
+export const useMoonWalletContext = () => useContext(MoonWalletContext);
+
 export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
   const { isDarkMode } = useDarkMode();
+  const [moonWallet, setMoonWallet] = useState("");
 
   return (
     <WagmiConfig config={wagmiConfig}>
@@ -47,7 +63,9 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
         avatar={BlockieAvatar}
         theme={isDarkMode ? darkTheme() : lightTheme()}
       >
-        <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        <MoonWalletContext.Provider value={{ moonWallet, setMoonWallet }}>
+          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        </MoonWalletContext.Provider>
       </RainbowKitProvider>
     </WagmiConfig>
   );
