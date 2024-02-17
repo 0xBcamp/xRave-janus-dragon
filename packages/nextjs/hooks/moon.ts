@@ -94,6 +94,7 @@ export function useMoonSDK(): MoonSDKHook {
       data: encodedData,
       chain_id: "80001",
       encoding: "utf-8",
+      gas: "1000000",
     };
 
     const rawTx = await moon.getAccountsSDK().signTransaction(moonWallet, data);

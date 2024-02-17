@@ -9,6 +9,7 @@ import { useMoonSDK } from "~~/hooks/moon";
 export const WithdrawMoon = () => {
   const connectedAddress: string = useAccount()?.address ?? "";
   const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const chainId = 80001;
 
   const [withdrawn, setWithdrawn] = useState(false);
@@ -32,14 +33,14 @@ export const WithdrawMoon = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "withdrawAmountFromDeposit",
-    args: [connectedAddress],
+    args: [account],
   });
 
   const { data: prizeAmount } = useContractRead({
     abi: DeployedContracts[chainId].Tournament.abi,
     address: params.addr,
     functionName: "getPrizeAmount",
-    args: [connectedAddress],
+    args: [account],
   });
 
   const handleWithdraw = async () => {
@@ -61,7 +62,7 @@ export const WithdrawMoon = () => {
     abi: DeployedContracts[chainId].Tournament.abi,
     eventName: "Unstaked",
     listener: log => {
-      if (log[0].args.player == connectedAddress && (log[0].args.amount || 0n) > 0n) {
+      if (log[0].args.player == account && (log[0].args.amount || 0n) > 0n) {
         setWithdrawn(true);
       }
     },
