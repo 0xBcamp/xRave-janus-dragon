@@ -7,7 +7,7 @@ interface CallProps {
   moonWallet: string;
   contract: string;
   abi: any;
-  function: string;
+  functionName: string;
   args: any;
 }
 
@@ -27,7 +27,7 @@ export async function useCall(props: CallProps): Promise<void> {
 
   const encodedData = encodeFunctionData({
     abi: props.abi,
-    functionName: props.function,
+    functionName: props.functionName,
     args: props.args,
   });
 

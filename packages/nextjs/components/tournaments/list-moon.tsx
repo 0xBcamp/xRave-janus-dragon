@@ -25,10 +25,7 @@ export const ListMoon = () => {
         DeployedContracts[chainId].Tournament.abi,
         signer,
       );
-      if (moonProvider) {
-        const blockNumber = await moonProvider.getBlockNumber();
-        console.log(`Latest block number: ${blockNumber}`);
-      }
+
       setActiveTournaments(await tournamentFactory.getAllActiveTournaments());
       setFutureTournaments(await tournamentFactory.getAllFutureTournaments());
       setPastTournaments(await tournamentFactory.getAllPastTournaments());
