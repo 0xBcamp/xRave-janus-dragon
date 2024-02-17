@@ -2,17 +2,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useMoonSDK } from "../../hooks/moon";
 import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
-//import { ethers } from 'ethers';
 import { formatUnits } from "viem";
 import { erc20ABI, useAccount, useContractEvent, useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
 import { useMoonEthers } from "~~/hooks/ethers";
 
-//import { useTransactor } from "~~/hooks/scaffold-eth";
-
 export const EnterMoon = ({ tournament }: { tournament: string }) => {
-  // const writeTx = useTransactor();
-  // const { address } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const { moonWallet } = useMoonWalletContext();
   const account = connectedAddress || moonWallet;
@@ -66,35 +61,12 @@ export const EnterMoon = ({ tournament }: { tournament: string }) => {
   const { moonProvider } = useMoonEthers();
   const { ethereum } = window as any;
 
-  // const contractLP = new ethers.Contract(
-  //   LPaddr,
-  //   erc20ABI,
-  //   moonProvider || undefined
-  // );
-
   const signTransaction = async () => {
     if (!moon) {
       throw new Error("Moon SDK is not initialized");
     }
     await contractCall(moonWallet, LPaddr, erc20ABI as any, "approve", [spender, amount]);
-    // const raw_tx = await moon.getAccountsSDK().signTransaction(account, {
-    //   to: LPaddr,
-    //   data: "",
-    //   gasPrice: "1000000000",
-    //   gas: "200000",
-    //   nonce: "0",
-    //   chain_id: chainId.toString(),
-    //   encoding: "utf-8",
-    //   value: "1",
-    // });
-    // const kek = (raw_tx.data.data as Transaction)?.transactions?.at(0)?.raw_transaction;
-    // console.log(kek);
-    // const tx = await moon.getAccountsSDK().broadcastTx(account, {
-    //   chainId: chainId.toString(),
-    //   rawTransaction: "",
-    // });
 
-    // console.log(tx);
     return "";
   };
 
@@ -107,30 +79,13 @@ export const EnterMoon = ({ tournament }: { tournament: string }) => {
     }
     try {
       await signTransaction();
-      // const approve = await contractLP.populateTransaction.approve(
-      //   spender,
-      //   BigInt(amount)
-      // );
-      // await moonProvider.sendTransaction(approve);
-      // sign transaction
-      // const signedTx = await ethereum.request({
-      //   method: 'eth_sendTransaction',
-      //   params: [approve],
-      // });
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
   };
 
-  // const { writeAsync: deposit } = useContractWrite({
-  //   abi: DeployedContracts[chainId].Tournament.abi,
-  //   address: spender,
-  //   functionName: "stakeLPToken",
-  // });
-
   const handleDeposit = async () => {
     try {
-      //await writeTx(deposit, { blockConfirmations: 1 });
       await contractCall(moonWallet, spender, DeployedContracts[chainId].Tournament.abi as any, "stakeLPToken", []);
     } catch (e) {
       console.log("Unexpected error in writeTx", e);

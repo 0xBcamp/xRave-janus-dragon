@@ -83,14 +83,6 @@ export function useMoonSDK(): MoonSDKHook {
       return;
     }
 
-    // Define a type guard function to check if an object conforms to the Transaction interface
-    function isTransaction(obj: any): obj is Transaction {
-      return (
-        obj && typeof obj.userop_transaction === "string" && Array.isArray(obj.transactions)
-        // Add more checks for other properties if necessary
-      );
-    }
-
     const encodedData = encodeFunctionData({
       abi,
       functionName,
@@ -107,25 +99,14 @@ export function useMoonSDK(): MoonSDKHook {
     const rawTx = await moon.getAccountsSDK().signTransaction(moonWallet, data);
 
     console.log(rawTx);
-    if (isTransaction(rawTx.data.data)) {
-      const res: Transaction = rawTx.data.data;
-      if (res.transactions) {
-        const raw = res.transactions[0].raw_transaction || "";
-        const tx = await moon.getAccountsSDK().broadcastTx(moonWallet, {
-          chainId: "80001",
-          rawTransaction: raw,
-        });
-        console.log(tx);
-      }
-    }
-  };
+    const raw = (rawTx.data.data as Transaction)?.transactions?.at(0)?.raw_transaction || "";
 
-  // const signTransaction = async (transaction: TransactionResponse) => {
-  // 	if (moon) {
-  // 		return moon.SignTransaction(transaction);
-  // 	}
-  // 	throw new Error('Moon SDK is not initialized');
-  // };
+    const tx = await moon.getAccountsSDK().broadcastTx(moonWallet, {
+      chainId: "80001",
+      rawTransaction: raw,
+    });
+    console.log(tx);
+  };
 
   // Add other methods as needed
 

@@ -4,12 +4,9 @@ import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { useAccount, useContractEvent, useContractRead } from "wagmi";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import DeployedContracts from "~~/contracts/deployedContracts";
-//import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useMoonSDK } from "~~/hooks/moon";
 
 export const PlayMoon = () => {
-  // const writeTx = useTransactor();
-  // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const { moonWallet } = useMoonWalletContext();
   const account = connectedAddress || moonWallet;
@@ -57,13 +54,6 @@ export const PlayMoon = () => {
     functionName: "name",
   });
 
-  // const { writeAsync: playContract } = useContractWrite({
-  //   abi: DeployedContracts[chainId].Tournament.abi,
-  //   address: params.addr,
-  //   functionName: "playAgainstContract",
-  //   args: [move],
-  // });
-
   const handlePlayAgainstContract = async () => {
     setResult("sent");
     try {
@@ -74,19 +64,10 @@ export const PlayMoon = () => {
         "playAgainstContract",
         [move],
       );
-
-      //await writeTx(playContract, { blockConfirmations: 1 });
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }
   };
-
-  // const { writeAsync: playHuman } = useContractWrite({
-  //   abi: DeployedContracts[chainId].Tournament.abi,
-  //   address: params.addr,
-  //   functionName: "playAgainstPlayer",
-  //   args: [hash],
-  // });
 
   const handlePlayAgainstHuman = async () => {
     setResult("sent");
@@ -98,8 +79,6 @@ export const PlayMoon = () => {
         "playAgainstPlayer",
         [hash],
       );
-
-      //await writeTx(playHuman, { blockConfirmations: 1 });
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }

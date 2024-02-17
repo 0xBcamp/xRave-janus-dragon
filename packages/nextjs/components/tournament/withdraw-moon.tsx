@@ -4,12 +4,9 @@ import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { formatUnits } from "viem";
 import { useAccount, useContractEvent, useContractRead } from "wagmi";
 import DeployedContracts from "~~/contracts/deployedContracts";
-//import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useMoonSDK } from "~~/hooks/moon";
 
 export const WithdrawMoon = () => {
-  // const writeTx = useTransactor();
-  // const { address: connectedAddress } = useAccount();
   const connectedAddress: string = useAccount()?.address ?? "";
   const { moonWallet } = useMoonWalletContext();
   const chainId = 80001;
@@ -45,12 +42,6 @@ export const WithdrawMoon = () => {
     args: [connectedAddress],
   });
 
-  // const { writeAsync: withdraw } = useContractWrite({
-  //   abi: DeployedContracts[chainId].Tournament.abi,
-  //   address: params.addr,
-  //   functionName: "unstakeLPToken",
-  // });
-
   const handleWithdraw = async () => {
     try {
       await contractCall(
@@ -60,8 +51,6 @@ export const WithdrawMoon = () => {
         "unstakeLPToken",
         [],
       );
-
-      //await writeTx(withdraw, { blockConfirmations: 1 });
     } catch (e) {
       console.log("Unexpected error in writeTx", e);
     }

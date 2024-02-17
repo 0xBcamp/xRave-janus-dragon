@@ -4,11 +4,12 @@ import { useMoonSDK } from "../../hooks/moon";
 //import { useCall } from "~~/hooks/call";
 import { CreateAccountInput } from "@moonup/moon-api";
 import { formatEther } from "viem";
+import { erc20ABI } from "wagmi";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { InputBase, InputPwd } from "~~/components/scaffold-eth";
 
 export const Sign = () => {
-  const { moon, connect, disconnect, listAccounts } = useMoonSDK();
+  const { moon, connect, disconnect, listAccounts, contractCall } = useMoonSDK();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [answer, setAnswer] = useState("");
@@ -107,7 +108,10 @@ export const Sign = () => {
     event.preventDefault();
     setAnswer("");
     try {
-      //useCall();
+      await contractCall(moonWallet, "0xDED33Fff66356AaffBD03a972ef9fd91fe620D3d", erc20ABI as any, "approve", [
+        "0x8e185b1990573693FC74b38642B8c2f14E010d94",
+        10000000000000000n,
+      ]);
     } catch (error: any) {
       console.error(error);
       if (error) setAnswer(error.error.message);
