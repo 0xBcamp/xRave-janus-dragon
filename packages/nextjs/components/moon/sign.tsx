@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
+import { Spinner } from "../Spinner";
 //import { useCall } from "~~/hooks/call";
 import { CreateAccountInput } from "@moonup/moon-api";
-import { formatEther } from "viem";
+import { formatEther, getAddress } from "viem";
 //import { erc20ABI } from "wagmi";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { InputBase, InputPwd } from "~~/components/scaffold-eth";
@@ -15,14 +16,17 @@ export const Sign = () => {
   const [answer, setAnswer] = useState("");
   const { moonWallet, setMoonWallet } = useMoonWalletContext();
   const [balance, setBalance] = useState(0n);
+  const [action, setAction] = useState("");
 
   const handleSignup = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setAnswer("");
+    setAction("signup");
     try {
       // Check if Moon SDK is properly initialized and user is authenticated
       if (!moon) {
         console.error("User not authenticated");
+        setAction("");
         return;
       }
 
@@ -47,15 +51,18 @@ export const Sign = () => {
       console.error(error);
       if (error) setAnswer(error.error.message);
     }
+    setAction("");
   };
 
   const handleLogin = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setAnswer("");
+    setAction("login");
     try {
       // Check if Moon SDK is properly initialized and user is authenticated
       if (!moon) {
         console.error("User not authenticated");
+        setAction("");
         return;
       }
 
@@ -77,7 +84,7 @@ export const Sign = () => {
       console.log(message2);
       if (message2) {
         addr = message2;
-        setMoonWallet(addr.data.keys[0]);
+        setMoonWallet(getAddress(addr.data.keys[0]));
       }
 
       const message4 = await moon.getAccountsSDK().getBalance(addr.data.keys[0], { chainId: "80001" });
@@ -90,6 +97,7 @@ export const Sign = () => {
       console.error(error);
       setAnswer(error.error.message);
     }
+    setAction("");
   };
 
   const handleDisconnect = async () => {
@@ -135,11 +143,11 @@ export const Sign = () => {
             <InputPwd name="password" placeholder="Enter your password" value={password} onChange={setPassword} />
           </label>
           <div className="flex justify-between mt-4">
-            <button className="btn btn-secondary" onClick={handleSignup}>
-              Sign up
+            <button className="btn btn-secondary" disabled={action !== ""} onClick={handleSignup}>
+              {action === "signup" ? <Spinner /> : "Sign up"}
             </button>
-            <button className="btn btn-secondary" onClick={handleLogin}>
-              Login
+            <button className="btn btn-secondary" disabled={action !== ""} onClick={handleLogin}>
+              {action === "login" ? <Spinner /> : "Sign in"}
             </button>
           </div>
           <div>{answer}</div>

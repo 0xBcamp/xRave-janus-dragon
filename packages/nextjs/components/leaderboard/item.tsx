@@ -1,4 +1,5 @@
 // import { formatUnits } from "viem";
+import { useMoonWalletContext } from "../ScaffoldEthAppWithProviders";
 import { useContractRead } from "wagmi";
 import { useAccount } from "wagmi";
 import { SparklesIcon, UserIcon } from "@heroicons/react/24/outline";
@@ -8,6 +9,8 @@ import DeployedContracts from "~~/contracts/deployedContracts";
 
 export const Item = ({ tournament, player, score }: { tournament: string; player: string; score: number }) => {
   const connectedAddress: string = useAccount()?.address ?? "";
+  const { moonWallet } = useMoonWalletContext();
+  const account = connectedAddress || moonWallet;
   const chainId = 80001;
 
   const { data: playerRank, isLoading } = useContractRead({
@@ -38,7 +41,7 @@ export const Item = ({ tournament, player, score }: { tournament: string; player
         <div className="flex items-center justify-self-start">
           <TrophyIcon className={trophyColor} /> {playerRank[0].toString()}
         </div>
-        {player === connectedAddress ? (
+        {player === account ? (
           <div className="flex items-center">
             <UserIcon className="h-6 w-6 mr-1" />
             You
