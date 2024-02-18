@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMoonWalletContext } from "../../components/ScaffoldEthAppWithProviders";
 import { useMoonSDK } from "../../hooks/moon";
+import { Spinner } from "../Spinner";
 //import { useCall } from "~~/hooks/call";
 import { CreateAccountInput } from "@moonup/moon-api";
 import { formatEther } from "viem";
@@ -15,14 +16,17 @@ export const Sign = () => {
   const [answer, setAnswer] = useState("");
   const { moonWallet, setMoonWallet } = useMoonWalletContext();
   const [balance, setBalance] = useState(0n);
+  const [action, setAction] = useState("");
 
   const handleSignup = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setAnswer("");
+    setAction("signup");
     try {
       // Check if Moon SDK is properly initialized and user is authenticated
       if (!moon) {
         console.error("User not authenticated");
+        setAction("");
         return;
       }
 
@@ -47,15 +51,18 @@ export const Sign = () => {
       console.error(error);
       if (error) setAnswer(error.error.message);
     }
+    setAction("");
   };
 
   const handleLogin = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setAnswer("");
+    setAction("login");
     try {
       // Check if Moon SDK is properly initialized and user is authenticated
       if (!moon) {
         console.error("User not authenticated");
+        setAction("");
         return;
       }
 
@@ -90,6 +97,7 @@ export const Sign = () => {
       console.error(error);
       setAnswer(error.error.message);
     }
+    setAction("");
   };
 
   const handleDisconnect = async () => {
@@ -135,11 +143,11 @@ export const Sign = () => {
             <InputPwd name="password" placeholder="Enter your password" value={password} onChange={setPassword} />
           </label>
           <div className="flex justify-between mt-4">
-            <button className="btn btn-secondary" onClick={handleSignup}>
-              Sign up
+            <button className="btn btn-secondary" disabled={action !== ""} onClick={handleSignup}>
+              {action === "signup" ? <Spinner /> : "Sign up"}
             </button>
-            <button className="btn btn-secondary" onClick={handleLogin}>
-              Login
+            <button className="btn btn-secondary" disabled={action !== ""} onClick={handleLogin}>
+              {action === "login" ? <Spinner /> : "Sign in"}
             </button>
           </div>
           <div>{answer}</div>
