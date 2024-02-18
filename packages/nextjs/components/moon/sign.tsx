@@ -4,7 +4,7 @@ import { useMoonSDK } from "../../hooks/moon";
 import { Spinner } from "../Spinner";
 //import { useCall } from "~~/hooks/call";
 import { CreateAccountInput } from "@moonup/moon-api";
-import { formatEther } from "viem";
+import { formatEther, getAddress } from "viem";
 //import { erc20ABI } from "wagmi";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { InputBase, InputPwd } from "~~/components/scaffold-eth";
@@ -84,7 +84,7 @@ export const Sign = () => {
       console.log(message2);
       if (message2) {
         addr = message2;
-        setMoonWallet(addr.data.keys[0]);
+        setMoonWallet(getAddress(addr.data.keys[0]));
       }
 
       const message4 = await moon.getAccountsSDK().getBalance(addr.data.keys[0], { chainId: "80001" });
