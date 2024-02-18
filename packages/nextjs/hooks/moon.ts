@@ -16,7 +16,14 @@ interface MoonSDKHook {
   signMessage: (msg: string) => Promise<string | undefined>;
   updateToken: (token: string) => Promise<void>;
   updateRefreshToken: (token: string) => Promise<void>;
-  contractCall: (moonWallet: string, contract: string, abi: any[], functionName: string, args: any[]) => Promise<void>;
+  contractCall: (
+    moonWallet: string,
+    contract: string,
+    abi: any[],
+    functionName: string,
+    args: any[],
+    value?: number,
+  ) => Promise<void>;
   // signTransaction: (transaction: TransactionResponse) => Promise<Transaction>;
   // Add other methods as needed
 }
@@ -77,7 +84,14 @@ export function useMoonSDK(): MoonSDKHook {
     }
   };
 
-  const contractCall = async (moonWallet: string, contract: string, abi: any[], functionName: string, args: any[]) => {
+  const contractCall = async (
+    moonWallet: string,
+    contract: string,
+    abi: any[],
+    functionName: string,
+    args: any[],
+    value?: number,
+  ) => {
     if (!moon) {
       console.error("User not authenticated");
       return;
@@ -95,6 +109,7 @@ export function useMoonSDK(): MoonSDKHook {
       chain_id: "80001",
       encoding: "utf-8",
       gas: "1000000",
+      value: value ? value.toString() : "0",
     };
 
     const rawTx = await moon.getAccountsSDK().signTransaction(moonWallet, data);
