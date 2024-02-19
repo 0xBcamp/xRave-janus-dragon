@@ -45,7 +45,7 @@ export const Sign = () => {
       console.log(message2);
       if (message2) {
         const res: any = message2;
-        setMoonWallet(res.data.keys[0]);
+        setMoonWallet(getAddress(res.data.keys[0]));
       }
     } catch (error: any) {
       console.error(error);
