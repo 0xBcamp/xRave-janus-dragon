@@ -43,9 +43,17 @@ export const Sign = () => {
 
       const message2 = await listAccounts();
       console.log(message2);
+      let res: any;
       if (message2) {
-        const res: any = message2;
-        setMoonWallet(res.data.keys[0]);
+        res = message2;
+        setMoonWallet(getAddress(res.data.keys[0]));
+      }
+
+      const message4 = await moon.getAccountsSDK().getBalance(res.data.keys[0], { chainId: "80001" });
+      console.log(message4);
+      if (message4) {
+        const res: any = message4;
+        setBalance(res.data.data.balance);
       }
     } catch (error: any) {
       console.error(error);
