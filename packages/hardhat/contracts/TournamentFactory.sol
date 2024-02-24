@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./Tournament.sol";
+import {Tournament} from"./Tournament.sol";
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,26 +10,28 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 
+error TournamentFactory__NotOwner();
+
 contract TournamentFactory {
 	// State Variables
-	address[] public TournamentArray; // Store deployed contracts
-	mapping(address => Tournament) public TournamentMap;
-	mapping(address => address) public TournamentPartner;
-	address public owner;
+	address[] private s_tournamentArray; // Store deployed contracts
+	mapping(address => Tournament) private s_tournamentMap;
+	mapping(address => address) private TournamentPartner;
+	address public immutable i_owner;
 
-	address public implementationContract;
+	address private immutable i_implementationContract;
 
-    VRFCoordinatorV2Interface private vrfCoordinator;
-    uint64 public subscriptionId;
-    bytes32 public gasLane;
-    uint32 public callbackGasLimit = 1000000;
+    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
+    uint64 private immutable i_subscriptionId;
+    bytes32 private s_gasLane;
+    uint32 private s_callbackGasLimit = 1000000;
 
 	constructor (address _owner, address _vrfCoordinatorV2) {
-		owner = _owner;
-		implementationContract = address(new Tournament());
+		i_owner = _owner;
+		i_implementationContract = address(new Tournament());
 
-		vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
-        subscriptionId = vrfCoordinator.createSubscription();
+		i_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinatorV2);
+        i_subscriptionId = i_vrfCoordinator.createSubscription();
 
 	}
 	//// VRF deployment to Avax. @todo make structs for each chain? Pass in struct to createTournament() for vrf constructor args.
@@ -45,7 +47,7 @@ contract TournamentFactory {
 
 	// Modifier: used to define a set of rules that must be met before or after a function is executed
 	modifier isOwner() {
-		require(msg.sender == owner, "Not the Owner");
+		if(msg.sender != i_owner) revert TournamentFactory__NotOwner();
 		_;
 	}
 
@@ -60,26 +62,26 @@ contract TournamentFactory {
 	 * @return instance (address) - address of the new tournament
 	 */
 	function createTournament(
-		string memory _name, 
+		string calldata _name, 
 		address _poolIncentivized, 
 		uint256 _LPTokenAmount, 
 		uint32 _startTime, 
 		uint32 _endTime
 	) public returns(address instance) {
-		instance = Clones.clone(implementationContract);
+		instance = Clones.clone(i_implementationContract);
 		Tournament(instance).initialize(
-			owner, 
+			i_owner, 
 			_name, 
 			_poolIncentivized, 
 			_LPTokenAmount, 
 			_startTime, 
 			_endTime, 
 			address(this),
-			address(vrfCoordinator)
+			address(i_vrfCoordinator)
 		);
-		TournamentArray.push(instance);
-		TournamentMap[instance] = Tournament(instance);
-		vrfCoordinator.addConsumer(subscriptionId, instance);
+		s_tournamentArray.push(instance);
+		s_tournamentMap[instance] = Tournament(instance);
+		i_vrfCoordinator.addConsumer(i_subscriptionId, instance);
 		emit TournamentCreated(instance);
 	}
 
@@ -90,16 +92,16 @@ contract TournamentFactory {
 	 * @param _callbackGasLimit (uint32) - callback gas limit
 	 */
 	function setChainlinkConfig(bytes32 _gasLane, uint32 _callbackGasLimit) external isOwner {
-		gasLane = _gasLane;
-		callbackGasLimit = _callbackGasLimit;
+		s_gasLane = _gasLane;
+		s_callbackGasLimit = _callbackGasLimit;
 	}
 
 	/**
 	 * @notice Returns the chainlink config
-	 * @dev For use by the proxies when requesting a word to VRF
+	 * @dev For use by the clones when requesting a word to VRF
 	 */
 	function getVrfConfig() public view returns (uint64, bytes32, uint32) {
-		return (subscriptionId, gasLane, callbackGasLimit);
+		return (i_subscriptionId, s_gasLane, s_callbackGasLimit);
 	}
 
 	/**
@@ -107,7 +109,7 @@ contract TournamentFactory {
 	 * @return list (address[] memory) - list of all tournament
 	 */
 	function getAllTournaments() public view returns (address[] memory list) {
-		list = TournamentArray;
+		list = s_tournamentArray;
 	}
 
 	/**
@@ -116,10 +118,10 @@ contract TournamentFactory {
 	 */
 	function getAllActiveTournaments() external view returns (address[] memory activeTournaments) {
 		uint activeCount = 0;
-
+		uint length = s_tournamentArray.length;
 		// First pass: Count the number of active tournaments
-		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive()) {
+		for (uint i = 0; i < length; i++) {
+			if (s_tournamentMap[s_tournamentArray[i]].isActive()) {
 				activeCount++;
 			}
 		}
@@ -127,9 +129,9 @@ contract TournamentFactory {
 		// Second pass: Populate the array with active tournaments
 		activeTournaments = new address[](activeCount);
 		uint currentIndex = 0;
-		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isActive()) {
-				activeTournaments[currentIndex] = TournamentArray[i];
+		for (uint i = 0; i < length; i++) {
+			if (s_tournamentMap[s_tournamentArray[i]].isActive()) {
+				activeTournaments[currentIndex] = s_tournamentArray[i];
 				currentIndex++;
 			}
 		}
@@ -141,11 +143,11 @@ contract TournamentFactory {
 	 */
 	function getAllPastTournaments() external view returns (address[] memory pastTournaments) {
 		uint count = 0;
-
+		uint length = s_tournamentArray.length;
 		// First pass: Count the number of active tournaments
-		for (uint i = 0; i < TournamentArray.length; i++) {
+		for (uint i = 0; i < length; i++) {
 
-			if (TournamentMap[TournamentArray[i]].isEnded()) {
+			if (s_tournamentMap[s_tournamentArray[i]].isEnded()) {
 				count++;
 			}
 		}
@@ -153,10 +155,10 @@ contract TournamentFactory {
 		// Second pass: Populate the array with active tournaments
 		pastTournaments = new address[](count);
 		uint currentIndex = 0;
-		for (uint i = 0; i < TournamentArray.length; i++) {
+		for (uint i = 0; i < length; i++) {
 
-			if (TournamentMap[TournamentArray[i]].isEnded()) {
-				pastTournaments[currentIndex] = TournamentArray[i];
+			if (s_tournamentMap[s_tournamentArray[i]].isEnded()) {
+				pastTournaments[currentIndex] = s_tournamentArray[i];
 				currentIndex++;
 			}
 		}
@@ -168,11 +170,11 @@ contract TournamentFactory {
 	 */
 	function getAllFutureTournaments() external view returns (address[] memory futureTournaments) {
 		uint count = 0;
-
+		uint length = s_tournamentArray.length;
 
 		// First pass: Count the number of active tournaments
-		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isFuture()) {
+		for (uint i = 0; i < length; i++) {
+			if (s_tournamentMap[s_tournamentArray[i]].isFuture()) {
 				count++;
 			}
 		}
@@ -180,9 +182,9 @@ contract TournamentFactory {
 		// Second pass: Populate the array with active tournaments
 		futureTournaments = new address[](count);
 		uint currentIndex = 0;
-		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isFuture()) {
-				futureTournaments[currentIndex] = TournamentArray[i];
+		for (uint i = 0; i < length; i++) {
+			if (s_tournamentMap[s_tournamentArray[i]].isFuture()) {
+				futureTournaments[currentIndex] = s_tournamentArray[i];
 				currentIndex++;
 			}
 		}
@@ -194,10 +196,11 @@ contract TournamentFactory {
 	 */
 	function getTournamentsByPlayer(address _player) external view returns (address[] memory playersTournaments) {
 		uint count = 0;
+		uint length = s_tournamentArray.length;
 
 		// First pass: Count the number of active tournaments
-		for (uint i = 0; i < TournamentArray.length; i++) {
-			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
+		for (uint i = 0; i < length; i++) {
+			if (s_tournamentMap[s_tournamentArray[i]].isPlayer(_player)) {
 				count++;
 			}
 		}
@@ -205,10 +208,10 @@ contract TournamentFactory {
 		// Second pass: Populate the array with active tournaments
 		playersTournaments = new address[](count);
 		uint currentIndex = 0;
-		for (uint i = 0; i < TournamentArray.length; i++) {
+		for (uint i = 0; i < length; i++) {
 
-			if (TournamentMap[TournamentArray[i]].isPlayer(_player)) {
-				playersTournaments[currentIndex] = TournamentArray[i];
+			if (s_tournamentMap[s_tournamentArray[i]].isPlayer(_player)) {
+				playersTournaments[currentIndex] = s_tournamentArray[i];
 				currentIndex++;
 			}
 		}
@@ -227,7 +230,7 @@ contract TournamentFactory {
 	 * @return (bool)
 	 */
 	function isTournament(address _contract) external view returns (bool) {
-		if(address(TournamentMap[_contract]) == _contract) {
+		if(address(s_tournamentMap[_contract]) == _contract) {
 			return true;
 		}
 		return false;
