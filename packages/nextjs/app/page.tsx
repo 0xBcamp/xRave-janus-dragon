@@ -20,9 +20,9 @@ const Home: NextPage = () => {
             <div className="flex flex-1 flex-col bg-base-100 px-10 py-10 text-center items-center min-w-[300px] sm:min-w-[200px] md:min-w-[250px] lg:min-w-[300px] xl:min-w-[350px] rounded-3xl">
               <BookOpenIcon className="h-8 w-8 fill-secondary" />
               <p>
-                {/* <Link href="/debug" passHref className="link"> */}
-                About
-                {/* </Link>{" "} */}
+                <Link href="/about" passHref className="link">
+                  About
+                </Link>{" "}
               </p>
             </div>
             <div className="flex flex-1 flex-col bg-base-100 px-10 py-10 text-center items-center min-w-[300px] sm:min-w-[200px] md:min-w-[250px] lg:min-w-[300px] xl:min-w-[350px] rounded-3xl">
