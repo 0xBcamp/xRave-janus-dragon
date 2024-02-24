@@ -27,42 +27,60 @@ interface Factory {
 	function getVrfConfig() external view returns (uint64, bytes32, uint32);
 }
 
+
 contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
     using ECDSAUpgradeable for bytes32;
 
 	//////////////
 	/// ERRORS ///
 	//////////////
-		
+
+	error Tournament__AlreadyPlayed();
+	error Tournament__AlreadyStaked();
+	error Tournament__InvalidEndTime();
+	error Tournament__InvalidMove();
+	error Tournament__InvalidStartTime();
+	error Tournament__InvalidTimeRange();
+	error Tournament__NoFees();
+	error Tournament__NothingToWithdraw();
+	error Tournament__NotOwner();
+	error Tournament__NotPlayer();
+	error Tournament__RequestFailed();
+	error Tournament__RequestNotFound();
+	error Tournament__StakingNotAllowed();
+	error Tournament__TournamentNotActive();
+	error Tournament__UnstakingNotAllowed();
+	error Tournament__ZeroDepositAmount();
+
 	///////////////////////
 	/// State Variables ///
 	///////////////////////
 
-	address public owner;
+	address public s_owner;
 	
 	//TOURNAMENT INFO
-	string public name; // Name of the tournament
-	IERC20Metadata poolIncentivized;
-	uint256 public depositAmount; // Exact Amount of LP to be deposited by the players
-	uint32 public startTime;
-	uint32 public endTime;
-	address private factory;
+	string private s_name; // Name of the tournament
+	IERC20Metadata private s_poolIncentivized;
+	uint256 private s_depositAmount; // Exact Amount of LP to be deposited by the players
+	uint32 private s_startTime;
+	uint32 private s_endTime;
+	address private s_factory;
 	enum Protocol {
 		Uniswap,
 		Yearn
 	}
-	Protocol public protocol;
-	uint256 private realizedPoolPrize; // Amount of LP left by players that withdrawn
-	uint256 private realizedFees; // Amount of LP fees left by players that withdrawn
-	uint64 private unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
-	uint64 public fees = 0.1 ether; // 10% fees on pool prize
-	uint16 public topScore = 0;
-	uint256 private nbRanks = 1;
+	Protocol private s_protocol;
+	uint256 private s_realizedPoolPrize; // Amount of LP left by players that withdrawn
+	uint256 private s_realizedFees; // Amount of LP fees left by players that withdrawn
+	uint64 private s_unclaimedPoolPrize = 1 ether; // 100% of the pool prize unclaimed
+	uint64 public constant FEES = 0.1 ether; // 10% fees on pool prize
+	uint16 public s_topScore = 0;
+	uint256 private s_nbRanks = 1;
 
 	// PLAYER INFO
-	address[] public players;
-	mapping(uint16 => address[]) public scoreToPlayers; // Used for ranking
-	mapping(address => Player) public playersMap; //address => Player Struct
+	address[] private s_players;
+	mapping(uint16 => address[]) private s_scoreToPlayers; // Used for ranking
+	mapping(address => Player) private s_playersMap; //address => Player Struct
 
 	struct Player {
 		uint16 score; // how many points each player has
@@ -75,7 +93,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		bytes32 hash;
 		uint32 lastGame;
 	}
-	StoredPlayer private storedPlayer;
+	StoredPlayer private s_storedPlayer;
 
 
 	///////////////////////////////
@@ -98,7 +116,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
     uint256[] public requestIds;
     uint256 public lastRequestId;
 
-    VRFCoordinatorV2Interface private vrfCoordinator;    
+    VRFCoordinatorV2Interface private s_vrfCoordinator;    
     /// VRF END ///
 
 	//////////////
@@ -140,13 +158,13 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	// Check the withdraw() function
 	modifier onlyOwner() {
 		// msg.sender: predefined variable that represents address of the account that called the current function
-		require(msg.sender == owner, "Not the Owner");
+		if(msg.sender != s_owner) revert Tournament__NotOwner();
 		_;
 	}
 
 	function initialize(
 		address _owner, 
-		string memory _name, 
+		string calldata _name, 
 		address _poolIncentivized, 
 		uint256 _depositAmount, 
 		uint32 _startTime, 
@@ -154,29 +172,29 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		address _factory,
 		address _vrfCoordinator
 		) public initializer {
-			require(_startTime < _endTime, "Start time must be before end time");
+			if(_startTime >= _endTime) revert Tournament__InvalidTimeRange();
 			// Defaults to current block timestamp
-			startTime = _startTime == 0 ? uint32(block.timestamp) : _startTime;
-			require(startTime >= block.timestamp, "Start time must be today or in the future");
-			require(_endTime > block.timestamp, "End time must be in the future");
-			require(_depositAmount > 0, "Amount to stake must be greater than 0");
-			owner = _owner;
-			name = _name;
-			depositAmount = _depositAmount;
+			s_startTime = _startTime == 0 ? uint32(block.timestamp) : _startTime;
+			if(_startTime < block.timestamp) revert Tournament__InvalidStartTime();
+			if(_endTime <= block.timestamp) revert Tournament__InvalidEndTime();
+			if(_depositAmount == 0) revert Tournament__ZeroDepositAmount();
+			s_owner = _owner;
+			s_name = _name;
+			s_depositAmount = _depositAmount;
 			if(_poolIncentivized != address(0)) {
-				poolIncentivized = IERC20Metadata(_poolIncentivized);
-				string memory symbol = poolIncentivized.symbol();
+				s_poolIncentivized = IERC20Metadata(_poolIncentivized);
+				string memory symbol = s_poolIncentivized.symbol();
 				if(keccak256(abi.encodePacked(symbol)) == keccak256("UNI-V2")) {
-					protocol = Protocol.Uniswap;
+					s_protocol = Protocol.Uniswap;
 				} else {
-					protocol = Protocol.Yearn;
+					s_protocol = Protocol.Yearn;
 				}
 			}
-			endTime = _endTime;
-			factory = _factory;
+			s_endTime = _endTime;
+			s_factory = _factory;
 			// VRF
 			__VRFConsumerBaseV2Upgradeable_init(_vrfCoordinator);
-			vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
+			s_vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
 		}
 
 	/////////////////////////////
@@ -187,13 +205,13 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @notice Allows the players to stake their LP token to register for the tournament
 	 */
 	function stakeLPToken() public {
-		require(!isPlayer(msg.sender), "You have already staked");
-		require(stakingAllowed(), "Staking not allowed");
-		require(IERC20(poolIncentivized).transferFrom(msg.sender, address(this), depositAmount)); // Revert message handled by the ERC20 transferFrom function
-		playersMap[msg.sender].depositPricePerShare = getPricePerShare();
-		players.push(msg.sender);
+		if(isPlayer(msg.sender)) revert Tournament__AlreadyStaked();
+		if(!stakingAllowed()) revert Tournament__StakingNotAllowed();
+		IERC20(s_poolIncentivized).transferFrom(msg.sender, address(this), s_depositAmount); // Revert message handled by the ERC20 transferFrom function
+		s_playersMap[msg.sender].depositPricePerShare = getPricePerShare();
+		s_players.push(msg.sender);
 		// emit: keyword used to trigger an event
-		emit Staked(msg.sender, depositAmount);
+		emit Staked(msg.sender, s_depositAmount);
 	}
 
 	/**
@@ -201,20 +219,20 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @dev Also updates the state of the contract to reflect the withdrawal
 	 */
 	function unstakeLPToken() public {
-		require(isPlayer(msg.sender), "You have nothing to withdraw"); // Address never staked or already withdrew
-		require(unstakingAllowed(), "Unstaking not allowed");
+		if(!isPlayer(msg.sender)) revert Tournament__NothingToWithdraw(); // Address never staked or already withdrew
+		if(!unstakingAllowed()) revert Tournament__UnstakingNotAllowed();
 		// Get back its deposited value of underlying assets
 		uint256 amount = withdrawAmountFromDeposit(msg.sender); // corresponds to deposited underlying assets
-		uint256 extraPoolPrize = (1 ether - fees) * (depositAmount - amount) / 1 ether; // How much LP token is left by the user
-		realizedFees += depositAmount - amount - extraPoolPrize;
+		uint256 extraPoolPrize = (1 ether - FEES) * (s_depositAmount - amount) / 1 ether; // How much LP token is left by the user
+		s_realizedFees += s_depositAmount - amount - extraPoolPrize;
 		// Add rewards from the game
 		amount += getPrizeAmount(msg.sender);
-		realizedPoolPrize += extraPoolPrize;
-		unclaimedPoolPrize -= getPrizeShare(msg.sender);
+		s_realizedPoolPrize += extraPoolPrize;
+		s_unclaimedPoolPrize -= getPrizeShare(msg.sender);
 
-		playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
+		s_playersMap[msg.sender].depositPricePerShare = 0; // Reuse of this variable to indicate that the player unstaked its LP token
 
-		require(IERC20(poolIncentivized).transfer(msg.sender, amount), "Transfer of LP token Failed");
+		IERC20(s_poolIncentivized).transfer(msg.sender, amount);
 		emit Unstaked(msg.sender, amount);
 	}
 
@@ -224,10 +242,10 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @dev Partial fees can be withdran at any time after players begun to withdraw
 	 */
 	function withdrawFees() public onlyOwner {
-		require(realizedFees > 0, "No fees to withdraw");
-		uint256 _realizedFees = unclaimedPoolPrize == 0 ? poolIncentivized.balanceOf(address(this)) : realizedFees;
-		realizedFees = 0;
-		require(IERC20(poolIncentivized).transfer(msg.sender, _realizedFees), "Transfer of LP token Failed");		
+		if(s_realizedFees == 0) revert Tournament__NoFees();
+		uint256 _realizedFees = s_unclaimedPoolPrize == 0 ? s_poolIncentivized.balanceOf(address(this)) : s_realizedFees;
+		s_realizedFees = 0;
+		IERC20(s_poolIncentivized).transfer(msg.sender, _realizedFees);
 	}
 
 
@@ -241,7 +259,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function hashMoves(address _player) public view returns(bytes32 hash0, bytes32 hash1, bytes32 hash2) {
 		if(!isActive() || alreadyPlayed(_player) || !isPlayer(_player)) return (0, 0, 0);
-		return _hashMoves(_player, playersMap[_player].lastGame);
+		return _hashMoves(_player, s_playersMap[_player].lastGame);
 	}
 
 	/**
@@ -279,34 +297,34 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		if(_hash == hash0) return 0;
 		if(_hash == hash1) return 1;
 		if(_hash == hash2) return 2;
-		revert("Invalid move");
+		revert Tournament__InvalidMove();
 	}
 
 	/**
 	 * @notice Submit a move for play against another player
 	 */
 	function playAgainstPlayer(bytes32 _hash) public {
-		require(isActive(), "Tournament is not active");
-		require(!alreadyPlayed(msg.sender), "You already played today");
-		require(isPlayer(msg.sender), "You must deposit before playing");
+		if(!isActive()) revert Tournament__TournamentNotActive();
+		if(alreadyPlayed(msg.sender)) revert Tournament__AlreadyPlayed();
+		if(!isPlayer(msg.sender)) revert Tournament__NotPlayer();
 
-        if(storedPlayer.addr != address(0)) {
+        if(s_storedPlayer.addr != address(0)) {
 			// A player is already waiting to be matched
-			uint8 senderMove = recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame);
-			uint8 storedMove = recoverMove(storedPlayer.addr, storedPlayer.hash, storedPlayer.lastGame);
+			uint8 senderMove = recoverMove(msg.sender, _hash, s_playersMap[msg.sender].lastGame);
+			uint8 storedMove = recoverMove(s_storedPlayer.addr, s_storedPlayer.hash, s_storedPlayer.lastGame);
 
-            resolveGame(msg.sender, senderMove, storedPlayer.addr, storedMove);
-			storedPlayer.addr = address(0);
+            resolveGame(msg.sender, senderMove, s_storedPlayer.addr, storedMove);
+			s_storedPlayer.addr = address(0);
         } else {
 			// No player is waiting to be matched, we store the move and wait for a player to join
-			recoverMove(msg.sender, _hash, playersMap[msg.sender].lastGame); // We check that the move is valid before saving it
+			recoverMove(msg.sender, _hash, s_playersMap[msg.sender].lastGame); // We check that the move is valid before saving it
 
-            storedPlayer.addr = msg.sender;
-			storedPlayer.hash = _hash;
-			storedPlayer.lastGame = playersMap[msg.sender].lastGame;
+            s_storedPlayer.addr = msg.sender;
+			s_storedPlayer.hash = _hash;
+			s_storedPlayer.lastGame = s_playersMap[msg.sender].lastGame;
         }
 
-		playersMap[msg.sender].lastGame = uint32(block.timestamp);        
+		s_playersMap[msg.sender].lastGame = uint32(block.timestamp);        
         emit MoveSaved(msg.sender, 0);
 	}
 
@@ -316,15 +334,15 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return requestId is the requestId generated by chainlink and used to grab the game struct
 	 */
 	function playAgainstContract(uint8 _move) public returns(uint256 requestId) {
-		require(_move <= 2, "Invalid move");
-		require(isActive(), "Tournament is not active");
-		require(!alreadyPlayed(msg.sender), "You already played today");
-		require(isPlayer(msg.sender), "You must deposit before playing");
-		playersMap[msg.sender].lastGame = uint32(block.timestamp);
+		if(_move > 2) revert Tournament__InvalidMove();
+		if(!isActive()) revert Tournament__TournamentNotActive();
+		if(alreadyPlayed(msg.sender)) revert Tournament__AlreadyPlayed();
+		if(!isPlayer(msg.sender)) revert Tournament__NotPlayer();
+		s_playersMap[msg.sender].lastGame = uint32(block.timestamp);
 
         requestId = _requestRandomWords(_move, msg.sender);
 
-        require(requestId > 0, "Your move could not be processed");
+        if(requestId == 0) revert Tournament__RequestFailed();
 		emit MoveSaved(msg.sender, requestId);
 	}
 
@@ -344,11 +362,11 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
     function _requestRandomWords(uint8 _playerMove, address _player) internal returns (uint256 requestId) {
 
-		(uint64 _subscriptionId, bytes32 _gasLane, uint32 _callbackGasLimit) = Factory(factory).getVrfConfig();
+		(uint64 _subscriptionId, bytes32 _gasLane, uint32 _callbackGasLimit) = Factory(s_factory).getVrfConfig();
 
 		// Will revert if subscription is not set and funded.
 		//@todo can I just call this in the play function??
-		requestId = vrfCoordinator.requestRandomWords(
+		requestId = s_vrfCoordinator.requestRandomWords(
 			_gasLane,
 			_subscriptionId,
 			3, // Number of confirmations
@@ -377,7 +395,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
         // check number is ready
-        require(contractGameRequestId[requestId].exists, "request not found");
+        if(!contractGameRequestId[requestId].exists) revert Tournament__RequestNotFound();
       
         // number of moves size 3 (0rock 1paper 2scissor)
         uint8 vrfMove = uint8(randomWords[0] % 3);
@@ -433,30 +451,31 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	function updateScore(address _player, uint8 _points) internal {
 		if(_player == address(0)) return; // We don't update VRF score
 		if(_points == 0) {
-			playersMap[_player].streak = 0;
+			s_playersMap[_player].streak = 0;
 			return;
 		} else if(_points == 2) {
-			playersMap[_player].streak += 1;
+			s_playersMap[_player].streak += 1;
 		}
 		// We first remove the player from it's current rank
-		uint16 score = playersMap[_player].score;
-		for(uint i=0; i<scoreToPlayers[score].length; i++) {
-			if(scoreToPlayers[score][i] == _player) {
-				scoreToPlayers[score][i] = scoreToPlayers[score][scoreToPlayers[score].length - 1];
+		uint16 score = s_playersMap[_player].score;
+		uint256 length = s_scoreToPlayers[score].length;
+		for(uint i=0; i<length; i++) {
+			if(s_scoreToPlayers[score][i] == _player) {
+				s_scoreToPlayers[score][i] = s_scoreToPlayers[score][s_scoreToPlayers[score].length - 1];
 				break;
 			}
 		}
 		if(score > 0) {
-			scoreToPlayers[score].pop();
-			if(scoreToPlayers[score].length == 0) { nbRanks -= 1; } // No more players at this rank
+			s_scoreToPlayers[score].pop();
+			if(s_scoreToPlayers[score].length == 0) { s_nbRanks -= 1; } // No more players at this rank
 		}
 		// Now we can update the score and push the user to its new rank
-		playersMap[_player].score += _points**playersMap[_player].streak;
-		if(topScore < playersMap[_player].score) {
-			topScore = playersMap[_player].score;
+		s_playersMap[_player].score += _points**s_playersMap[_player].streak;
+		if(s_topScore < s_playersMap[_player].score) {
+			s_topScore = s_playersMap[_player].score;
 		}
-		scoreToPlayers[playersMap[_player].score].push(_player);
-		if(scoreToPlayers[playersMap[_player].score].length == 1) { nbRanks += 1; } // New rank created for this player
+		s_scoreToPlayers[s_playersMap[_player].score].push(_player);
+		if(s_scoreToPlayers[s_playersMap[_player].score].length == 1) { s_nbRanks += 1; } // New rank created for this player
 	}
 
 	////////////////////
@@ -478,16 +497,16 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		uint16 rPlayers,
 		uint256 poolPrize
 	) {
-		rName = name;
+		rName = s_name;
 		contractAddress = address(this);
-		rPoolIncentivized = address(poolIncentivized);
+		rPoolIncentivized = address(s_poolIncentivized);
 		rLPTokenSymbol = getFancySymbol();
-		rProtocol = uint8(protocol);
+		rProtocol = uint8(s_protocol);
 		(token0, token1) = getUnderlyingAssets();
-		rdepositAmount = depositAmount;
+		rdepositAmount = s_depositAmount;
 		rDecimals = getLPDecimals();
-		rStartTime = startTime;
-		rEndTime = endTime;
+		rStartTime = s_startTime;
+		rEndTime = s_endTime;
 		rPlayers = getNumberOfPlayers();
 		poolPrize = getExpectedPoolPrize();
 	}
@@ -508,11 +527,11 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return pPS The current price per share
 	 */
 	function getPricePerShare() public view returns(uint256 pPS) {
-		if(Protocol.Yearn == protocol) {
-			YearnInterface yearn = YearnInterface(address(poolIncentivized));
+		if(Protocol.Yearn == s_protocol) {
+			YearnInterface yearn = YearnInterface(address(s_poolIncentivized));
 			pPS = yearn.pricePerShare();
 		} else { // Uniswap
-			UniswapInterface uniswap = UniswapInterface(address(poolIncentivized));
+			UniswapInterface uniswap = UniswapInterface(address(s_poolIncentivized));
 			(uint112 res0, uint112 res1, ) = uniswap.getReserves();
 			uint256 supply = uniswap.totalSupply();
 			pPS = uint256(res0) * uint256(res1) / supply;
@@ -527,10 +546,10 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function withdrawAmountFromDeposit(address _player) public view returns (uint256 amount) {
 		uint256 pPS = getPricePerShare();
-		if(playersMap[_player].depositPricePerShare == 0) return 0; // User aleady withdrew
+		if(s_playersMap[_player].depositPricePerShare == 0) return 0; // User aleady withdrew
 		// We prevent user to receive more LP than deposited in exeptional case where pPS disminushes
-		pPS = (pPS < playersMap[_player].depositPricePerShare) ? playersMap[_player].depositPricePerShare : pPS;
-		amount = depositAmount * playersMap[_player].depositPricePerShare / pPS;
+		pPS = (pPS < s_playersMap[_player].depositPricePerShare) ? s_playersMap[_player].depositPricePerShare : pPS;
+		amount = s_depositAmount * s_playersMap[_player].depositPricePerShare / pPS;
 	}
 
 	/**
@@ -543,18 +562,19 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	function getRank(address _player) public view returns (uint16 rank, uint16 split) {
 		if(!isPlayer(_player)) return (0, 0);
 		uint16 cumulativePlayers;
-		for(uint16 i=topScore; i>=playersMap[_player].score; i--) {
-			if(scoreToPlayers[i].length > 0) {
-				cumulativePlayers += uint16(scoreToPlayers[i].length);
+		uint16 playerScore = s_playersMap[_player].score;
+		for(uint16 i=s_topScore; i>=playerScore; i--) {
+			if(s_scoreToPlayers[i].length > 0) {
+				cumulativePlayers += uint16(s_scoreToPlayers[i].length);
 				rank += 1;
 			}
 			if(i == 0) { // If the player did not score, he won't be in in the mapping
 				rank += 1;
-				split = uint16(players.length) - cumulativePlayers;
+				split = uint16(s_players.length) - cumulativePlayers;
 				return (rank, split);
 			}
 		}
-		split = uint16(scoreToPlayers[playersMap[_player].score].length);
+		split = uint16(s_scoreToPlayers[s_playersMap[_player].score].length);
 	}
 
 	/**
@@ -567,7 +587,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 		// TODO: how to manage rewards if the number of different ranks is low?
 		(uint256 rank, uint256 split) = getRank(_player);
 		if(split == 0) return 0; // Not a player = no share
-		uint8 multiplier = (nbRanks == rank) ? 2 : 1; // We double the allocation for the last rank so that sum of shares is 100%
+		uint8 multiplier = (s_nbRanks == rank) ? 2 : 1; // We double the allocation for the last rank so that sum of shares is 100%
 		share = uint64((multiplier * 1 ether / (2 ** rank)) / split);
 	}
 
@@ -577,7 +597,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return amount The pool prize amount
 	 */
 	function getPoolPrize() public view returns (uint256 amount) {
-		amount = realizedPoolPrize + getRemainingPoolPrize();
+		amount = s_realizedPoolPrize + getRemainingPoolPrize();
 	}
 
 	/**
@@ -587,11 +607,12 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function getRemainingPoolPrize() public view returns (uint256 amount) {
 		uint256 extraLP = 0;
-		for (uint i=0; i<players.length; i++) {
-			if(playersMap[players[i]].depositPricePerShare == 0) continue; // The player withdrew, we skip him
-			extraLP += depositAmount - withdrawAmountFromDeposit(players[i]);
+		uint256 length = s_players.length;
+		for (uint i=0; i<length; i++) {
+			if(s_playersMap[s_players[i]].depositPricePerShare == 0) continue; // The player withdrew, we skip him
+			extraLP += s_depositAmount - withdrawAmountFromDeposit(s_players[i]);
 		}
-		amount = extraLP * (1 ether - fees) / 1 ether;
+		amount = extraLP * (1 ether - FEES) / 1 ether;
 	}
 
 	/**
@@ -601,7 +622,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return amount The user pool prize amount
 	 */
 	function getPrizeAmount(address _player) public view returns (uint256 amount) {
-		amount = getRemainingPoolPrize() * getPrizeShare(_player) / unclaimedPoolPrize;
+		amount = getRemainingPoolPrize() * getPrizeShare(_player) / s_unclaimedPoolPrize;
 	}
 
 	/**
@@ -612,7 +633,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	function getExpectedPoolPrize() public view returns (uint256) {
 		if(isFuture()) return 0;
 		if(isEnded()) return getPoolPrize();
-		return getPoolPrize() * (endTime - startTime) / (1 + block.timestamp - startTime); // Add 1 to avoid division by 0
+		return getPoolPrize() * (s_endTime - s_startTime) / (1 + block.timestamp - s_startTime); // Add 1 to avoid division by 0
 	}
 
 	/**
@@ -620,7 +641,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return amount The amount of fees
 	 */
 	function getFees() internal view returns (uint256 amount) {
-		amount = getPoolPrize() * fees / (1 ether - fees);
+		amount = getPoolPrize() * FEES / (1 ether - FEES);
 	}
 
 	/**
@@ -639,7 +660,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return ended
 	 */
 	function isEnded() public view returns (bool ended) {
-		ended = timeToDate(uint32(block.timestamp)) >= timeToDate(endTime);
+		ended = timeToDate(uint32(block.timestamp)) >= timeToDate(s_endTime);
 	}
 
 	/**
@@ -648,7 +669,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return future
 	 */
 	function isFuture() public view returns (bool future) {
-		future = timeToDate(uint32(block.timestamp)) < timeToDate(startTime);
+		future = timeToDate(uint32(block.timestamp)) < timeToDate(s_startTime);
 	}
 
 	/**
@@ -667,7 +688,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return isP
 	 */
 	function isPlayer(address _player) public view returns (bool isP) {
-		isP = playersMap[_player].depositPricePerShare > 0;
+		isP = s_playersMap[_player].depositPricePerShare > 0;
 	}
 
 	/**
@@ -677,7 +698,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function alreadyPlayed(address _player) public view returns (bool) {
 		uint32 today = timeToDate(uint32(block.timestamp));
-		uint32 lastGame = timeToDate(playersMap[_player].lastGame);
+		uint32 lastGame = timeToDate(s_playersMap[_player].lastGame);
 		return today == lastGame;
 	}
 
@@ -686,7 +707,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @param _player The player address
 	 */
 	function pointsOfPlayer(address _player) public view returns (uint16) {
-		return playersMap[_player].score;
+		return s_playersMap[_player].score;
 	}
 
 	/**
@@ -695,7 +716,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return (bool)
 	 */
 	function stakingAllowed() public view returns (bool) {
-		return timeToDate(uint32(block.timestamp)) < timeToDate(endTime - 1 days);
+		return timeToDate(uint32(block.timestamp)) < timeToDate(s_endTime - 1 days);
 	}
 
 	/**
@@ -712,7 +733,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return number Number of players
 	 */
 	function getNumberOfPlayers() public view returns (uint16 number) {
-		number = uint16(players.length);
+		number = uint16(s_players.length);
 	}
 
 	/**
@@ -720,7 +741,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return arr List of players
 	 */
 	function getPlayers() public view returns (address[] memory arr) {
-		arr = players;
+		arr = s_players;
 	}
 
 	/**
@@ -730,7 +751,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function getPlayersAtScore(uint16 _score) public view returns (address[] memory arr) {
 		if(_score == 0) return new address[](0); // We don't return the list of players without any point
-		arr = scoreToPlayers[_score];
+		arr = s_scoreToPlayers[_score];
 	}
 
 	/**
@@ -741,7 +762,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 */
 	function getPlayer(address _player) public view returns (uint16 rank, uint16 score) {
 		(rank, ) = getRank(_player);
-		score = playersMap[_player].score;
+		score = s_playersMap[_player].score;
 	}
 
 	/**
@@ -749,7 +770,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return decimals Number of decimals
 	 */
 	function getLPDecimals() public view returns (uint8 decimals) {
-		decimals = IERC20Metadata(poolIncentivized).decimals();
+		decimals = IERC20Metadata(s_poolIncentivized).decimals();
 	}
 
 	/**
@@ -757,7 +778,7 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return symbol of the pool
 	 */
 	function getLPSymbol() public view returns (string memory symbol) {
-		symbol = IERC20Metadata(poolIncentivized).symbol();
+		symbol = IERC20Metadata(s_poolIncentivized).symbol();
 	}
 
 	/**
@@ -766,11 +787,11 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return token1 (address) for Uniswap
 	 */
 	function getUnderlyingAssets() public view returns (address token0, address token1) {
-		if(protocol == Protocol.Uniswap) {
-			token0 = UniswapInterface(address(poolIncentivized)).token0();
-			token1 = UniswapInterface(address(poolIncentivized)).token1();
+		if(s_protocol == Protocol.Uniswap) {
+			token0 = UniswapInterface(address(s_poolIncentivized)).token0();
+			token1 = UniswapInterface(address(s_poolIncentivized)).token1();
 		} else {
-			token0 = YearnInterface(address(poolIncentivized)).token();
+			token0 = YearnInterface(address(s_poolIncentivized)).token();
 			token1 = address(0);
 		}
 	}
@@ -781,9 +802,9 @@ contract Tournament is Initializable, VRFConsumerBaseV2Upgradeable {
 	 * @return symbol "fancy" symbol of the pool
 	 */
 	function getFancySymbol() public view returns (string memory symbol) {
-		if(protocol == Protocol.Uniswap) {
-			address token0 = UniswapInterface(address(poolIncentivized)).token0();
-			address token1 = UniswapInterface(address(poolIncentivized)).token1();
+		if(s_protocol == Protocol.Uniswap) {
+			address token0 = UniswapInterface(address(s_poolIncentivized)).token0();
+			address token1 = UniswapInterface(address(s_poolIncentivized)).token1();
 			string memory symbol0 = IERC20Metadata(token0).symbol();
 			string memory symbol1 = IERC20Metadata(token1).symbol();
 			symbol = string.concat("UNI-V2 (",symbol0);

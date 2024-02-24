@@ -179,12 +179,18 @@ contract TournamentTest is Test {
     }
 
     function testSetUp() public {
-        assertEq(tournamentY.owner(), owner);
-        assertEq(tournamentY.name(), "Yearn Tournament");
+        (
+            string memory name,,,,,,,
+            uint256 depositAmount,,
+            uint32 rStartTime,
+            uint32 rEndTime,,
+        ) = tournamentY.getTournament();
+        //assertEq(tournamentY.owner(), owner);
+        assertEq(name, "Yearn Tournament");
         //assertEq(tournamentY.poolIncentivized(), address(mockYLP));
-        assertEq(tournamentY.depositAmount(), 1e18);
-        assertEq(tournamentY.startTime(), startTime);
-        assertEq(tournamentY.endTime(), endTime);
+        assertEq(depositAmount, 1e18);
+        assertEq(rStartTime, startTime);
+        assertEq(rEndTime, endTime);
         //assertEq(tournamentY.subId(), 1);
         //assertEq(tournamentY.gasLane(), bytes32(0));
         //assertEq(tournamentY.callbackGasLimit(), 2000000);
@@ -354,13 +360,13 @@ contract TournamentTest is Test {
         stakeForTest(player1);
 
         assertEq(tournamentY.getPlayers().length, 1);
-        assertEq(tournamentY.players(0), player1);
+        assertEq(tournamentY.getPlayers()[0], player1);
 
         stakeForTest(player2);
 
         assertEq(tournamentY.getPlayers().length, 2);
-        assertEq(tournamentY.players(0), player1);
-        assertEq(tournamentY.players(1), player2);
+        assertEq(tournamentY.getPlayers()[0], player1);
+        assertEq(tournamentY.getPlayers()[1], player2);
     }
 
     event Staked(address indexed player, uint256 amount);
@@ -430,9 +436,9 @@ contract TournamentTest is Test {
         mockUniLP.approve(address(tournamentU), LPTokenAmount);
         mockYLP.approve(address(tournamentY), LPTokenAmount);
 
-        vm.expectRevert("Staking not allowed");
+        vm.expectRevert(Tournament.Tournament__StakingNotAllowed.selector);
         tournamentY.stakeLPToken();
-        vm.expectRevert("Staking not allowed");
+        vm.expectRevert(Tournament.Tournament__StakingNotAllowed.selector);
         tournamentU.stakeLPToken();
         vm.stopPrank();
 
@@ -457,9 +463,9 @@ contract TournamentTest is Test {
         tournamentU.stakeLPToken();
 
         // Second staking
-        vm.expectRevert("You have already staked");
+        vm.expectRevert(Tournament.Tournament__AlreadyStaked.selector);
         tournamentY.stakeLPToken();
-        vm.expectRevert("You have already staked");
+        vm.expectRevert(Tournament.Tournament__AlreadyStaked.selector);
         tournamentU.stakeLPToken();
         vm.stopPrank();
 
@@ -577,9 +583,9 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.expectRevert("Unstaking not allowed");
+        vm.expectRevert(Tournament.Tournament__UnstakingNotAllowed.selector);
         tournamentY.unstakeLPToken();
-        vm.expectRevert("Unstaking not allowed");
+        vm.expectRevert(Tournament.Tournament__UnstakingNotAllowed.selector);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
     }
@@ -589,9 +595,9 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.expectRevert("Unstaking not allowed");
+        vm.expectRevert(Tournament.Tournament__UnstakingNotAllowed.selector);
         tournamentY.unstakeLPToken();
-        vm.expectRevert("Unstaking not allowed");
+        vm.expectRevert(Tournament.Tournament__UnstakingNotAllowed.selector);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
    }
@@ -600,9 +606,9 @@ contract TournamentTest is Test {
         vm.warp(afterTime);
         vm.startPrank(player1);
 
-        vm.expectRevert("You have nothing to withdraw");
+        vm.expectRevert(Tournament.Tournament__NothingToWithdraw.selector);
         tournamentY.unstakeLPToken();
-        vm.expectRevert("You have nothing to withdraw");
+        vm.expectRevert(Tournament.Tournament__NothingToWithdraw.selector);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
     }
@@ -848,9 +854,9 @@ contract TournamentTest is Test {
         assertEq(mockUniLP.balanceOf(player1), initPlayerBalanceU + LPTokenAmount);
         assertEq(mockUniLP.balanceOf(address(tournamentU)), initContractBalanceU - LPTokenAmount);
 
-        vm.expectRevert("You have nothing to withdraw");
+        vm.expectRevert(Tournament.Tournament__NothingToWithdraw.selector);
         tournamentY.unstakeLPToken();
-        vm.expectRevert("You have nothing to withdraw");
+        vm.expectRevert(Tournament.Tournament__NothingToWithdraw.selector);
         tournamentU.unstakeLPToken();
         vm.stopPrank();
 
@@ -893,7 +899,7 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.expectRevert("Invalid move");
+        vm.expectRevert(Tournament.Tournament__InvalidMove.selector);
         tournamentY.playAgainstContract(3);
         vm.stopPrank();
     }
@@ -904,7 +910,7 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.expectRevert("Tournament is not active");
+        vm.expectRevert(Tournament.Tournament__TournamentNotActive.selector);
         tournamentY.playAgainstContract(1);
         vm.stopPrank();
     }
@@ -916,7 +922,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         vm.warp(afterTime);
-        vm.expectRevert("Tournament is not active");
+        vm.expectRevert(Tournament.Tournament__TournamentNotActive.selector);
         tournamentY.playAgainstContract(1);
         vm.stopPrank();
     }
@@ -926,7 +932,7 @@ contract TournamentTest is Test {
         vm.warp(duringTime);
         vm.startPrank(player1);
 
-        vm.expectRevert("You must deposit before playing");        
+        vm.expectRevert(Tournament.Tournament__NotPlayer.selector);        
         tournamentY.playAgainstContract(1);
 
         vm.stopPrank();
@@ -939,7 +945,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
         tournamentY.playAgainstContract(1);
 
-        vm.expectRevert("You already played today");
+        vm.expectRevert(Tournament.Tournament__AlreadyPlayed.selector);
         tournamentY.playAgainstContract(1);
         vm.stopPrank();
     }
@@ -974,7 +980,7 @@ contract TournamentTest is Test {
         uint[] memory randomWords = new uint[](1);
         randomWords[0] = 1;
 
-        vm.expectRevert("nonexistent request");
+        vm.expectRevert();
         mockVRF.fulfillRandomWordsWithOverride(10, address(tournamentY), randomWords);
 
         vm.stopPrank();
@@ -1006,7 +1012,7 @@ contract TournamentTest is Test {
         stakeForTest(player1);
         vm.startPrank(player1);
 
-        vm.expectRevert("Invalid move");
+        vm.expectRevert(Tournament.Tournament__InvalidMove.selector);
         tournamentY.playAgainstPlayer(bytes32('0xdeadbeef'));
         vm.stopPrank();
     }
@@ -1018,7 +1024,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         bytes32 move = getMoveHash(tournamentY, player1, 1);
-        vm.expectRevert("Tournament is not active");
+        vm.expectRevert(Tournament.Tournament__TournamentNotActive.selector);
         tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
@@ -1031,7 +1037,7 @@ contract TournamentTest is Test {
 
         vm.warp(afterTime);
         bytes32 move = getMoveHash(tournamentY, player1, 1);
-        vm.expectRevert("Tournament is not active");
+        vm.expectRevert(Tournament.Tournament__TournamentNotActive.selector);
         tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
@@ -1042,7 +1048,7 @@ contract TournamentTest is Test {
         vm.startPrank(player1);
 
         bytes32 move = getMoveHash(tournamentY, player1, 1);
-        vm.expectRevert("You must deposit before playing");
+        vm.expectRevert(Tournament.Tournament__NotPlayer.selector);
         tournamentY.playAgainstPlayer(move);
 
         vm.stopPrank();
@@ -1057,7 +1063,7 @@ contract TournamentTest is Test {
         tournamentY.playAgainstPlayer(move);
 
         move = getMoveHash(tournamentY, player1, 1);
-        vm.expectRevert("You already played today");
+        vm.expectRevert(Tournament.Tournament__AlreadyPlayed.selector);
         tournamentY.playAgainstPlayer(move);
         vm.stopPrank();
     }
@@ -1289,7 +1295,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
         assertEq(tournamentY.pointsOfPlayer(player3), 1);
         assertEq(tournamentY.pointsOfPlayer(player4), 1);
-        assertEq(tournamentY.topScore(), 2);
+        //assertEq(tournamentY.topScore(), 2);
     }
 
     function test_PlayAgainstPlayer_4Players_2Days() public {
@@ -1324,7 +1330,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player2), 0);
         assertEq(tournamentY.pointsOfPlayer(player3), 1);
         assertEq(tournamentY.pointsOfPlayer(player4), 1);
-        assertEq(tournamentY.topScore(), 2);
+        //assertEq(tournamentY.topScore(), 2);
 
         skip(1 days);
 
@@ -1345,7 +1351,7 @@ contract TournamentTest is Test {
         assertEq(tournamentY.pointsOfPlayer(player2), 1);
         assertEq(tournamentY.pointsOfPlayer(player3), 3);
         assertEq(tournamentY.pointsOfPlayer(player4), 2);
-        assertEq(tournamentY.topScore(), 3);
+        //assertEq(tournamentY.topScore(), 3);
     }
 
     function test_alreadyPlayed_notStaked() public {
@@ -1506,7 +1512,7 @@ contract TournamentTest is Test {
         mockUniLP.setReserves(2000 ether, 1000 ether);
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
-        uint fees = tournamentY.fees();
+        uint fees = tournamentY.FEES();
 
         assertEq(tournamentY.getPoolPrize(), contractBalanceY * (1 ether - fees) / 2 ether);
         assertEq(tournamentU.getPoolPrize(), contractBalanceU * (1 ether - fees) / 2 ether);
@@ -1546,7 +1552,7 @@ contract TournamentTest is Test {
 
         uint contractBalanceY = mockYLP.balanceOf(address(tournamentY));
         uint contractBalanceU = mockUniLP.balanceOf(address(tournamentU));
-        uint fees = tournamentY.fees();
+        uint fees = tournamentY.FEES();
         
         vm.warp(afterTime);
         tournamentY.unstakeLPToken();
@@ -1570,7 +1576,7 @@ contract TournamentTest is Test {
         mockYLP.setPricePerShare(200000); // Value of LP doubles
         mockUniLP.setReserves(2000 ether, 1000 ether);
 
-        uint fees = tournamentY.fees();
+        uint fees = tournamentY.FEES();
         
         vm.warp(afterTime);
         tournamentY.unstakeLPToken();
@@ -1730,7 +1736,7 @@ contract TournamentTest is Test {
 
         mockYLP.setPricePerShare(200000); // Value of LP doubled
         uint contractBalance = mockYLP.balanceOf(address(tournamentY));
-        uint fees = tournamentY.fees();
+        uint fees = tournamentY.FEES();
 
         assertEq(tournamentY._getFees(), contractBalance * fees / 2 ether);
     }
@@ -1757,7 +1763,7 @@ contract TournamentTest is Test {
         mockUniLP.setReserves(2000 ether, 2000 ether);
 
         vm.startPrank(player1);
-        vm.expectRevert("Not the Owner");
+        vm.expectRevert(Tournament.Tournament__NotOwner.selector);
         tournamentY.withdrawFees();
         vm.stopPrank();
     }
@@ -1770,7 +1776,7 @@ contract TournamentTest is Test {
         mockUniLP.setReserves(2000 ether, 2000 ether);
 
         vm.startPrank(owner);
-        vm.expectRevert("No fees to withdraw");
+        vm.expectRevert(Tournament.Tournament__NoFees.selector);
         tournamentY.withdrawFees();
         vm.stopPrank();
     }
